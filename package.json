@@ -1,0 +1,18 @@
+{
+  "name": "khilona",
+  "private": true,
+  "description": "Khilona shop platform — three independently deployable apps: API, storefront, admin panel.",
+  "scripts": {
+    "install:all": "npm --prefix khilona_backend install && npm --prefix khilona_userpanel install && npm --prefix khilona_adminpanel install",
+    "db:dev": "npm --prefix khilona_backend run db:dev",
+    "db:setup": "npm --prefix khilona_backend run prisma:deploy && npm --prefix khilona_backend run seed",
+    "dev:api": "npm --prefix khilona_backend run start:dev",
+    "dev:user": "npm --prefix khilona_userpanel run dev",
+    "dev:admin": "npm --prefix khilona_adminpanel run dev",
+    "build": "npm --prefix khilona_backend run build && npm --prefix khilona_userpanel run build && npm --prefix khilona_adminpanel run build",
+    "lint": "npm --prefix khilona_backend run lint && npm --prefix khilona_userpanel run lint && npm --prefix khilona_adminpanel run lint",
+    "test:api": "npm --prefix khilona_backend test && npm --prefix khilona_backend run test:e2e",
+    "test:e2e:user": "npm --prefix khilona_userpanel run test:e2e",
+    "test:e2e:admin": "npm --prefix khilona_adminpanel run test:e2e"
+  }
+}

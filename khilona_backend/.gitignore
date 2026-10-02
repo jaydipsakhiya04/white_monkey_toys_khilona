@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*.local
+!.env.example
+.pgdata/
+.pgdata.log
+uploads/*
+!uploads/.gitkeep
+*.log
+*.tsbuildinfo

@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/*
+ * KHILONA design tokens.
+ * coral-600 / coral-700 are the accessible (AA on white) shades used for CTA
+ * backgrounds and small text; coral (#E4572E) is used for accents and large type.
+ */
+@theme inline {
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --color-ink: #1d1b2f;
+  --color-muted: #5e5a6e;
+  --color-page: #fffcf7;
+  --color-surface: #ffffff;
+  --color-sand: #f6f1e9;
+  --color-sand-deep: #ede5d8;
+  --color-line: #ece5da;
+  --color-line-strong: #ddd3c4;
+
+  --color-coral: #e4572e;
+  --color-coral-600: #c9461f;
+  --color-coral-700: #a93a19;
+  --color-coral-tint: #fdeee8;
+
+  --color-sun: #ffc53d;
+  --color-sun-tint: #fff4d6;
+
+  --color-teal: #0f8b8d;
+  --color-teal-700: #0b6c6e;
+  --color-teal-tint: #e3f3f3;
+
+  --color-success: #1e9e5a;
+  --color-success-700: #157a44;
+  --color-success-tint: #e6f5ec;
+
+  --color-danger: #d93636;
+  --color-danger-700: #b42727;
+  --color-danger-tint: #fcebeb;
+
+  --shadow-soft: 0 1px 2px rgb(29 27 47 / 0.04), 0 4px 16px rgb(29 27 47 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(29 27 47 / 0.05), 0 10px 28px rgb(29 27 47 / 0.08);
+
+  --breakpoint-xs: 25rem;
+  --breakpoint-3xl: 112rem;
+}
+
+@layer base {
+  :root {
+    --tabbar-h: 4rem;
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-coral-600);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* bottom padding so content clears the mobile tab bar */
+  .pb-tabbar {
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 1rem);
+  }
+  @media (min-width: 768px) {
+    .pb-tabbar {
+      padding-bottom: 0;
+    }
+  }
+  .prose-policy p {
+    margin-bottom: 0.9em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

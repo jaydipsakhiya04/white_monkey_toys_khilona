@@ -1,0 +1,32 @@
+# Dependencies & builds
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Environment (never commit secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Local data
+khilona_backend/.pgdata/
+khilona_backend/uploads/*
+!khilona_backend/uploads/.gitkeep
+khilona_backend/uploads-test/
+
+# Logs & test artefacts
+*.log
+test-results/
+playwright-report/
+blob-report/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
