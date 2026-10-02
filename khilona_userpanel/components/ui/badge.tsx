@@ -1,13 +1,12 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/utils/cn";
 
-export type BadgeTone = "neutral" | "coral" | "sun" | "teal" | "success" | "danger" | "ink";
+export type BadgeTone = "neutral" | "outline" | "accent" | "success" | "danger" | "ink";
 
 const tones: Record<BadgeTone, string> = {
-  neutral: "bg-sand text-muted",
-  coral: "bg-coral-tint text-coral-700",
-  sun: "bg-sun text-ink",
-  teal: "bg-teal-tint text-teal-700",
+  neutral: "bg-sand text-ink",
+  outline: "border border-line-strong bg-surface text-ink",
+  accent: "bg-accent text-ink",
   success: "bg-success-tint text-success-700",
   danger: "bg-danger-tint text-danger-700",
   ink: "bg-ink text-white",

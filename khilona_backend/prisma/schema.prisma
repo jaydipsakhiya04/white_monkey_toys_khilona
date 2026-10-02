@@ -102,6 +102,9 @@ model Store {
   seoTitle       String?
   seoDescription String?
 
+  /// When true, new customer reviews wait for admin approval before they appear on the storefront.
+  reviewsRequireApproval Boolean @default(false)
+
   currency  String   @default("INR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -161,6 +164,10 @@ model Product {
   seoDescription   String?
   /// Soft delete: products referenced by orders are never hard-deleted.
   deletedAt        DateTime?
+  /// Average of APPROVED review ratings (0 when there are none). Maintained by the API.
+  ratingAvg        Decimal   @default(0) @db.Decimal(3, 2)
+  /// Number of APPROVED reviews. Maintained by the API.
+  ratingCount      Int       @default(0)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -169,6 +176,7 @@ model Product {
   options    ProductOption[]
   variants   ProductVariant[]
   orderItems OrderItem[]
+  reviews    Review[]
 
   @@index([categoryId])
   @@index([isActive, deletedAt])
@@ -256,16 +264,60 @@ model ProductVariantOptionValue {
 // Customers & orders
 // ─────────────────────────────────────────────────────────────
 
-/// Guest customers are identified by phone. Ready to be extended into accounts.
+/// Customers are identified by phone. A customer becomes a registered account once a
+/// password is set (signup); guest checkout keeps working without one.
 model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String   @unique
-  email     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  name         String
+  phone        String    @unique
+  /// Contact email (last one given at checkout for guests; the login email for accounts).
+  email        String?
+  /// Login email of a registered account (lowercase). Null for guest-only customers.
+  accountEmail String?   @unique
+  /// bcrypt hash. Null => guest-only customer (cannot sign in).
+  passwordHash String?
+  registeredAt DateTime?
+  lastLoginAt  DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  orders Order[]
+  orders         Order[]
+  refreshTokens  CustomerRefreshToken[]
+  passwordResets CustomerPasswordReset[]
+  reviews        Review[]
+}
+
+/// Rotating refresh tokens for customer accounts. Only a SHA-256 hash of the token is stored.
+model CustomerRefreshToken {
+  id         String    @id @default(cuid())
+  customerId String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+/// Single-use, short-lived password reset tokens (hash only).
+model CustomerPasswordReset {
+  id         String    @id @default(cuid())
+  customerId String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  ipAddress  String?
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
 }
 
 enum OrderStatus {
@@ -327,6 +379,9 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
 
   stockRestored Boolean   @default(false)
+  /// Set when the order belongs to the customer's account (placed while signed in, or claimed
+  /// with order number + the account's mobile). Only these orders appear under "My orders".
+  accountLinkedAt DateTime?
   confirmedAt   DateTime?
   deliveredAt   DateTime?
   cancelledAt   DateTime?
@@ -340,6 +395,7 @@ model Order {
   customer Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items    OrderItem[]
   history  OrderStatusHistory[]
+  reviews  Review[]
 
   @@index([status])
   @@index([createdAt])
@@ -390,6 +446,39 @@ model OrderStatusHistory {
   changedBy Admin? @relation(fields: [changedById], references: [id], onDelete: SetNull)
 
   @@index([orderId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reviews
+// ─────────────────────────────────────────────────────────────
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+}
+
+/// A verified-purchase review: only possible for a product in one of the customer's own
+/// DELIVERED orders (enforced by the API). One review per customer + product + order.
+model Review {
+  id         String       @id @default(cuid())
+  customerId String
+  productId  String
+  orderId    String
+  rating     Int
+  comment    String?      @db.Text
+  status     ReviewStatus @default(APPROVED)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId, orderId])
+  @@index([productId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([orderId])
 }
 
 /// Per-day sequence used to build collision-safe order numbers (KH-YYYYMMDD-NNNN).

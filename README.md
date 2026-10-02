@@ -1,6 +1,8 @@
-# KHILONA — Shop Management & Ordering Platform
+# WHITE MONKEY TOYS — Toy Store Platform (project: Khilona)
 
-Khilona is a complete toy-shop platform: customers browse the catalogue and place **manual orders (pay on delivery)** without creating an account; the shop team manages the catalogue, store settings and orders from a separate admin panel.
+A complete premium toy-store platform. The customer-facing brand is **White Monkey Toys**; *Khilona* is the internal project/repository name.
+
+Customers browse the catalogue and place **pay-on-delivery orders** — as a guest or with an optional **customer account** (order history, live tracking, invoice & receipt PDFs, verified-purchase reviews). The shop team manages the catalogue, store settings, orders and review moderation from a separate admin panel.
 
 ```
                 ┌────────────────────┐
@@ -100,6 +102,9 @@ npm run dev:admin     # http://localhost:3001
 |---|---|---|
 | SUPER_ADMIN | `admin@khilona.in` | `Admin@12345` |
 | ADMIN | `staff@khilona.in` | `Staff@12345` |
+| Storefront customer (demo) | `demo@whitemonkeytoys.in` (mobile `9811122233`) | `Demo@12345` |
+
+The demo customer has three account orders (two delivered, with verified reviews) so *My Account*, documents and product reviews have content. Skipped when `SEED_DEMO_ORDERS=false` or in production.
 
 > ⚠️ **Change these before production.** Create real admin accounts (Admin → Settings → Admin users), then deactivate the seeded ones, or change their passwords from the Profile page.
 
@@ -115,16 +120,19 @@ The seed creates the store profile (logo, hero, hours, policies), 11 categories 
 | `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/khilona?schema=public` | required |
 | `JWT_SECRET` | 48+ random chars | required; ≥ 32 chars enforced in production |
 | `JWT_EXPIRES_IN` | `15m` | access token lifetime |
-| `REFRESH_TOKEN_TTL_DAYS` | `7` | |
+| `REFRESH_TOKEN_TTL_DAYS` | `7` | admin refresh token |
+| `CUSTOMER_REFRESH_TOKEN_TTL_DAYS` | `30` | storefront account refresh token |
+| `PASSWORD_RESET_TTL_MINUTES` | `30` | lifetime of a password-reset link |
+| `STOREFRONT_URL` | `http://localhost:3000` | used to build password-reset links |
 | `CORS_ORIGIN` | `http://localhost:3000,http://localhost:3001` | comma-separated allow-list |
 | `APP_URL` | `http://localhost:4000` | public API base (used for local upload URLs) |
 | `COOKIE_SECURE` / `COOKIE_SAMESITE` / `COOKIE_DOMAIN` | `true` / `lax` / `.khilona.in` | refresh-token cookie |
 | `APP_TIMEZONE` | `Asia/Kolkata` | order-number dates, opening hours, reports |
-| `ORDER_NUMBER_PREFIX` | `KH` | |
+| `ORDER_NUMBER_PREFIX` | `WMT` | new orders look like `WMT-20261002-0001`; existing orders keep their numbers |
 | `STORAGE_PROVIDER` | `local` \| `s3` | |
 | `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_PUBLIC_URL` | | for S3 / R2 / MinIO / Spaces |
 | `UPLOAD_MAX_FILE_SIZE_MB` | `5` | |
-| `THROTTLE_GLOBAL_LIMIT`, `THROTTLE_LOGIN_LIMIT`, `THROTTLE_ORDER_LIMIT` | `300`, `5`, `10` | requests / minute / IP |
+| `THROTTLE_GLOBAL_LIMIT`, `THROTTLE_LOGIN_LIMIT`, `THROTTLE_ORDER_LIMIT`, `THROTTLE_TRACK_LIMIT` | `300`, `5`, `10`, `20` | requests / minute / IP (login limit also covers customer signup / password reset; track limit covers guest tracking & guest documents) |
 | `TRUST_PROXY`, `SWAGGER_ENABLED` | `true`, `false` | |
 
 ### User panel (`khilona_userpanel/.env.local`)
@@ -145,11 +153,18 @@ The seed creates the store profile (logo, hero, hours, policies), 11 categories 
 
 ## Business rules (summary)
 
-- **Guest checkout** — name, mobile, address, city/state/pincode, landmark, Google Maps link, browser location (optional) and notes. Customers are stored by phone (`Customer`) so accounts can be added later.
+- **Guest checkout** — name, mobile, address, city/state/pincode, landmark, Google Maps link, browser location (optional) and notes. Never requires an account.
+- **Customer accounts** — signup / login (email or mobile) / logout / password change. JWT access token kept in memory only + rotating httpOnly refresh cookie (`wmt_crt`, separate JWT audience from admins). Orders placed while signed in are linked to the account.
+- **Guest → account** — mobile numbers are not verified, so signing up never exposes earlier guest orders automatically. A customer can *claim* an earlier guest order with its order number when it was placed with the account's mobile — the same proof guest tracking already requires. A guest checkout using an account's mobile never overwrites that account's details.
+- **Password reset** — single-use, hashed, 30-minute tokens. No email/SMS provider ships with the project: the API reports `deliveryAvailable: false` and the storefront honestly tells the customer to contact the store. Register a `NotificationChannel` with `passwordResetRequested` to deliver links (in development the link is logged to the API console).
+- **Order ownership** — every `/customer/*` order, invoice and receipt route checks ownership server-side; another customer's order number returns 404.
+- **Customer cancellation** — allowed only while an order is still `PENDING` (stock is restored exactly once, same routine as admin cancellation).
+- **Reviews** — verified purchase only: signed-in owner + order contains the product + order `DELIVERED` + one review per customer/product/order. Eligibility is decided by the API. Optional moderation (`reviewsRequireApproval`); admins can publish/hide but never edit ratings or text. Product cards/pages show average, count and distribution.
+- **Invoice & receipt PDFs** — generated on demand (pdfkit + bundled Inter font for ₹) purely from order snapshots, so old documents stay correct after products change. Invoice number = order number with an `INV-` prefix.
 - **Prices & stock are re-validated server-side** for every cart view and order.
 - **Order item snapshots** — name, SKU, options, image, MRP and price at purchase time. Later product edits/deletion never alter past orders.
 - **Stock** — reserved when the order is placed (atomic, never negative; concurrency-tested); restored exactly once when an order is cancelled.
-- **Order numbers** — `KH-YYYYMMDD-NNNN`, collision-safe per-day counter.
+- **Order numbers** — `PREFIX-YYYYMMDD-NNNN` (prefix `WMT` by default), collision-safe per-day counter shared across prefixes.
 - **Order lifecycle** — `PENDING → CONFIRMED → PROCESSING → READY → OUT_FOR_DELIVERY → DELIVERED`, forward-only, `CANCELLED` from any open state, full history with who/when/note.
 - **Deletion safety** — products with orders are archived instead of deleted; categories with products require moving the products first; categories with sub-categories cannot be deleted.
 - **Store switch** — when the store is set to closed, ordering is paused with a custom message.
@@ -159,8 +174,8 @@ The seed creates the store profile (logo, hero, hours, policies), 11 categories 
 ## Testing
 
 ```bash
-npm run test:api          # backend unit (21) + e2e (37) tests — needs PostgreSQL running
-npm run test:e2e:user     # Playwright (18 tests, desktop + Pixel 7): browse → product → cart → checkout → order placed, errors, SEO, filters
+npm run test:api          # backend unit (21) + e2e (58: catalogue/orders + customer accounts, ownership, reviews, PDFs) — needs PostgreSQL running
+npm run test:e2e:user     # Playwright (24 tests, desktop + Pixel 7): purchase flow, errors, SEO, filters, signup → signed-in checkout → My Orders → receipt PDF → logout
 npm run test:e2e:admin    # Playwright (5 tests): auth, login → create category → create product (image upload) → order → status change
 npm run lint
 npm run build
@@ -189,7 +204,8 @@ Each app deploys independently.
 | Online payments | `PaymentMethod` / `PaymentStatus` enums on `Order`; add a `payments` module and a pre-confirmation step |
 | Delivery partners | new module consuming order status changes; `shippingFee` already on `Order` |
 | WhatsApp / SMS / email | implement a `NotificationChannel` and register it in `NotificationsService` (already called on order placed / status changed) |
-| Customer accounts | `Customer` model already linked to orders by phone |
-| Coupons, GST, invoices | `Order.discount`/`shippingFee` totals are server-computed in one place (`CartPricingService`) |
+| Customer accounts | ✅ implemented (signup/login, My Account, documents, reviews) |
+| Password-reset delivery | register a `NotificationChannel` implementing `passwordResetRequested` (email / SMS / WhatsApp) |
+| Coupons, GST | `Order.discount`/`shippingFee` totals are server-computed in one place (`CartPricingService`) |
 | Multiple admins / permissions | `AdminRole` enum + `@AdminAuth(...roles)` guard |
-| Reviews, wishlist, reports | new modules; catalogue IDs and slugs are stable |
+| Wishlist, reports | new modules; catalogue IDs and slugs are stable |

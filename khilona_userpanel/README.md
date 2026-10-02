@@ -1,8 +1,8 @@
-# KHILONA – customer storefront (`khilona_userpanel`)
+# WHITE MONKEY TOYS – customer storefront (`khilona_userpanel`)
 
-The customer-facing shop for KHILONA (toys & games). Built with **Next.js 15.5 (App Router)**, React 19, TypeScript (strict), Tailwind CSS v4, TanStack Query v5, React Hook Form + zod, zustand, lucide-react and sonner.
+The customer-facing shop for **White Monkey Toys** (internal project name: Khilona). Premium monochrome design system (black / white / neutral greys, one banana-yellow accent for ratings), Inter Tight + Inter typography, and the black WHITE MONKEY TOYS wordmark with a minimal monkey mark. Built with **Next.js 15.5 (App Router)**, React 19, TypeScript (strict), Tailwind CSS v4, TanStack Query v5, React Hook Form + zod, zustand, lucide-react and sonner.
 
-All store, category and product content comes from the KHILONA REST API (`docs/API_CONTRACT.md`). Prices, stock and totals are calculated by the backend. The client only displays them.
+All store, category and product content comes from the REST API (`docs/API_CONTRACT.md`). Prices, stock and totals are calculated by the backend. The client only displays them.
 
 ## Quick start
 
@@ -36,6 +36,14 @@ No URL is hard-coded. `next.config.ts` builds `images.remotePatterns` from these
 | `npm run typecheck` | Runs `tsc --noEmit` |
 | `npm run test:e2e` | Runs the Playwright e2e suite (desktop + mobile Chromium) |
 | `npm run screenshots` | Runs a responsive screenshot sweep (see Testing) |
+
+## Customer accounts
+
+- `/login`, `/signup`, `/forgot-password`, `/reset-password` and `/account/*` (overview, orders, order details with tracking/reviews/documents, profile, reviews, documents).
+- The access token lives **in memory only** (`lib/auth/session.ts`); the refresh token is an httpOnly cookie set by the API. A non-sensitive `wmt-signed-in` flag in localStorage only decides whether to attempt a silent refresh on page load.
+- `lib/api/authed.ts` attaches the token, refreshes once on 401 and retries; if the refresh fails the session ends with a "session expired" notice.
+- Guest checkout and guest tracking keep working without an account; signed-in checkout links the order to the account.
+- Review eligibility, order ownership and document access are decided by the API — the UI only renders what it returns.
 
 ## Routes
 

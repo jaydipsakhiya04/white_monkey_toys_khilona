@@ -287,10 +287,10 @@ export function heroSvg(): string {
   const place = (kind: ArtKind, color: string, x: number, y: number, s: number, r = 0) =>
     `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s}) translate(-400 -400)">${art[kind](color)}</g>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-    <rect width="1600" height="900" fill="#FDEEE8"/>
-    <circle cx="1240" cy="420" r="380" fill="#FFF1C9"/>
-    <circle cx="1450" cy="130" r="90" fill="#DDF2EE"/>
-    <circle cx="960" cy="760" r="120" fill="#E6E9FF"/>
+    <rect width="1600" height="900" fill="#F4F4F2"/>
+    <circle cx="1240" cy="420" r="380" fill="#EAEAE6"/>
+    <circle cx="1450" cy="130" r="90" fill="#F7E7B4"/>
+    <circle cx="960" cy="760" r="120" fill="#E4E4E0"/>
     ${place('blocks', '#7B6CF6', 1010, 560, 0.55, -4)}
     ${place('teddy', '#C68B59', 1290, 420, 0.72)}
     ${place('car', '#E4572E', 1080, 300, 0.45, 6)}

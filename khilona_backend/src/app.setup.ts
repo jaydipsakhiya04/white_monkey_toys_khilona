@@ -39,6 +39,7 @@ export function configureApp(app: NestExpressApplication): AppConfig {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Disposition'],
     maxAge: 86400,
   });
 
@@ -57,14 +58,16 @@ export function configureApp(app: NestExpressApplication): AppConfig {
 
   if (config.swaggerEnabled) {
     const doc = new DocumentBuilder()
-      .setTitle('Khilona API')
+      .setTitle('White Monkey Toys API (Khilona)')
       .setDescription(
-        'REST API for the Khilona shop: storefront catalogue, cart validation, guest orders and the admin panel.\n\n' +
+        'REST API for the White Monkey Toys shop (project Khilona): storefront catalogue, cart validation, guest & account orders, reviews, documents and the admin panel.\n\n' +
           'All responses use the envelope `{ success, message, data }`; errors use `{ success: false, statusCode, message, errors[] }`.\n\n' +
-          'Admin endpoints require `Authorization: Bearer <accessToken>` from `POST /api/auth/login`.',
+          'Admin endpoints require `Authorization: Bearer <accessToken>` from `POST /api/auth/login`.\n\n' +
+          'Customer endpoints (`/api/customer/*`) require a customer token from `POST /api/auth/customer/login`.',
       )
       .setVersion('1.0.0')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
+      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'customer-token')
       .addCookieAuth('khilona_rt')
       .build();
     const document = SwaggerModule.createDocument(app, doc);

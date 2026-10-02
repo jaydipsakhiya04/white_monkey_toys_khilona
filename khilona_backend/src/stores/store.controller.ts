@@ -10,7 +10,7 @@ const STORE_EXAMPLE = {
   message: 'Store fetched successfully',
   data: {
     id: 'clx0store0001',
-    name: 'Khilona',
+    name: 'White Monkey Toys',
     tagline: 'Toys, games & joyful gifts',
     phone: '+91 98765 43210',
     whatsapp: '919876543210',

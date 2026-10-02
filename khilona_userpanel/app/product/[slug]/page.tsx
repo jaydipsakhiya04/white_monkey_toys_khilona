@@ -7,8 +7,10 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { ProductGrid } from "@/features/catalog/product-card";
 import { ProductExperience } from "@/features/catalog/product-experience";
 import { absoluteUrl } from "@/lib/env";
-import { getProduct, getRelatedProducts, getStore } from "@/services/catalog.server";
-import type { ProductDetail, PublicStore } from "@/types/api";
+import { ProductReviews } from "@/features/reviews/product-reviews";
+import { brandName } from "@/lib/brand";
+import { getProduct, getProductReviews, getRelatedProducts, getStore } from "@/services/catalog.server";
+import type { ProductDetail, ProductReviews as ProductReviewsData, PublicStore } from "@/types/api";
 import { toPlainText } from "@/utils/format";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -37,11 +39,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function productJsonLd(product: ProductDetail, store: PublicStore | null) {
+function productJsonLd(product: ProductDetail, store: PublicStore | null, reviews: ProductReviewsData | null) {
   const url = absoluteUrl(`/product/${product.slug}`);
   const images = product.images.length ? product.images.map((i) => i.url) : product.thumbnailUrl ? [product.thumbnailUrl] : [];
   const availability = (inStock: boolean) => (inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock");
-  const seller = store ? { "@type": "Organization", name: store.name } : undefined;
+  const seller = { "@type": "Organization", name: brandName(store) };
   const offers =
     product.variants.length > 0
       ? {
@@ -52,7 +54,7 @@ function productJsonLd(product: ProductDetail, store: PublicStore | null) {
           offerCount: product.variants.length,
           availability: availability(product.inStock),
           url,
-          ...(seller ? { seller } : {}),
+          seller,
         }
       : {
           "@type": "Offer",
@@ -61,7 +63,7 @@ function productJsonLd(product: ProductDetail, store: PublicStore | null) {
           availability: availability(product.inStock),
           itemCondition: "https://schema.org/NewCondition",
           url,
-          ...(seller ? { seller } : {}),
+          seller,
         };
   return {
     "@context": "https://schema.org",
@@ -72,14 +74,28 @@ function productJsonLd(product: ProductDetail, store: PublicStore | null) {
     ...(product.sku ? { sku: product.sku } : {}),
     category: product.category.name,
     url,
-    ...(store ? { brand: { "@type": "Brand", name: store.name } } : {}),
+    brand: { "@type": "Brand", name: brandName(store) },
     offers,
+    ...(product.rating.count > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating.average, reviewCount: product.rating.count, bestRating: 5, worstRating: 1 } }
+      : {}),
+    ...(reviews?.items.length
+      ? {
+          review: reviews.items.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+            author: { "@type": "Person", name: r.authorName },
+            datePublished: r.createdAt.slice(0, 10),
+            ...(r.comment ? { reviewBody: r.comment } : {}),
+          })),
+        }
+      : {}),
   };
 }
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const [product, store, related] = await Promise.all([getProduct(slug), getStore(), getRelatedProducts(slug, 8)]);
+  const [product, store, related, reviews] = await Promise.all([getProduct(slug), getStore(), getRelatedProducts(slug, 8), getProductReviews(slug)]);
   if (!product) notFound();
 
   const crumbs: Crumb[] = [];
@@ -91,7 +107,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="pb-20 md:pb-0">
-      <JsonLd data={productJsonLd(product, store)} />
+      <JsonLd data={productJsonLd(product, store, reviews)} />
       <Container className="py-5 sm:py-8">
         <Breadcrumbs items={crumbs} className="mb-5 sm:mb-7" />
         <ProductExperience product={product} whatsapp={store?.whatsappUrl ?? store?.whatsapp ?? null} />
@@ -130,6 +146,8 @@ export default async function ProductPage({ params }: Props) {
             )}
           </div>
         )}
+
+        <ProductReviews slug={product.slug} initial={reviews} />
 
         {related.length > 0 && (
           <section aria-labelledby="related-title" className="mt-14 lg:mt-20">

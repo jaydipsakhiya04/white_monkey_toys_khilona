@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
@@ -14,13 +15,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore();
   return {
     title: "All categories",
-    description: `Browse every toy and game category at ${store?.name ?? "KHILONA"}.`,
+    description: `Browse every toy and game category at ${brandName(store)}.`,
     alternates: { canonical: "/categories" },
     openGraph: { url: "/categories" },
   };
 }
 
-const TINTS = ["bg-coral-tint", "bg-sun-tint", "bg-teal-tint", "bg-sand"];
+const TINTS = ["bg-sand", "bg-accent-tint", "bg-sand", "bg-sand"];
 
 export default async function CategoriesPage() {
   const categories = await getCategoryTree();
@@ -48,7 +49,7 @@ export default async function CategoriesPage() {
                   <SmartImage src={c.imageUrl} alt="" fill sizes="96px" className="object-cover" fallbackClassName="bg-transparent" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-display text-lg font-bold leading-tight text-ink group-hover:text-coral-700 sm:text-xl">{c.name}</span>
+                  <span className="block font-display text-lg font-bold leading-tight text-ink group-hover:text-ink sm:text-xl">{c.name}</span>
                   <span className="mt-1 block text-sm text-muted">{pluralize(c.productCount, "product")}</span>
                 </span>
               </Link>

@@ -1,11 +1,13 @@
 "use client";
 
-import { Check, CheckCircle2, Copy, Phone, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Check, CheckCircle2, Copy, Package, Phone, ShieldCheck, Truck, UserRoundPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ButtonAnchor, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WhatsAppIcon } from "@/components/icons/brand";
+import { useAuth } from "@/features/auth/auth-provider";
 import { useCartStore } from "@/features/cart/cart-store";
 import { readOrderSnapshot, saveOrderSnapshot } from "@/features/checkout/order-storage";
 import type { PublicOrder } from "@/types/api";
@@ -30,6 +32,7 @@ export function SuccessView({
   const [copied, setCopied] = useState(false);
   const clearCart = useCartStore((s) => s.clear);
   const hydrated = useCartStore((s) => s.hydrated);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     setOrder(readOrderSnapshot(orderNumber));
@@ -68,7 +71,7 @@ export function SuccessView({
     return (
       <div className="mx-auto max-w-2xl">
         <div className="text-center">
-          <span className="mx-auto grid size-16 place-items-center rounded-full bg-teal-tint text-teal-700">
+          <span className="mx-auto grid size-16 place-items-center rounded-full bg-sand text-ink">
             <ShieldCheck className="size-8" aria-hidden="true" />
           </span>
           <h1 className="mt-4 text-3xl font-extrabold text-ink sm:text-4xl">View your order</h1>
@@ -97,9 +100,10 @@ export function SuccessView({
         <span className="mx-auto grid size-16 place-items-center rounded-full bg-success-tint text-success-700">
           <CheckCircle2 className="size-9" aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-3xl font-extrabold text-ink sm:text-[2.75rem]">Order Placed Successfully</h1>
+        <h1 className="mt-5 text-3xl font-bold tracking-tight text-ink sm:text-[2.75rem]">Order Placed Successfully</h1>
         <p className="mx-auto mt-3 max-w-xl text-base text-muted">
-          We have received your order. Our team will contact you regarding delivery/order confirmation.
+          Thank you for shopping with <span className="font-semibold text-ink">{storeName}</span>. We&apos;ll keep you updated about your order —
+          our team will contact you to confirm it and arrange delivery.
         </p>
         <div className="mt-6 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
           <span className="text-sm text-muted">Order number</span>
@@ -109,7 +113,7 @@ export function SuccessView({
           <button
             type="button"
             onClick={copy}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-coral-700 hover:bg-coral-tint"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-ink hover:bg-sand"
             aria-label="Copy order number"
           >
             {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
@@ -122,28 +126,62 @@ export function SuccessView({
         </p>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <ButtonLink href="/products" size="lg">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+        <ButtonLink href={`/track-order?orderNumber=${encodeURIComponent(order.orderNumber)}`} size="lg">
+          <Truck className="size-4" aria-hidden="true" />
+          Track order
+        </ButtonLink>
+        {isAuthenticated && order.linkedToAccount !== false && (
+          <ButtonLink href="/account/orders" size="lg" variant="outline">
+            <Package className="size-4" aria-hidden="true" />
+            View my orders
+          </ButtonLink>
+        )}
+        <ButtonLink href="/products" size="lg" variant="outline">
           Continue shopping
         </ButtonLink>
-        {phoneUrl && (
-          <ButtonAnchor href={phoneUrl} size="lg" variant="outline">
-            <Phone className="size-4" aria-hidden="true" />
-            Call store
-          </ButtonAnchor>
-        )}
-        {waUrl && (
-          <ButtonAnchor href={waUrl} target="_blank" rel="noopener noreferrer" size="lg" variant="whatsapp">
-            <WhatsAppIcon className="size-4" />
-            WhatsApp store
-          </ButtonAnchor>
-        )}
       </div>
+      {(phoneUrl || waUrl) && (
+        <p className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted">
+          Questions about your order?
+          {phoneUrl && (
+            <a href={phoneUrl} className="inline-flex items-center gap-1.5 font-semibold text-ink underline-offset-4 hover:underline">
+              <Phone className="size-4" aria-hidden="true" /> Call store
+            </a>
+          )}
+          {waUrl && (
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-ink underline-offset-4 hover:underline">
+              <WhatsAppIcon className="size-4" /> WhatsApp store
+            </a>
+          )}
+        </p>
+      )}
+
+      {!isAuthenticated && (
+        <div className="mt-8 flex flex-col gap-4 rounded-3xl bg-sand p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex gap-3">
+            <UserRoundPlus className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden="true" />
+            <div>
+              <p className="font-semibold text-ink">Create an account to easily track all your future orders.</p>
+              <p className="mt-1 text-sm text-muted">
+                Optional. You can always track this order with its number and your mobile on the{" "}
+                <Link href="/track-order" className="underline underline-offset-4">
+                  Track Order
+                </Link>{" "}
+                page — or add it to your new account later.
+              </p>
+            </div>
+          </div>
+          <ButtonLink href="/signup" variant="dark" className="shrink-0">
+            Create account
+          </ButtonLink>
+        </div>
+      )}
 
       <div className="mt-10 space-y-6 rounded-3xl border border-line bg-surface p-5 sm:p-8">
         <OrderCustomer order={order} />
         <section aria-labelledby="items-title">
-          <h2 id="items-title" className="text-lg font-bold text-ink">
+          <h2 id="items-title" className="text-lg font-semibold text-ink">
             Items ({order.itemsCount})
           </h2>
           <OrderItems order={order} />

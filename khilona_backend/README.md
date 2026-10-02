@@ -48,7 +48,11 @@ npm run start:dev             # http://localhost:4000/api
 
 ```
 src/
-├── auth/            login, rotating refresh tokens (httpOnly cookie), profile, password
+├── auth/            admin login, rotating refresh tokens (httpOnly cookie), profile, password
+├── customer-auth/   storefront accounts: signup/login/refresh/logout, password reset & change (own JWT audience + wmt_crt cookie)
+├── account/         /customer/*: profile, own orders (list/detail/claim/cancel), invoice & receipt downloads, guest document lookup
+├── reviews/         verified-purchase reviews: public listing + summary, customer CRUD, admin moderation
+├── documents/       invoice / receipt PDFs (pdfkit, Inter font in assets/fonts) from order snapshots
 ├── admins/          admin users (SUPER_ADMIN only)
 ├── stores/          single-row store configuration (public + admin)
 ├── categories/      2-level category tree, safe deletion (move products first)
@@ -57,7 +61,7 @@ src/
 │   └── product.mapper.ts
 ├── orders/          cart validation, order placement, status workflow, tracking
 │   ├── cart-pricing.service.ts   single source of truth for line pricing & availability
-│   ├── order-number.service.ts   KH-YYYYMMDD-NNNN (atomic per-day counter)
+│   ├── order-number.service.ts   WMT-YYYYMMDD-NNNN (atomic per-day counter)
 │   └── order-status.ts           allowed transitions
 ├── uploads/         image upload → sharp (validate, resize ≤1600px, WebP) → storage provider
 │   └── storage/     local disk or any S3-compatible bucket
@@ -88,7 +92,7 @@ Lists return `{ items, meta: { page, limit, total, totalPages, hasNextPage, hasP
 - **Order snapshots.** Order items store name, SKU, options, image, category, MRP and price at purchase time; editing or deleting a product never changes past orders.
 - **Stock strategy.** Stock is reserved (decremented) when the order is placed, with conditional updates (`stock >= qty`) inside a transaction so stock can never go negative — verified by a concurrent-checkout test. Cancelling an order restores the stock **once** (`stockRestored` flag). Delivered orders do not change stock.
 - **Status lifecycle.** `PENDING → CONFIRMED → PROCESSING → READY → OUT_FOR_DELIVERY → DELIVERED`, forward-only (steps may be skipped, e.g. READY → DELIVERED for pickup). `CANCELLED` is reachable from any open state. Every change is stored in `OrderStatusHistory` with the admin and an optional note. Concurrent updates are rejected (optimistic check on the current status).
-- **Order numbers.** `KH-YYYYMMDD-NNNN` in the store timezone (`APP_TIMEZONE`), allocated with `INSERT … ON CONFLICT DO UPDATE … RETURNING` on a per-day counter row inside the order transaction, plus a unique index.
+- **Order numbers.** `WMT-YYYYMMDD-NNNN` (prefix from `ORDER_NUMBER_PREFIX`) in the store timezone (`APP_TIMEZONE`), allocated with `INSERT … ON CONFLICT DO UPDATE … RETURNING` on a per-day counter row inside the order transaction, plus a unique index.
 - **Variants.** Products can have option groups (Color, Size, Age…) and variants (combinations) with their own SKU, price override, sale price, stock and image. Variants are matched by option combination on update, so IDs (and carts) stay valid. `Product.stock/minPrice/maxPrice` are maintained aggregates used for fast filtering.
 - **Deletion.** Products referenced by orders are archived (soft-deleted, slug/SKU released); others are deleted. Categories with sub-categories cannot be deleted; categories with products require `moveProductsTo`.
 - **Guest checkout.** Customers are upserted by phone (`Customer` table) — ready for future accounts.

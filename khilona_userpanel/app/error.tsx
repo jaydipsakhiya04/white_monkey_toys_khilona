@@ -13,7 +13,7 @@ export default function RouteError({ error, reset }: { error: Error & { digest?:
   return (
     <Container className="py-16 sm:py-24">
       <div className="mx-auto max-w-xl text-center" role="alert">
-        <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-coral-tint font-display text-3xl font-extrabold text-coral-700" aria-hidden="true">
+        <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-sand font-display text-3xl font-extrabold text-ink" aria-hidden="true">
           !
         </span>
         <h1 className="mt-5 text-3xl font-extrabold text-ink sm:text-4xl">Oops, something went wrong</h1>

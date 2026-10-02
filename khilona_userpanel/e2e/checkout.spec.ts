@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const ORDER_NUMBER = /^KH-\d{8}-\d{4,}$/;
+// prefix is configurable (ORDER_NUMBER_PREFIX); older orders may still use the previous one
+const ORDER_NUMBER = /^[A-Z]{2,6}-\d{8}-\d{4,}$/;
 const API_URL = (process.env.E2E_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").replace(/\/+$/, "");
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@khilona.in";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Admin@12345";

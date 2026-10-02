@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { isApiError } from "@/lib/api/errors";
+import { AuthBootstrap } from "@/features/auth/auth-provider";
 import { selectCount, useCartStore } from "@/features/cart/cart-store";
 
 function CartHydrator() {
@@ -62,6 +63,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <CartHydrator />
+      <AuthBootstrap />
       <CartAnnouncer />
       {children}
       <Toaster
@@ -69,9 +71,9 @@ export function Providers({ children }: { children: ReactNode }) {
         offset={16}
         toastOptions={{
           classNames: {
-            toast: "!rounded-2xl !border !border-line !bg-surface !text-ink !shadow-lift !font-sans",
+            toast: "!rounded-2xl !border !border-line !bg-surface !text-ink !shadow-lift !font-sans !text-[0.9rem]",
             description: "!text-muted",
-            actionButton: "!bg-coral-600 !text-white !rounded-lg !font-semibold",
+            actionButton: "!bg-ink !text-white !rounded-full !font-semibold",
           },
         }}
       />

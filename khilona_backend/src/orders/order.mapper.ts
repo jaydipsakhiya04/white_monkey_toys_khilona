@@ -6,6 +6,7 @@ import { ORDER_TRANSITIONS } from './order-status';
 export const orderDetailInclude = {
   items: { orderBy: { createdAt: 'asc' } },
   history: { orderBy: { createdAt: 'asc' } },
+  customer: { select: { id: true, registeredAt: true } },
 } satisfies Prisma.OrderInclude;
 
 export type OrderDetailRow = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
@@ -128,6 +129,10 @@ export function toAdminOrderDetail(order: OrderDetailRow, storeName: string, cus
       mapsUrl: mapsUrlFor(order),
     },
     customerOrdersCount,
+    /** The order shows up under "My orders" of a customer account. */
+    linkedToAccount: order.accountLinkedAt !== null,
+    /** The customer record behind this order has a registered account. */
+    customerHasAccount: !!order.customer?.registeredAt,
   };
 }
 
@@ -145,5 +150,59 @@ export function toAdminOrderListItem(row: OrderListRow) {
     itemsPreview: row.items.map((i) => i.productName),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+// ─── Customer account views ───────────────────────────────────
+
+export const customerOrderListSelect = {
+  id: true,
+  orderNumber: true,
+  status: true,
+  itemsCount: true,
+  total: true,
+  paymentMethod: true,
+  paymentStatus: true,
+  createdAt: true,
+  deliveredAt: true,
+  items: { select: { productName: true, imageUrl: true, quantity: true }, orderBy: { createdAt: 'asc' }, take: 4 },
+  _count: { select: { items: true } },
+} satisfies Prisma.OrderSelect;
+
+export type CustomerOrderListRow = Prisma.OrderGetPayload<{ select: typeof customerOrderListSelect }>;
+
+export function toCustomerOrderListItem(row: CustomerOrderListRow) {
+  return {
+    orderNumber: row.orderNumber,
+    status: row.status,
+    itemsCount: row.itemsCount,
+    linesCount: row._count.items,
+    total: toNumber(row.total),
+    paymentMethod: row.paymentMethod,
+    paymentStatus: row.paymentStatus,
+    createdAt: row.createdAt,
+    deliveredAt: row.deliveredAt,
+    itemsPreview: row.items.map((i) => ({ productName: i.productName, imageUrl: i.imageUrl, quantity: i.quantity })),
+  };
+}
+
+export interface ItemReviewState {
+  review: { id: string; rating: number; comment: string | null; status: string; createdAt: Date; updatedAt: Date } | null;
+  canReview: boolean;
+}
+
+/**
+ * Detailed order for its owner. Review eligibility is computed by the API (never the client):
+ * see ReviewsService.reviewStateForOrder.
+ */
+export function toCustomerOrderDetail(order: OrderDetailRow, reviewState: (productId: string | null) => ItemReviewState) {
+  const base = toPublicOrder(order);
+  return {
+    ...base,
+    deliveredAt: order.deliveredAt,
+    cancelledAt: order.cancelledAt,
+    items: order.items.map((item) => ({ ...publicItem(item), productId: item.productId, ...reviewState(item.productId) })),
+    canCancel: order.status === 'PENDING',
+    documents: { invoice: order.status !== 'CANCELLED', receipt: true },
   };
 }

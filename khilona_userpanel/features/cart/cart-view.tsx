@@ -31,7 +31,7 @@ export function CartView() {
         headingLevel="h2"
         icon={<ShoppingBag />}
         title="Your cart is empty"
-        description="Looks like you haven't added anything yet. Let's find something fun!"
+        description="Your cart is waiting for something fun."
       >
         <ButtonLink href="/products">Start shopping</ButtonLink>
         <ButtonLink href="/categories" variant="outline">
@@ -68,7 +68,7 @@ export function CartView() {
           </div>
         )}
         {v.error ? (
-          <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-sun-tint p-4 text-sm text-ink">
+          <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-accent-tint p-4 text-sm text-ink">
             <Info className="size-5 shrink-0" aria-hidden="true" />
             <p className="min-w-0 flex-1">{errorMessage(v.error, "We couldn't check the latest prices and stock.")}</p>
             <Button size="sm" variant="outline" onClick={() => v.refetch()} loading={v.isFetching}>
@@ -83,7 +83,7 @@ export function CartView() {
           ))}
         </ul>
 
-        <Link href="/products" className="mt-5 inline-flex items-center gap-2 rounded-lg py-2 text-sm font-semibold text-ink hover:text-coral-600">
+        <Link href="/products" className="mt-5 inline-flex items-center gap-2 rounded-lg py-2 text-sm font-semibold text-ink underline-offset-4 hover:underline">
           <ArrowLeft className="size-4" aria-hidden="true" />
           Continue shopping
         </Link>
@@ -120,7 +120,7 @@ export function CartView() {
           </Button>
           {v.hasIssues && <p className="mt-2 text-center text-xs font-medium text-danger-700">Resolve the highlighted items to continue.</p>}
           <p className="mt-4 flex items-start gap-2 text-xs text-muted">
-            <Banknote className="size-4 shrink-0 text-teal" aria-hidden="true" />
+            <Banknote className="size-4 shrink-0 text-ink" aria-hidden="true" />
             Pay with cash on delivery. No online payment needed.
           </p>
         </div>
@@ -181,7 +181,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <Link href={`/product/${slug}`} className="line-clamp-2 font-semibold leading-snug text-ink hover:text-coral-700">
+            <Link href={`/product/${slug}`} className="line-clamp-2 font-semibold leading-snug text-ink underline-offset-4 hover:underline">
               {name}
             </Link>
             {options && Object.keys(options).length > 0 && (
@@ -209,7 +209,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
           </p>
         )}
         {!message && note && (
-          <p className="flex items-center gap-1.5 text-sm font-medium text-coral-700" role="status">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-ink" role="status">
             <Info className="size-4 shrink-0" aria-hidden="true" />
             {note}
           </p>

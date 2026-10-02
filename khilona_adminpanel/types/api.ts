@@ -73,6 +73,7 @@ export type Store = {
   termsAndConditions: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  reviewsRequireApproval: boolean;
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -345,6 +346,9 @@ export type AdminOrderDetail = {
   allowedTransitions: OrderStatus[];
   contact: { callUrl: string; whatsappUrl: string; alternateCallUrl: string | null; mapsUrl: string | null };
   customerOrdersCount: number;
+  /** Visible under the customer's "My orders" */
+  linkedToAccount?: boolean;
+  customerHasAccount?: boolean;
 };
 
 export type OrderSort = 'newest' | 'oldest' | 'total_desc' | 'total_asc';
@@ -364,3 +368,24 @@ export type OrderStatusCounts = Record<OrderStatus | 'ALL', number>;
 // ---------- Admins ----------
 export type AdminCreateInput = { name: string; email: string; password: string; phone?: string; role: AdminRole };
 export type AdminUpdateInput = { name?: string; phone?: string; role?: AdminRole; isActive?: boolean; password?: string };
+
+// ─── Reviews (moderation) ───────────────────────────────────
+export const REVIEW_STATUSES = ['PENDING', 'APPROVED', 'HIDDEN'] as const;
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
+
+export type AdminReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  status: ReviewStatus;
+  verifiedPurchase: boolean;
+  product: { id: string; name: string; slug: string; thumbnailUrl: string | null };
+  customer: { id: string; name: string; phone: string };
+  order: { id: string; orderNumber: string };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReviewListParams = { status?: ReviewStatus; rating?: number; search?: string; page?: number; limit?: number };
+
+export type AdminReviewList = Paginated<AdminReview> & { statusCounts: Record<ReviewStatus | 'ALL', number> };

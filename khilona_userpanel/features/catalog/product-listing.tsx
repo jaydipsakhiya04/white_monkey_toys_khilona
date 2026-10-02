@@ -89,7 +89,7 @@ export async function ProductListing({
                 ) : (
                   <EmptyState
                     icon={<PackageSearch />}
-                    title="No products found"
+                    title="No toys found"
                     description={hasFilters ? "No products match these filters. Try removing a few." : "New products are on their way. Check back soon!"}
                   >
                     {hasFilters ? <ClearFiltersButton /> : <ButtonLink href="/products">Shop all products</ButtonLink>}

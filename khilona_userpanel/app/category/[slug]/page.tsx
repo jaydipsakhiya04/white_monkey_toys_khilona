@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,7 +27,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const title = category.seoTitle || category.name;
   const description =
     toPlainText(category.seoDescription || category.description) ||
-    `Shop ${category.name} at ${store?.name ?? "KHILONA"}. ${pluralize(category.productCount, "product")} available — pay on delivery.`;
+    `Shop ${category.name} at ${brandName(store)}. ${pluralize(category.productCount, "product")} available — pay on delivery.`;
   const canonical = `/category/${category.slug}${sp.page > 1 ? `?page=${sp.page}` : ""}`;
   return {
     title,

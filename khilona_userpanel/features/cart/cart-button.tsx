@@ -12,7 +12,7 @@ export function CartCountBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-coral-600 px-1 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-surface",
+        "absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[0.6875rem] font-bold leading-none text-white ring-2 ring-surface animate-pop-in",
         className,
       )}
       aria-hidden="true"
@@ -34,7 +34,7 @@ export function CartButton() {
     <Link
       href="/cart"
       aria-label={label}
-      className="relative grid size-11 place-items-center rounded-xl text-ink transition-colors hover:bg-sand"
+      className="relative grid size-11 place-items-center rounded-full text-ink transition-colors hover:bg-sand"
     >
       <ShoppingBag className="size-[1.375rem]" aria-hidden="true" />
       <CartCountBadge />

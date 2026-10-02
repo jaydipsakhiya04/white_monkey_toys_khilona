@@ -18,6 +18,8 @@ export const cardSelect = {
   lowStockThreshold: true,
   isFeatured: true,
   hasVariants: true,
+  ratingAvg: true,
+  ratingCount: true,
   createdAt: true,
   category: { select: { id: true, name: true, slug: true } },
 } satisfies Prisma.ProductSelect;
@@ -106,6 +108,8 @@ export function toProductCard(row: CardRow) {
     isFeatured: row.isFeatured,
     hasVariants: row.hasVariants,
     category: row.category,
+    /** Published verified-purchase reviews (average 0 when none). */
+    rating: { average: toNumber(row.ratingAvg), count: row.ratingCount },
     createdAt: row.createdAt,
   };
 }

@@ -34,7 +34,7 @@ export async function seedBasics(prisma: PrismaService) {
       { name: 'Staff', email: STAFF.email, passwordHash: await bcrypt.hash(STAFF.password, 4), role: 'ADMIN' },
     ],
   });
-  await prisma.store.create({ data: { name: 'Khilona Test', phone: '9876543210', whatsapp: '919876543210' } });
+  await prisma.store.create({ data: { name: 'White Monkey Toys Test', phone: '9876543210', whatsapp: '919876543210' } });
 }
 
 export async function login(app: INestApplication, creds = SUPER) {

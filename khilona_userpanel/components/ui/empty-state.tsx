@@ -25,7 +25,7 @@ export function EmptyState({
       )}
     >
       {icon && (
-        <div className="mb-4 grid size-16 place-items-center rounded-2xl bg-sand text-coral [&_svg]:size-7" aria-hidden="true">
+        <div className="mb-4 grid size-16 place-items-center rounded-2xl bg-sand text-ink [&_svg]:size-7" aria-hidden="true">
           {icon}
         </div>
       )}

@@ -321,7 +321,7 @@ describe('Khilona API (e2e)', () => {
         .expect(201);
       const order = res.body.data;
       orderNumber = order.orderNumber;
-      expect(orderNumber).toMatch(/^KH-\d{8}-0001$/);
+      expect(orderNumber).toMatch(/^WMT-\d{8}-0001$/);
       expect(order).toMatchObject({
         status: 'PENDING',
         customerPhone: '9825012345',

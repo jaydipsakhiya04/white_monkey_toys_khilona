@@ -12,6 +12,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { AdminAuth, AuthenticatedAdmin, CurrentAdmin } from '../common/decorators/auth.decorators';
+import { AuthenticatedCustomer, CurrentCustomer, OptionalCustomerAuth } from '../common/decorators/customer-auth.decorators';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import { loadConfig } from '../config/configuration';
 import { CartPricingService } from './cart-pricing.service';
@@ -26,12 +27,13 @@ import {
 import { OrdersService } from './orders.service';
 
 const orderLimit = () => loadConfig().throttle.orderLimit;
+const trackLimit = () => loadConfig().throttle.trackLimit;
 
 const PUBLIC_ORDER_EXAMPLE = {
   success: true,
   message: 'Order placed successfully',
   data: {
-    orderNumber: 'KH-20261002-0001',
+    orderNumber: 'WMT-20261002-0001',
     status: 'PENDING',
     createdAt: '2026-10-02T09:30:00.000Z',
     customerName: 'Ananya Mehta',
@@ -81,16 +83,21 @@ export class OrdersController {
   @Post('orders')
   @Throttle({ default: { limit: orderLimit, ttl: 60_000 } })
   @ResponseMessage('Order placed successfully')
-  @ApiOperation({ summary: 'Place an order (guest checkout, no online payment)' })
+  @OptionalCustomerAuth()
+  @ApiOperation({
+    summary: 'Place an order (pay on delivery, no online payment)',
+    description: 'Works for guests. With a customer access token the order is linked to that account (My orders).',
+  })
   @ApiCreatedResponse({ schema: { example: PUBLIC_ORDER_EXAMPLE } })
   @ApiUnprocessableEntityResponse({ description: 'Validation failed' })
   @ApiConflictResponse({ description: 'Items unavailable / insufficient stock' })
   @ApiForbiddenResponse({ description: 'Store is not accepting orders' })
-  create(@Body() dto: CreateOrderDto, @Req() req: Request) {
-    return this.orders.create(dto, { ip: req.ip, userAgent: req.headers['user-agent'] });
+  create(@Body() dto: CreateOrderDto, @Req() req: Request, @CurrentCustomer() customer?: AuthenticatedCustomer) {
+    return this.orders.create(dto, { ip: req.ip, userAgent: req.headers['user-agent'] }, customer);
   }
 
   @Get('orders/track')
+  @Throttle({ default: { limit: trackLimit, ttl: 60_000 } })
   @ResponseMessage('Order fetched successfully')
   @ApiOperation({ summary: 'Track an order with order number + mobile number' })
   @ApiOkResponse({ schema: { example: PUBLIC_ORDER_EXAMPLE } })

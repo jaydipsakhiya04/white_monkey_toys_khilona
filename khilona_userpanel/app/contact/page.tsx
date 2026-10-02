@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, Truck } from "lucide-react";
@@ -10,7 +11,7 @@ import { getStore } from "@/services/catalog.server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore();
-  const name = store?.name ?? "KHILONA";
+  const name = brandName(store);
   return {
     title: "Contact us",
     description: `Call, WhatsApp or visit ${name}. Store address, opening hours and directions.`,
@@ -34,7 +35,7 @@ export default async function ContactPage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {store.email && (
               <a href={`mailto:${store.email}`} className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-coral-tint text-coral-700">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-ink">
                   <Mail className="size-5" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
@@ -44,7 +45,7 @@ export default async function ContactPage() {
               </a>
             )}
             <Link href="/track-order" className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-teal-tint text-teal-700">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-ink">
                 <Truck className="size-5" aria-hidden="true" />
               </span>
               <span>

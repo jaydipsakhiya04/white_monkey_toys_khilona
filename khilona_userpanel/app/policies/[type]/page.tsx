@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const store = await getStore();
   return {
     title: POLICY_TYPES[type].title,
-    description: `${POLICY_TYPES[type].title} of ${store?.name ?? "KHILONA"}.`,
+    description: `${POLICY_TYPES[type].title} of ${brandName(store)}.`,
     alternates: { canonical: `/policies/${type}` },
   };
 }

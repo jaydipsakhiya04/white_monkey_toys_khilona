@@ -1,4 +1,4 @@
-import type { CategoryListParams, OrderListParams, ProductListParams } from '@/types/api';
+import type { CategoryListParams, OrderListParams, ProductListParams, ReviewListParams } from '@/types/api';
 
 export const qk = {
   me: ['auth', 'me'] as const,
@@ -21,4 +21,8 @@ export const qk = {
     options: ['categories', 'options'] as const,
   },
   admins: ['admins'] as const,
+  reviews: {
+    all: ['reviews'] as const,
+    list: (p: ReviewListParams) => ['reviews', 'list', p] as const,
+  },
 };

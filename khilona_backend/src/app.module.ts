@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AccountModule } from './account/account.module';
 import { AdminsModule } from './admins/admins.module';
 import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -10,12 +11,14 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { AppConfigModule } from './config/config.module';
 import { APP_CONFIG, AppConfig } from './config/configuration';
+import { CustomerAuthModule } from './customer-auth/customer-auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { StoreModule } from './stores/store.module';
 import { UploadsModule } from './uploads/uploads.module';
 
@@ -43,6 +46,9 @@ import { UploadsModule } from './uploads/uploads.module';
     CategoriesModule,
     ProductsModule,
     OrdersModule,
+    CustomerAuthModule,
+    AccountModule,
+    ReviewsModule,
     UploadsModule,
     DashboardModule,
   ],

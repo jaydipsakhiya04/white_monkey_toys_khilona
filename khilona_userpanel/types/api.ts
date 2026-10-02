@@ -122,6 +122,8 @@ export type ProductCard = {
   isFeatured: boolean;
   hasVariants: boolean;
   category: CategoryRef;
+  /** Published verified-purchase reviews (average 0 when none). */
+  rating: ProductRating;
   createdAt: string;
 };
 
@@ -162,7 +164,7 @@ export type ProductDetail = Omit<ProductCard, "category"> & {
   updatedAt: string;
 };
 
-export type ProductSort = "featured" | "newest" | "price_asc" | "price_desc" | "name_asc" | "name_desc";
+export type ProductSort = "featured" | "popular" | "newest" | "price_asc" | "price_desc" | "name_asc" | "name_desc";
 
 export type ProductQuery = {
   category?: string;
@@ -268,6 +270,99 @@ export type PublicOrder = {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   history: { status: OrderStatus; createdAt: string }[];
+  /** Only on order placement: the order was linked to the signed-in account. */
+  linkedToAccount?: boolean;
 };
 
 export type HealthStatus = { status: "ok"; database: "up" | "down"; uptime: number; timestamp: string };
+
+// ─── Ratings & reviews ──────────────────────────────────────
+
+export type ProductRating = { average: number; count: number };
+
+export type ReviewStatus = "PENDING" | "APPROVED" | "HIDDEN";
+
+export type PublicReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  authorName: string;
+  variantTitle: string | null;
+  verifiedPurchase: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReviewSummary = {
+  average: number;
+  count: number;
+  distribution: Record<"1" | "2" | "3" | "4" | "5", number>;
+};
+
+export type ProductReviews = Paginated<PublicReview> & { summary: ReviewSummary };
+
+export type OwnReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  status: ReviewStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MyReview = OwnReview & {
+  orderNumber: string;
+  product: { id: string; name: string; slug: string | null; thumbnailUrl: string | null };
+};
+
+// ─── Customer accounts ──────────────────────────────────────
+
+export type CustomerProfile = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string;
+  registeredAt: string | null;
+  createdAt: string;
+};
+
+export type CustomerAuthResponse = { accessToken: string; expiresIn: number; customer: CustomerProfile };
+
+export type SignupInput = { name: string; email: string; phone: string; password: string };
+
+export type CustomerOrderListItem = {
+  orderNumber: string;
+  status: OrderStatus;
+  itemsCount: number;
+  linesCount: number;
+  total: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+  deliveredAt: string | null;
+  itemsPreview: { productName: string; imageUrl: string | null; quantity: number }[];
+};
+
+export type CustomerOrderSummary = {
+  totalOrders: number;
+  activeOrders: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  recentOrders: CustomerOrderListItem[];
+};
+
+export type CustomerOrderItem = PublicOrder["items"][number] & {
+  productId: string | null;
+  review: OwnReview | null;
+  canReview: boolean;
+};
+
+export type CustomerOrder = Omit<PublicOrder, "items"> & {
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  items: CustomerOrderItem[];
+  canCancel: boolean;
+  documents: { invoice: boolean; receipt: boolean };
+};
+
+export type DocumentKind = "invoice" | "receipt";

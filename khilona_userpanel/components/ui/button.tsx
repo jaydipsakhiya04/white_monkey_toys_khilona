@@ -3,20 +3,23 @@ import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type 
 import { cn } from "@/utils/cn";
 import { Spinner } from "./spinner";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "dark" | "whatsapp" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "dark" | "whatsapp" | "danger" | "inverse" | "outline-inverse";
 export type ButtonSize = "sm" | "card" | "md" | "lg" | "icon" | "icon-sm";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-semibold whitespace-nowrap select-none transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-[-0.005em] whitespace-nowrap select-none transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-coral-600 text-white hover:bg-coral-700",
-  dark: "bg-ink text-white hover:bg-ink/90",
-  secondary: "bg-coral-tint text-coral-700 hover:bg-[#fbe1d6]",
-  outline: "border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-sand/60",
+  primary: "bg-ink text-white hover:bg-ink-soft",
+  dark: "bg-ink text-white hover:bg-ink-soft",
+  secondary: "bg-sand text-ink hover:bg-sand-deep",
+  outline: "border border-line-strong bg-surface text-ink hover:border-ink",
   ghost: "text-ink hover:bg-sand",
-  whatsapp: "bg-success-700 text-white hover:bg-[#106437]",
-  danger: "bg-danger-700 text-white hover:bg-[#9a1f1f]",
+  whatsapp: "bg-success-700 text-white hover:bg-[#12522a]",
+  danger: "bg-danger-700 text-white hover:bg-[#991b1b]",
+  /** on dark backgrounds */
+  inverse: "bg-white text-ink hover:bg-white/90",
+  "outline-inverse": "border border-white/30 text-white hover:border-white",
 };
 
 const sizes: Record<ButtonSize, string> = {

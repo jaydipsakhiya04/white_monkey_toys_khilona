@@ -20,12 +20,12 @@ export function Price({ price, effectivePrice, discountPercent = 0, minPrice, ma
   return (
     <div className={cn("flex flex-wrap items-baseline gap-x-2 gap-y-1", className)}>
       {hasRange ? (
-        <p className={cn("font-display font-bold text-ink tabular-nums", main)}>
+        <p className={cn("font-display font-semibold tracking-[-0.01em] text-ink tabular-nums", main)}>
           <span className="mr-1 text-[0.7em] font-semibold text-muted">From</span>
           {formatPrice(minPrice)}
         </p>
       ) : (
-        <p className={cn("font-display font-bold text-ink tabular-nums", main)}>
+        <p className={cn("font-display font-semibold tracking-[-0.01em] text-ink tabular-nums", main)}>
           <span className="sr-only">{onSale ? "Sale price: " : "Price: "}</span>
           {formatPrice(effectivePrice)}
         </p>
@@ -37,7 +37,7 @@ export function Price({ price, effectivePrice, discountPercent = 0, minPrice, ma
         </p>
       )}
       {onSale && showBadge && discountPercent > 0 && (
-        <span className="rounded-full bg-coral-tint px-2 py-0.5 text-xs font-bold text-coral-700">{discountPercent}% off</span>
+        <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-semibold text-white">{discountPercent}% off</span>
       )}
     </div>
   );

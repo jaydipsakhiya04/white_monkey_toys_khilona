@@ -52,7 +52,7 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
         {address.length > 0 && (
           <div className="flex gap-3">
             <dt>
-              <MapPin className="mt-0.5 size-5 text-coral-600" aria-hidden="true" />
+              <MapPin className="mt-0.5 size-5 text-ink" aria-hidden="true" />
               <span className="sr-only">Address</span>
             </dt>
             <dd className="text-ink">
@@ -67,7 +67,7 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
         {store.phone && (
           <div className="flex gap-3">
             <dt>
-              <Phone className="mt-0.5 size-5 text-coral-600" aria-hidden="true" />
+              <Phone className="mt-0.5 size-5 text-ink" aria-hidden="true" />
               <span className="sr-only">Phone</span>
             </dt>
             <dd>
@@ -80,7 +80,7 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
         {store.whatsapp && (
           <div className="flex gap-3">
             <dt>
-              <WhatsAppIcon className="mt-0.5 size-5 text-coral-600" />
+              <WhatsAppIcon className="mt-0.5 size-5 text-ink" />
               <span className="sr-only">WhatsApp</span>
             </dt>
             <dd>
@@ -93,7 +93,7 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
         {hours && (
           <div className="flex gap-3">
             <dt>
-              <Clock className="mt-0.5 size-5 text-coral-600" aria-hidden="true" />
+              <Clock className="mt-0.5 size-5 text-ink" aria-hidden="true" />
               <span className="sr-only">Opening hours</span>
             </dt>
             <dd className="text-ink">{hours}</dd>

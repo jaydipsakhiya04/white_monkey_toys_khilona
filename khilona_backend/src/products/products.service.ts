@@ -16,6 +16,8 @@ export const STOREFRONT_PRODUCT: Prisma.ProductWhereInput = {
 
 const SORTS: Record<PublicSort, Prisma.ProductOrderByWithRelationInput[]> = {
   featured: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
+  /** Most reviewed, best rated first (verified-purchase reviews only), then featured. */
+  popular: [{ ratingCount: 'desc' }, { ratingAvg: 'desc' }, { isFeatured: 'desc' }, { createdAt: 'desc' }],
   newest: [{ createdAt: 'desc' }],
   price_asc: [{ minPrice: 'asc' }],
   price_desc: [{ maxPrice: 'desc' }],

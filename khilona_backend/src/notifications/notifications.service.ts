@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
+import { APP_CONFIG, AppConfig } from '../config/configuration';
 
 export interface OrderEvent {
   orderId: string;
@@ -10,30 +11,47 @@ export interface OrderEvent {
   itemsCount: number;
 }
 
+export interface PasswordResetEvent {
+  customerId: string;
+  name: string;
+  email: string | null;
+  phone: string;
+  resetUrl: string;
+  expiresAt: Date;
+}
+
 /**
  * A notification channel (WhatsApp, SMS, email, push…). Implementations can be registered
- * in NotificationsModule later without touching order logic.
+ * in NotificationsModule later without touching order or account logic.
  */
 export interface NotificationChannel {
   readonly name: string;
   orderPlaced?(event: OrderEvent): Promise<void>;
   orderStatusChanged?(event: OrderEvent & { from: OrderStatus; to: OrderStatus }): Promise<void>;
+  passwordResetRequested?(event: PasswordResetEvent): Promise<void>;
 }
 
 export const NOTIFICATION_CHANNELS = Symbol('NOTIFICATION_CHANNELS');
 
 /**
- * Fan-out point for order events. Notification failures are logged and never break
- * order placement or status updates. For the MVP no external channel is configured;
- * orders are reliably visible in the admin panel.
+ * Fan-out point for order and account events. Notification failures are logged and never
+ * break order placement, status updates or account flows. No external channel ships with
+ * the project; register one (email / SMS / WhatsApp) to deliver messages to customers.
  */
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger('Notifications');
   private readonly channels: NotificationChannel[] = [];
 
+  constructor(@Inject(APP_CONFIG) private readonly config: AppConfig) {}
+
   register(channel: NotificationChannel) {
     this.channels.push(channel);
+  }
+
+  /** True when at least one registered channel can deliver password-reset links. */
+  canDeliverPasswordResets(): boolean {
+    return this.channels.some((c) => typeof c.passwordResetRequested === 'function');
   }
 
   orderPlaced(event: OrderEvent) {
@@ -44,6 +62,15 @@ export class NotificationsService {
   orderStatusChanged(event: OrderEvent & { from: OrderStatus; to: OrderStatus }) {
     this.logger.log(`Order ${event.orderNumber} status ${event.from} → ${event.to}`);
     this.dispatch((c) => c.orderStatusChanged?.(event));
+  }
+
+  passwordResetRequested(event: PasswordResetEvent) {
+    this.logger.log(`Password reset requested for customer ${event.customerId}`);
+    // Development convenience only: the link is a secret, never log it in production.
+    if (!this.config.isProduction && this.config.env !== 'test') {
+      this.logger.warn(`[dev] Password reset link for ${event.email ?? event.phone}: ${event.resetUrl}`);
+    }
+    this.dispatch((c) => c.passwordResetRequested?.(event));
   }
 
   private dispatch(fn: (channel: NotificationChannel) => Promise<void> | undefined) {

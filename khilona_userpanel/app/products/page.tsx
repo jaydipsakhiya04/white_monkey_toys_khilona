@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
@@ -10,7 +11,7 @@ type Props = { searchParams: Promise<RawSearchParams> };
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = parseListingParams(await searchParams);
   const store = await getStore();
-  const storeName = store?.name ?? "KHILONA";
+  const storeName = brandName(store);
   if (params.search) {
     return {
       title: `Search results for “${params.search}”`,

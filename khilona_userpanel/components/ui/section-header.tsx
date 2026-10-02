@@ -23,8 +23,8 @@ export function SectionHeader({
   return (
     <div className={cn("mb-5 flex items-end justify-between gap-4 sm:mb-7", className)}>
       <div className="min-w-0">
-        {eyebrow && <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.14em] text-coral-600">{eyebrow}</p>}
-        <h2 id={id} className="text-2xl font-bold text-ink sm:text-3xl lg:text-[2.125rem]">
+        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
+        <h2 id={id} className="text-2xl font-bold text-ink sm:text-3xl lg:text-[2.25rem]">
           {title}
         </h2>
         {description && <p className="mt-1.5 max-w-xl text-[0.9375rem] text-muted">{description}</p>}
@@ -32,7 +32,7 @@ export function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="group inline-flex shrink-0 items-center gap-1 rounded-lg py-2 text-sm font-semibold text-ink hover:text-coral-600"
+          className="group inline-flex shrink-0 items-center gap-1 rounded-lg py-2 text-sm font-semibold text-ink underline-offset-4 hover:underline"
         >
           {linkLabel}
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />

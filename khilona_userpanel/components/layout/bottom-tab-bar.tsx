@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Home, LayoutGrid, Phone, Search, ShoppingBag } from "lucide-react";
+import { Home, LayoutGrid, Search, ShoppingBag, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/overlay";
+import { useAuth } from "@/features/auth/auth-provider";
 import { CartCountBadge, useCartLabel } from "@/features/cart/cart-button";
 import { cn } from "@/utils/cn";
 import { SearchForm } from "./header-search";
@@ -17,10 +18,13 @@ export function BottomTabBar() {
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const cartLabel = useCartLabel();
+  const { isAuthenticated } = useAuth();
+  const accountHref = isAuthenticated ? "/account" : "/login";
+  const accountActive = ["/account", "/login", "/signup"].some((p) => pathname.startsWith(p));
   useEffect(() => setSearchOpen(false), [pathname]);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
-  const tone = (active: boolean) => (active ? "text-coral-600" : "text-muted hover:text-ink");
+  const tone = (active: boolean) => (active ? "text-ink" : "text-muted hover:text-ink");
 
   return (
     <>
@@ -66,13 +70,9 @@ export function BottomTabBar() {
             </Link>
           </li>
           <li className="flex flex-1">
-            <Link
-              href="/contact"
-              className={cn(item, tone(isActive("/contact")))}
-              aria-current={isActive("/contact") ? "page" : undefined}
-            >
-              <Phone className="size-[1.375rem]" aria-hidden="true" />
-              Contact
+            <Link href={accountHref} className={cn(item, tone(accountActive))} aria-current={accountActive ? "page" : undefined}>
+              <UserRound className="size-[1.375rem]" aria-hidden="true" />
+              {isAuthenticated ? "Account" : "Log in"}
             </Link>
           </li>
         </ul>
@@ -83,13 +83,13 @@ export function BottomTabBar() {
             <SearchForm autoFocus onSubmitted={() => setSearchOpen(false)} inputClassName="h-12 text-base" />
           </Suspense>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/products?sort=newest" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink hover:bg-sand">
+            <Link href="/products?sort=newest" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
               New arrivals
             </Link>
-            <Link href="/products?featured=true" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink hover:bg-sand">
+            <Link href="/products?featured=true" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
               Featured
             </Link>
-            <Link href="/categories" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink hover:bg-sand">
+            <Link href="/categories" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
               All categories
             </Link>
           </div>

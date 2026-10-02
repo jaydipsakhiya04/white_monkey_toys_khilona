@@ -15,6 +15,7 @@ ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/assets ./assets
 COPY package.json ./
 RUN mkdir -p uploads && chown -R node:node /app
 USER node

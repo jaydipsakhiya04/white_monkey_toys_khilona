@@ -1,4 +1,7 @@
 import { Transform } from 'class-transformer';
+import { normalizeIndianMobile } from '../utils/phone';
+
+export const INDIAN_MOBILE = /^[6-9]\d{9}$/;
 
 /** Trims strings; converts empty strings to null (use for optional nullable text fields). */
 export const EmptyToNull = () =>
@@ -46,3 +49,12 @@ export const ToNumber = () =>
 /** Lowercases + trims (emails). */
 export const ToLowerTrim = () =>
   Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value));
+
+/** Normalises "+91 98765 43210" → "9876543210"; leaves invalid input untouched for the validator. */
+export const NormalizePhone = () =>
+  Transform(({ value }) => {
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return normalizeIndianMobile(trimmed) ?? trimmed;
+  });

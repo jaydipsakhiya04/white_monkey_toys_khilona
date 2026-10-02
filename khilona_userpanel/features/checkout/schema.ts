@@ -83,8 +83,8 @@ export const STEP_FIELDS: (keyof CheckoutValues)[][] = [
 ];
 
 export const STEPS = [
-  { id: "contact", label: "Contact" },
-  { id: "address", label: "Address" },
+  { id: "contact", label: "Your details" },
+  { id: "address", label: "Delivery" },
   { id: "review", label: "Review" },
 ] as const;
 

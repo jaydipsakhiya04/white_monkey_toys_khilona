@@ -377,6 +377,13 @@ export function OrderDetail({ id }: { id: string }) {
                   >
                     {order.customerOrdersCount} order{order.customerOrdersCount === 1 ? '' : 's'} from this customer
                   </Link>
+                  {order.linkedToAccount ? (
+                    <p className="mt-1 text-xs font-medium text-green-700">Placed from a customer account</p>
+                  ) : order.customerHasAccount ? (
+                    <p className="mt-1 text-xs text-muted">Guest order · this mobile has an account</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted">Guest checkout</p>
+                  )}
                 </div>
               </div>
               <dl className="grid grid-cols-[90px_minmax(0,1fr)] gap-x-3 gap-y-2">

@@ -44,7 +44,7 @@ function makeRowActions(onChange: (order: AdminOrderListItem, to: OrderStatus) =
       {
         label: 'WhatsApp',
         icon: <MessageCircle />,
-        href: whatsappLink(order.customerPhone, `Hello ${order.customerName}, this is KHILONA about your order ${order.orderNumber}.`),
+        href: whatsappLink(order.customerPhone, `Hello ${order.customerName}, this is White Monkey Toys about your order ${order.orderNumber}.`),
       },
     ];
     if (transitions.length) {
@@ -309,7 +309,7 @@ export function OrdersList() {
                         <Phone className="size-4" aria-hidden /> Call
                       </a>
                       <a
-                        href={whatsappLink(o.customerPhone, `Hello ${o.customerName}, this is KHILONA about your order ${o.orderNumber}.`)}
+                        href={whatsappLink(o.customerPhone, `Hello ${o.customerName}, this is White Monkey Toys about your order ${o.orderNumber}.`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line text-[13px] font-medium hover:bg-subtle"

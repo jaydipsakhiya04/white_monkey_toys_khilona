@@ -148,7 +148,7 @@ export function FilterPanel({
                 value={draft.minPrice}
                 placeholder={range ? String(Math.floor(range.min)) : "0"}
                 onChange={(e) => setDraft({ ...draft, minPrice: e.target.value })}
-                className="h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm focus:border-coral-600 focus:outline-none focus:ring-2 focus:ring-coral-600/25"
+                className="h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/25"
               />
             </div>
             <span className="pb-3 text-muted" aria-hidden="true">
@@ -166,7 +166,7 @@ export function FilterPanel({
                 value={draft.maxPrice}
                 placeholder={range ? String(Math.ceil(range.max)) : "Any"}
                 onChange={(e) => setDraft({ ...draft, maxPrice: e.target.value })}
-                className="h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm focus:border-coral-600 focus:outline-none focus:ring-2 focus:ring-coral-600/25"
+                className="h-11 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/25"
               />
             </div>
             {mode === "sidebar" && (
@@ -194,7 +194,7 @@ export function FilterPanel({
                 <label
                   key={token}
                   className={cn(
-                    "relative inline-flex min-h-10 cursor-pointer items-center rounded-xl border px-3.5 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-coral-600",
+                    "relative inline-flex min-h-10 cursor-pointer items-center rounded-xl border px-3.5 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink",
                     checked ? "border-ink bg-ink text-white" : "border-line-strong bg-surface text-ink hover:border-ink/40",
                   )}
                 >
@@ -245,7 +245,7 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
         onClick={() => onChange(!checked)}
         className={cn(
           "relative h-7 w-12 shrink-0 rounded-full transition-colors",
-          checked ? "bg-coral-600" : "bg-line-strong",
+          checked ? "bg-ink" : "bg-line-strong",
         )}
       >
         <span

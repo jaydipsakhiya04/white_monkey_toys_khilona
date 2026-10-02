@@ -1,3 +1,4 @@
+import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { storePhoneUrl, storeWhatsappUrl } from "@/features/store/store-utils";
@@ -18,7 +19,7 @@ export default async function OrderSuccessPage({ params }: Props) {
     <Container className="py-8 sm:py-14">
       <SuccessView
         orderNumber={decodeURIComponent(orderNumber)}
-        storeName={store?.name ?? "KHILONA"}
+        storeName={brandName(store)}
         phoneUrl={storePhoneUrl(store)}
         whatsapp={storeWhatsappUrl(store)}
       />

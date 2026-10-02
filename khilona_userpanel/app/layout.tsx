@@ -1,31 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { connection } from "next/server";
 import { AnnouncementBar, Header } from "@/components/layout/header";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Footer } from "@/components/layout/footer";
+import { brandName } from "@/lib/brand";
 import { SITE_URL } from "@/lib/env";
 import { getCategoryTree, getStore } from "@/services/catalog.server";
 import { toPlainText } from "@/utils/format";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({
+const display = Inter_Tight({
   subsets: ["latin"],
-  variable: "--font-bricolage",
+  variable: "--font-display-face",
   display: "swap",
   weight: ["500", "600", "700", "800"],
 });
 
-const body = Plus_Jakarta_Sans({
+const body = Inter({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-body-face",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
 });
 
 export const viewport: Viewport = {
-  themeColor: "#FFFCF7",
+  themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -34,11 +34,11 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   const store = await getStore();
-  const name = store?.name ?? "KHILONA";
-  const title = store?.seoTitle || (store?.tagline ? `${name} – ${store.tagline}` : `${name} – Toys & Games Shop`);
+  const name = brandName(store);
+  const title = store?.seoTitle || (store?.tagline ? `${name} – ${store.tagline}` : `${name} – Premium Toys, Games & Gifts`);
   const description =
     toPlainText(store?.seoDescription || store?.description) ||
-    "Shop toys, games and gifts your kids will love. Order online and pay on delivery.";
+    `Shop quality toys, games and gifts at ${name}. Easy ordering, order tracking and pay on delivery.`;
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: title, template: `%s | ${name}` },
@@ -73,7 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-dvh flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-ink focus:px-4 focus:py-3 focus:font-semibold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:font-semibold focus:text-white"
         >
           Skip to content
         </a>

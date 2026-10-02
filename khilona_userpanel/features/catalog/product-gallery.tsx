@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SmartImage } from "@/components/ui/smart-image";
 import { cn } from "@/utils/cn";
+import { ImageZoom } from "./image-zoom";
 
 type GalleryImage = { url: string; alt: string };
 
@@ -28,6 +29,7 @@ export function ProductGallery({
 
   const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const goTo = useCallback((i: number, smooth = true) => {
     const track = trackRef.current;
@@ -62,6 +64,8 @@ export function ProductGallery({
   }
 
   return (
+    <>
+    {zoomOpen && <ImageZoom images={list} index={index} onIndex={(i) => goTo(i, false)} onClose={() => setZoomOpen(false)} />}
     <div className="flex flex-col gap-3" aria-roledescription="carousel" aria-label={`${productName} images`}>
       <div className="relative">
         <div
@@ -83,7 +87,8 @@ export function ProductGallery({
           {list.map((img, i) => (
             <div
               key={`${img.url}-${i}`}
-              className="relative aspect-square w-full shrink-0 snap-center"
+              className="relative aspect-square w-full shrink-0 snap-center cursor-zoom-in"
+              onClick={() => setZoomOpen(true)}
               role="group"
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${list.length}`}
@@ -100,6 +105,14 @@ export function ProductGallery({
           ))}
         </div>
         {badge}
+        <button
+          type="button"
+          onClick={() => setZoomOpen(true)}
+          aria-label="Zoom image"
+          className="absolute right-3 top-3 grid size-10 place-items-center rounded-full border border-line bg-surface/95 text-ink shadow-soft transition-transform hover:scale-105"
+        >
+          <Expand className="size-4" aria-hidden="true" />
+        </button>
         {list.length > 1 && (
           <>
             <button
@@ -150,5 +163,6 @@ export function ProductGallery({
         </ul>
       )}
     </div>
+    </>
   );
 }

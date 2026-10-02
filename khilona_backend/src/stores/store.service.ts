@@ -22,7 +22,7 @@ export class StoreService {
   async get(): Promise<Store> {
     const store = await this.prisma.store.findFirst({ orderBy: { createdAt: 'asc' } });
     if (store) return store;
-    return this.prisma.store.create({ data: { name: 'Khilona' } });
+    return this.prisma.store.create({ data: { name: 'White Monkey Toys' } });
   }
 
   async getPublic() {

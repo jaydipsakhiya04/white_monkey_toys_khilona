@@ -9,6 +9,7 @@ import type {
   ProductDetail,
   ProductFacets,
   ProductQuery,
+  ProductReviews,
   PublicStore,
   SitemapData,
 } from "@/types/api";
@@ -44,7 +45,9 @@ export const getCategory = cache(async (slug: string): Promise<CategoryDetail | 
 /** Returns null on 404, throws ApiError otherwise. */
 export const getProduct = cache(async (slug: string): Promise<ProductDetail | null> => {
   try {
-    return await serverGet<ProductDetail>(`/products/${encodeURIComponent(slug)}`);
+    const product = await serverGet<ProductDetail>(`/products/${encodeURIComponent(slug)}`);
+    // tolerate payloads cached before ratings existed
+    return { ...product, rating: product.rating ?? { average: 0, count: 0 } };
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) return null;
     throw e;
@@ -69,4 +72,13 @@ export async function getRelatedProducts(slug: string, limit = 8): Promise<Produ
 
 export function getSitemapData() {
   return serverGet<SitemapData>("/sitemap", undefined, 600);
+}
+
+/** First page of published reviews; null when unavailable (the section then loads client-side). */
+export async function getProductReviews(slug: string): Promise<ProductReviews | null> {
+  try {
+    return await serverGet<ProductReviews>(`/products/${encodeURIComponent(slug)}/reviews`, { limit: 6 });
+  } catch {
+    return null;
+  }
 }

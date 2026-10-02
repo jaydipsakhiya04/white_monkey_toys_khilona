@@ -5,6 +5,8 @@ export interface AppConfig {
   isProduction: boolean;
   port: number;
   appUrl: string;
+  /** Public storefront URL (password-reset links). */
+  storefrontUrl: string;
   trustProxy: boolean;
   swaggerEnabled: boolean;
   corsOrigins: string[];
@@ -15,6 +17,9 @@ export interface AppConfig {
     expiresIn: string;
     expiresInSeconds: number;
     refreshTtlDays: number;
+    /** Lifetime of customer refresh tokens ("keep me signed in"). */
+    customerRefreshTtlDays: number;
+    passwordResetTtlMinutes: number;
   };
   cookie: {
     secure: boolean;
@@ -25,6 +30,8 @@ export interface AppConfig {
     globalLimit: number;
     loginLimit: number;
     orderLimit: number;
+    /** Guest order tracking / document lookups (order number + mobile). */
+    trackLimit: number;
   };
   storage: {
     provider: 'local' | 's3';
@@ -94,6 +101,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     isProduction,
     port,
     appUrl,
+    storefrontUrl: trimSlash(env.STOREFRONT_URL || 'http://localhost:3000'),
     trustProxy: bool(env.TRUST_PROXY, false),
     swaggerEnabled: bool(env.SWAGGER_ENABLED, !isProduction),
     corsOrigins: (env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001')
@@ -101,12 +109,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .map((o) => trimSlash(o.trim()))
       .filter(Boolean),
     timezone: env.APP_TIMEZONE || 'Asia/Kolkata',
-    orderNumberPrefix: (env.ORDER_NUMBER_PREFIX || 'KH').toUpperCase(),
+    orderNumberPrefix: (env.ORDER_NUMBER_PREFIX || 'WMT').toUpperCase(),
     jwt: {
       secret: jwtSecret,
       expiresIn: jwtExpiresIn,
       expiresInSeconds: expiresInSeconds ?? 900,
       refreshTtlDays: int(env.REFRESH_TOKEN_TTL_DAYS, 7),
+      customerRefreshTtlDays: int(env.CUSTOMER_REFRESH_TOKEN_TTL_DAYS, 30),
+      passwordResetTtlMinutes: int(env.PASSWORD_RESET_TTL_MINUTES, 30),
     },
     cookie: {
       secure: bool(env.COOKIE_SECURE, isProduction),
@@ -117,6 +127,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       globalLimit: int(env.THROTTLE_GLOBAL_LIMIT, 300),
       loginLimit: int(env.THROTTLE_LOGIN_LIMIT, 5),
       orderLimit: int(env.THROTTLE_ORDER_LIMIT, 10),
+      trackLimit: int(env.THROTTLE_TRACK_LIMIT, 20),
     },
     storage: {
       provider,

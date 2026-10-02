@@ -53,7 +53,7 @@ export function ListingToolbar({
             maxLength={100}
             onChange={(e) => setQ(e.target.value)}
             placeholder={searchLabel}
-            className="h-11 w-full rounded-xl border border-line-strong bg-surface pl-10 pr-20 text-[0.9375rem] placeholder:text-muted/80 focus:border-coral-600 focus:outline-none focus:ring-2 focus:ring-coral-600/25 [&::-webkit-search-cancel-button]:hidden"
+            className="h-11 w-full rounded-xl border border-line-strong bg-surface pl-10 pr-20 text-[0.9375rem] placeholder:text-muted/80 focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/25 [&::-webkit-search-cancel-button]:hidden"
           />
           {q && (
             <button
@@ -85,7 +85,7 @@ export function ListingToolbar({
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Filters
             {activeCount > 0 && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-coral-600 px-1 text-[0.6875rem] font-bold text-white">
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[0.6875rem] font-bold text-white">
                 {activeCount}
               </span>
             )}
@@ -182,7 +182,7 @@ function ActiveFilterChips({ current }: { current: ListingParams }) {
           </li>
         ))}
       </ul>
-      <button type="button" onClick={clearFilters} className="h-8 rounded-lg px-2 text-xs font-semibold text-coral-700 hover:underline">
+      <button type="button" onClick={clearFilters} className="h-8 rounded-lg px-2 text-xs font-semibold text-ink hover:underline">
         Clear all
       </button>
     </>

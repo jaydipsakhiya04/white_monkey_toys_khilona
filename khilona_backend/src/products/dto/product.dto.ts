@@ -29,7 +29,7 @@ const SKU_MESSAGE = 'SKU may contain letters, numbers, dot, dash, slash and unde
 
 // ─── Public queries ──────────────────────────────────────────
 
-export const PUBLIC_SORTS = ['featured', 'newest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'] as const;
+export const PUBLIC_SORTS = ['featured', 'popular', 'newest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'] as const;
 export type PublicSort = (typeof PUBLIC_SORTS)[number];
 
 export class PublicProductQueryDto {

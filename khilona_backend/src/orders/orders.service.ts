@@ -12,6 +12,7 @@ import { roundMoney } from '../common/utils/money';
 import { buildPage, skipTake } from '../common/utils/pagination';
 import { addDaysIso, startOfDayInZone } from '../common/utils/time';
 import { AuthenticatedAdmin } from '../common/decorators/auth.decorators';
+import { AuthenticatedCustomer } from '../common/decorators/customer-auth.decorators';
 import { APP_CONFIG, AppConfig } from '../config/configuration';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -20,6 +21,7 @@ import { StoreService } from '../stores/store.service';
 import { CartPricingService } from './cart-pricing.service';
 import { AdminOrderQueryDto, CreateOrderDto, UpdateOrderDto, UpdateOrderStatusDto } from './dto/order.dto';
 import {
+  OrderDetailRow,
   orderDetailInclude,
   orderListSelect,
   toAdminOrderDetail,
@@ -65,7 +67,7 @@ export class OrdersService {
    *    even under concurrent checkouts;
    * 3. allocates a collision-safe order number and stores immutable item snapshots.
    */
-  async create(dto: CreateOrderDto, meta: RequestMeta) {
+  async create(dto: CreateOrderDto, meta: RequestMeta, account?: AuthenticatedCustomer) {
     const store = await this.store.get();
     if (!store.isOpen) {
       throw new ForbiddenException(store.closedMessage || 'The store is not accepting orders right now. Please try again later.');
@@ -107,17 +109,31 @@ export class OrdersService {
 
       const orderNumber = await this.orderNumbers.next(tx);
 
-      const customer = await tx.customer.upsert({
-        where: { phone: dto.phone },
-        create: { name: dto.customerName, phone: dto.phone, email: dto.email ?? null },
-        update: { name: dto.customerName, ...(dto.email ? { email: dto.email } : {}) },
-      });
+      // Signed-in checkout: the order belongs to the account (delivery details may differ, e.g. gifts).
+      // Guest checkout: customers are matched by phone; a registered account's profile is never
+      // overwritten by a guest checkout, and such orders do not appear in that account.
+      const customerId = account
+        ? account.id
+        : (
+            await tx.customer.upsert({
+              where: { phone: dto.phone },
+              create: { name: dto.customerName, phone: dto.phone, email: dto.email ?? null },
+              update: {},
+            })
+          ).id;
+      if (!account) {
+        await tx.customer.updateMany({
+          where: { id: customerId, passwordHash: null },
+          data: { name: dto.customerName, ...(dto.email ? { email: dto.email } : {}) },
+        });
+      }
 
       const { summary } = evaluation;
       return tx.order.create({
         data: {
           orderNumber,
-          customerId: customer.id,
+          customerId,
+          accountLinkedAt: account ? new Date() : null,
           status: OrderStatus.PENDING,
           customerName: dto.customerName,
           customerPhone: dto.phone,
@@ -170,16 +186,55 @@ export class OrdersService {
     }, ORDER_TX);
 
     this.notifications.orderPlaced(this.event(order));
-    return toPublicOrder(order);
+    return { ...toPublicOrder(order), linkedToAccount: order.accountLinkedAt !== null };
   }
 
   async track(orderNumber: string, phone: string) {
+    return toPublicOrder(await this.findForGuest(orderNumber, phone));
+  }
+
+  /** Guest access: the order is only revealed when order number AND mobile number match. */
+  async findForGuest(orderNumber: string, phone: string) {
     const order = await this.prisma.order.findFirst({
       where: { orderNumber, customerPhone: phone },
       include: orderDetailInclude,
     });
     if (!order) throw new NotFoundException('We could not find an order with these details');
-    return toPublicOrder(order);
+    return order;
+  }
+
+  /**
+   * Account access: only orders linked to this customer's account. Anything else — including
+   * another customer's order — is reported as "not found" so order numbers cannot be probed.
+   */
+  async findOwned(customerId: string, orderNumber: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { orderNumber: orderNumber.trim().toUpperCase(), customerId, accountLinkedAt: { not: null } },
+      include: orderDetailInclude,
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  /** Customers may cancel their own order only while it is still PENDING (not yet confirmed by the store). */
+  async cancelByCustomer(customer: AuthenticatedCustomer, orderNumber: string, reason?: string) {
+    const order = await this.findOwned(customer.id, orderNumber);
+    if (order.status !== OrderStatus.PENDING) {
+      throw new ConflictException(
+        order.status === OrderStatus.CANCELLED
+          ? 'This order is already cancelled'
+          : 'This order has already been confirmed by the store. Please contact the store to cancel it.',
+      );
+    }
+    await this.transition(order, OrderStatus.CANCELLED, {
+      id: null,
+      name: 'Customer',
+      note: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer',
+    });
+    this.logger.log(`Customer ${customer.id} cancelled ${order.orderNumber}`);
+    const fresh = await this.findOwned(customer.id, order.orderNumber);
+    this.notifications.orderStatusChanged({ ...this.event(fresh), from: order.status, to: OrderStatus.CANCELLED });
+    return fresh;
   }
 
   // ─── Admin ─────────────────────────────────────────────────
@@ -226,6 +281,36 @@ export class OrdersService {
       );
     }
 
+    await this.transition(order, to, { id: admin.id, name: admin.name, note: dto.note });
+
+    this.logger.log(`${admin.email} changed ${order.orderNumber}: ${from} → ${to}`);
+    const fresh = await this.findOrder(order.id);
+    this.notifications.orderStatusChanged({ ...this.event(fresh), from, to });
+    return this.toDetail(fresh);
+  }
+
+  async update(idOrNumber: string, dto: UpdateOrderDto, admin: AuthenticatedAdmin) {
+    const order = await this.findOrder(idOrNumber);
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { adminNote: dto.adminNote, paymentStatus: dto.paymentStatus },
+    });
+    this.logger.log(`${admin.email} updated ${order.orderNumber} (${Object.keys(dto).join(', ')})`);
+    return this.adminGet(order.id);
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────
+
+  /**
+   * Applies an already-validated status change atomically: optimistic concurrency on the current
+   * status, timestamps, exactly-once stock restoration on cancel, and a history entry.
+   */
+  private async transition(
+    order: { id: string; status: OrderStatus; confirmedAt: Date | null; stockRestored: boolean; items: OrderDetailRow['items'] },
+    to: OrderStatus,
+    actor: { id: string | null; name: string; note?: string },
+  ) {
+    const from = order.status;
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       // Optimistic concurrency: only succeeds if nobody changed the status meanwhile.
@@ -252,30 +337,13 @@ export class OrdersService {
           orderId: order.id,
           fromStatus: from,
           toStatus: to,
-          note: dto.note ?? null,
-          changedById: admin.id,
-          changedByName: admin.name,
+          note: actor.note ?? null,
+          changedById: actor.id,
+          changedByName: actor.name,
         },
       });
     }, ORDER_TX);
-
-    this.logger.log(`${admin.email} changed ${order.orderNumber}: ${from} → ${to}`);
-    const fresh = await this.findOrder(order.id);
-    this.notifications.orderStatusChanged({ ...this.event(fresh), from, to });
-    return this.toDetail(fresh);
   }
-
-  async update(idOrNumber: string, dto: UpdateOrderDto, admin: AuthenticatedAdmin) {
-    const order = await this.findOrder(idOrNumber);
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: { adminNote: dto.adminNote, paymentStatus: dto.paymentStatus },
-    });
-    this.logger.log(`${admin.email} updated ${order.orderNumber} (${Object.keys(dto).join(', ')})`);
-    return this.adminGet(order.id);
-  }
-
-  // ─── Helpers ───────────────────────────────────────────────
 
   /**
    * Stock restoration policy (on cancellation): every item's quantity is returned to the

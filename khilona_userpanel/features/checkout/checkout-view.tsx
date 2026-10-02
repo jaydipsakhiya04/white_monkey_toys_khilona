@@ -13,6 +13,7 @@ import { TextAreaField, TextField } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Spinner } from "@/components/ui/spinner";
+import { firstName, useAuth } from "@/features/auth/auth-provider";
 import { useCartStore, type CartItem } from "@/features/cart/cart-store";
 import { OrderSummaryRows } from "@/features/cart/order-summary";
 import { useCartValidation, type LineView } from "@/features/cart/use-cart-validation";
@@ -76,6 +77,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
   const [placedOrder, setPlacedOrder] = useState<string | null>(null);
   const [issue, setIssue] = useState<SubmitIssue | null>(null);
   const submittingRef = useRef(false);
+  const { status: authStatus, customer } = useAuth();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const form = useForm<CheckoutValues>({
@@ -96,6 +98,17 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
     }
     setRestored(true);
   }, [reset]);
+
+  // signed-in customers: prefill contact details once (never overwrite what was typed)
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!restored || prefilled.current || authStatus !== "authenticated" || !customer) return;
+    prefilled.current = true;
+    const v = getValues();
+    if (!v.customerName) setValue("customerName", customer.name);
+    if (!v.phone) setValue("phone", customer.phone);
+    if (!v.email && customer.email) setValue("email", customer.email);
+  }, [restored, authStatus, customer, getValues, setValue]);
 
   // persist progress
   useEffect(() => {
@@ -178,6 +191,10 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
         void cart.refetch();
         return;
       }
+      if (err.status === 401) {
+        setIssue({ kind: "other", message: "Your session has expired. Log in again, or place the order as a guest — your cart is safe." });
+        return;
+      }
       if (err.status === 403) {
         setIssue({ kind: "closed", message: err.message || closedMessage || "The store is not accepting orders right now." });
         return;
@@ -206,7 +223,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
   if (placedOrder) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center" role="status">
-        <Spinner className="size-8 text-coral-600" />
+        <Spinner className="size-8 text-ink" />
         <p className="font-semibold text-ink">Order placed! Taking you to your confirmation…</p>
       </div>
     );
@@ -235,6 +252,23 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
       <div className="min-w-0">
         <Stepper step={step} onStepClick={(s) => s < step && goTo(s)} />
 
+        {authStatus === "authenticated" && customer ? (
+          <p className="mt-5 flex items-center gap-2 rounded-2xl bg-sand px-4 py-3 text-sm text-ink" role="status">
+            <User className="size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Signed in as <span className="font-semibold">{firstName(customer.name)}</span> — this order will be saved to your account.
+            </span>
+          </p>
+        ) : authStatus === "guest" ? (
+          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-sand px-4 py-3 text-sm text-ink">
+            <span>Checking out as a guest.</span>
+            <span className="text-muted">Have an account?</span>
+            <Link href="/login?next=/checkout" className="font-semibold underline underline-offset-4">
+              Log in for faster checkout
+            </Link>
+          </p>
+        ) : null}
+
         {!storeOpen && (
           <div role="alert" className="mt-5 flex gap-3 rounded-2xl border border-danger/30 bg-danger-tint p-4 text-sm text-danger-700">
             <StoreIcon className="size-5 shrink-0" aria-hidden="true" />
@@ -251,11 +285,11 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             if (step < 2) void next();
             else void onPlaceOrder();
           }}
-          className="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-7"
+          className="mt-6 rounded-3xl border border-line bg-surface p-5 sm:p-8"
           aria-labelledby="checkout-step-title"
         >
           <h2 id="checkout-step-title" ref={headingRef} tabIndex={-1} className="scroll-mt-28 text-xl font-bold text-ink focus:outline-none sm:text-2xl">
-            {step === 0 ? "Contact details" : step === 1 ? "Delivery address & location" : "Review your order"}
+            {step === 0 ? "Customer information" : step === 1 ? "Delivery address & location" : "Review your order"}
           </h2>
 
           {step === 0 && (
@@ -435,12 +469,12 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
       </div>
 
       <aside aria-labelledby="co-summary-title" className="lg:sticky lg:top-24">
-        <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+        <div className="rounded-3xl border border-line bg-surface p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <h2 id="co-summary-title" className="text-lg font-bold text-ink">
               Order summary
             </h2>
-            <Link href="/cart" className="text-sm font-semibold text-coral-600 hover:text-coral-700">
+            <Link href="/cart" className="text-sm font-semibold text-ink underline-offset-4 hover:underline">
               Edit cart
             </Link>
           </div>
@@ -473,7 +507,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             )}
           </div>
           <p className="mt-4 flex items-start gap-2 rounded-xl bg-sand p-3 text-sm text-ink">
-            <Banknote className="mt-0.5 size-4 shrink-0 text-teal" aria-hidden="true" />
+            <Banknote className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden="true" />
             <span>
               <span className="font-semibold">Payment: Cash / pay on delivery.</span> No online payment.
             </span>
@@ -509,7 +543,7 @@ function Stepper({ step, onStepClick }: { step: number; onStepClick: (s: number)
                 <span
                   className={cn(
                     "grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold",
-                    done ? "bg-success-700 text-white" : current ? "bg-ink text-white" : "border border-line-strong bg-surface text-muted",
+                    done ? "bg-ink text-white" : current ? "bg-surface text-ink ring-2 ring-ink" : "border border-line-strong bg-surface text-muted",
                   )}
                   aria-hidden="true"
                 >
@@ -523,7 +557,7 @@ function Stepper({ step, onStepClick }: { step: number; onStepClick: (s: number)
                   {done && <span className="sr-only"> (completed)</span>}
                 </span>
               </button>
-              {i < STEPS.length - 1 && <span className={cn("h-0.5 min-w-3 flex-1 rounded-full", done ? "bg-success-700" : "bg-line")} aria-hidden="true" />}
+              {i < STEPS.length - 1 && <span className={cn("h-0.5 min-w-3 flex-1 rounded-full", done ? "bg-ink" : "bg-line")} aria-hidden="true" />}
             </li>
           );
         })}
@@ -608,7 +642,7 @@ function ReviewStep({
         </ul>
       </div>
 
-      <p className="flex items-start gap-2 rounded-2xl bg-teal-tint p-4 text-sm text-teal-700">
+      <p className="flex items-start gap-2 rounded-2xl bg-sand p-4 text-sm text-ink">
         <Banknote className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <span>
           <span className="font-bold">Payment: Cash / Pay on delivery — no online payment.</span> Our team will contact you to confirm your
@@ -627,7 +661,7 @@ function ReviewCard({ title, icon, onEdit, children }: { title: string; icon: Re
           {icon}
           {title}
         </h3>
-        <button type="button" onClick={onEdit} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-coral-600 hover:bg-coral-tint">
+        <button type="button" onClick={onEdit} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink hover:bg-sand">
           <Pencil className="size-3.5" aria-hidden="true" />
           Edit<span className="sr-only"> {title.toLowerCase()}</span>
         </button>

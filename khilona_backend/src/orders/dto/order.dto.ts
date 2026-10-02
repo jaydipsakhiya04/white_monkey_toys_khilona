@@ -22,20 +22,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
-import { EmptyToNull, EmptyToUndefined, ToLowerTrim } from '../../common/decorators/transforms';
-import { normalizeIndianMobile } from '../../common/utils/phone';
+import { EmptyToNull, EmptyToUndefined, INDIAN_MOBILE, NormalizePhone, ToLowerTrim } from '../../common/decorators/transforms';
 
 const URL_OPTS = { protocols: ['http', 'https'], require_protocol: true, require_tld: true };
-const INDIAN_MOBILE = /^[6-9]\d{9}$/;
-
-/** Normalises "+91 98765 43210" → "9876543210"; leaves invalid input untouched for the validator. */
-const NormalizePhone = () =>
-  Transform(({ value }) => {
-    if (typeof value !== 'string') return value;
-    const trimmed = value.trim();
-    if (!trimmed) return undefined;
-    return normalizeIndianMobile(trimmed) ?? trimmed;
-  });
 
 export class CartItemDto {
   @ApiProperty({ example: 'clx0prod0001' })
@@ -140,7 +129,7 @@ export class CreateOrderDto extends ValidateCartDto {
 }
 
 export class TrackOrderQueryDto {
-  @ApiProperty({ example: 'KH-20261002-0001' })
+  @ApiProperty({ example: 'WMT-20261002-0001' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @IsString()
   @Length(5, 40)

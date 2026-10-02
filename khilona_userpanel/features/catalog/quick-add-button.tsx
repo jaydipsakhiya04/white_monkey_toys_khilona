@@ -36,7 +36,7 @@ export function QuickAddButton({ product }: { product: ProductCard }) {
     <button
       type="button"
       disabled={busy}
-      className={buttonClasses({ variant: "secondary", size: "card", block: true })}
+      className={buttonClasses({ variant: "primary", size: "card", block: true })}
       aria-label={`Add ${product.name} to cart`}
       onClick={() => {
         setBusy(true);

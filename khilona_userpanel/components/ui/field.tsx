@@ -4,10 +4,10 @@ import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type Selec
 import { cn } from "@/utils/cn";
 
 const control =
-  "block w-full rounded-xl border bg-surface px-3.5 text-[0.9375rem] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-coral-600/30 disabled:bg-sand disabled:text-muted";
+  "block w-full rounded-xl border bg-surface px-3.5 text-[0.9375rem] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-ink/30 disabled:bg-sand disabled:text-muted";
 
 function stateClasses(invalid?: boolean) {
-  return invalid ? "border-danger focus:border-danger" : "border-line-strong hover:border-ink/30 focus:border-coral-600";
+  return invalid ? "border-danger focus:border-danger" : "border-line-strong hover:border-ink/30 focus:border-ink";
 }
 
 type FieldWrapProps = {
@@ -134,7 +134,7 @@ export function Checkbox({
       <input
         id={id}
         type="checkbox"
-        className="mt-0.5 size-5 shrink-0 rounded-md border-line-strong accent-coral-600"
+        className="mt-0.5 size-5 shrink-0 rounded-md border-line-strong accent-ink"
         {...props}
       />
       <label htmlFor={id} className="min-w-0 text-sm leading-6 text-ink">

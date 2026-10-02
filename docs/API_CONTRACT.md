@@ -1,4 +1,6 @@
-# Khilona REST API Contract
+# Khilona REST API Contract (White Monkey Toys)
+
+> Customer-facing brand: **White Monkey Toys**. "Khilona" is the internal project name.
 
 Base URL: `${NEXT_PUBLIC_API_URL}` → e.g. `http://localhost:4000/api`
 Interactive docs (Swagger): `http://localhost:4000/api/docs`
@@ -133,6 +135,7 @@ type ProductCard = {
   isFeatured: boolean;
   hasVariants: boolean;             // true => customer must pick options on product page
   category: CategoryRef;
+  rating: { average: number; count: number }; // APPROVED verified-purchase reviews (average 0 when none)
   createdAt: string;
 };
 
@@ -206,7 +209,7 @@ Query params (all optional):
 | `inStock` | `true` | only stock > 0 |
 | `featured` | `true` | only featured |
 | `options` | `Color:Red,Color:Blue,Age:3+` | same name = OR, different names = AND |
-| `sort` | `featured` (default) \| `newest` \| `price_asc` \| `price_desc` \| `name_asc` \| `name_desc` | |
+| `sort` | `featured` (default) \| `popular` \| `newest` \| `price_asc` \| `price_desc` \| `name_asc` \| `name_desc` | `popular` = most reviewed / best rated |
 | `page`, `limit` | `1`, `20` | limit max 60 |
 
 ### `GET /products/facets` → `ProductFacets`
@@ -257,8 +260,8 @@ type CartLine = {
 };
 ```
 
-### `POST /orders` → `201 PublicOrder`
-Rate limited (10/min/IP).
+### `POST /orders` → `201 PublicOrder & { linkedToAccount: boolean }`
+Rate limited (10/min/IP). Guest checkout needs no token. With an optional customer `Authorization: Bearer <token>` the order is linked to that account (shows under "My orders"); an invalid/expired token returns `401` so the client can refresh. Prices and stock are always re-validated server-side.
 ```ts
 // request
 {
@@ -283,7 +286,7 @@ Errors: `422` validation; `409` when any item is unavailable / out of stock / qu
 
 ```ts
 type PublicOrder = {
-  orderNumber: string;              // "KH-20261002-0001"
+  orderNumber: string;              // "WMT-20261002-0001"
   status: OrderStatus;
   createdAt: string;
   customerName: string;
@@ -307,8 +310,24 @@ type PublicOrder = {
 };
 ```
 
-### `GET /orders/track?orderNumber=KH-20261002-0001&phone=9876543210` → `PublicOrder`
-404 unless both order number and phone match.
+### `GET /orders/track?orderNumber=WMT-20261002-0001&phone=9876543210` → `PublicOrder`
+404 unless both order number and phone match. Rate limited (`THROTTLE_TRACK_LIMIT`, 20/min/IP).
+
+### `POST /orders/track/invoice` · `POST /orders/track/receipt` → `application/pdf`
+Body `{ orderNumber, phone }` (same proof as tracking; POST keeps the phone out of URLs/logs). 404 unless both match. Invoice is `409` for cancelled orders.
+
+### `GET /products/:slug/reviews?page&limit&rating` → `Paginated<PublicReview> & { summary }`
+```ts
+type PublicReview = {
+  id: string; rating: 1|2|3|4|5; comment: string | null;
+  authorName: string;               // privacy-safe: "Jaydip P."
+  variantTitle: string | null;      // what the reviewer bought
+  verifiedPurchase: true;           // every review comes from a delivered order of the reviewer
+  createdAt: string; updatedAt: string;
+};
+type ReviewSummary = { average: number; count: number; distribution: { "1": number; "2": number; "3": number; "4": number; "5": number } };
+```
+Only `APPROVED` reviews are returned.
 
 ---
 
@@ -327,6 +346,63 @@ Refresh token: rotating, **httpOnly cookie** `khilona_rt` (path `/api/auth`). Fr
 | PATCH | `/auth/me/password` | `{ currentPassword, newPassword }` (min 8, letter + number) | `null`; revokes all refresh tokens except current |
 
 `expiresIn` is in seconds (default 900). Recommended client strategy: keep access token in memory; on app load and on any 401 call `/auth/refresh` once, then retry; if refresh fails → redirect to login.
+
+---
+
+## 4b. Customer accounts (storefront)
+
+Separate from admin auth: customer access tokens use the JWT audience `khilona-customer` and are rejected on admin routes (and vice versa).
+Refresh token: rotating **httpOnly cookie** `wmt_crt` (path `/api/auth/customer`, default 30 days). Call auth endpoints with `credentials: 'include'`; keep the access token in memory only.
+
+| Method | Path | Body | Response |
+|---|---|---|---|
+| POST | `/auth/customer/signup` | `{ name, email, phone, password }` | `201 { accessToken, expiresIn, customer: CustomerProfile }` + cookie. `409` with `errors[]` for duplicate `email` / `phone`. |
+| POST | `/auth/customer/login` | `{ identifier, password }` (email or mobile) | as signup. `401 "Email/mobile or password is incorrect"`. |
+| POST | `/auth/customer/refresh` | – (cookie) | rotates cookie; reuse of a revoked token revokes all sessions |
+| POST | `/auth/customer/logout` | – (cookie) | `null` |
+| POST | `/auth/customer/forgot-password` | `{ identifier }` | always `200 { deliveryAvailable: boolean }` — never reveals whether an account exists; `false` when no email/SMS channel is configured |
+| POST | `/auth/customer/reset-password` | `{ token, password }` | `null`; single-use token (30 min), signs out all sessions. `400` invalid/expired |
+| PATCH | `/auth/customer/password` | `{ currentPassword, newPassword }` | `null`; signs out other sessions |
+
+Login/signup/forgot/reset are rate limited (`THROTTLE_LOGIN_LIMIT`). Password rule: 8–72 chars, at least one letter and one number.
+
+```ts
+type CustomerProfile = { id: string; name: string; email: string | null; phone: string; registeredAt: string | null; createdAt: string };
+```
+
+### Customer endpoints (customer Bearer token required)
+
+Every order route is scoped to the caller's account: another customer's order number returns **404**.
+An order belongs to an account when it was placed while signed in, or was claimed (order number + the account's mobile).
+
+| Method | Path | Notes |
+|---|---|---|
+| GET / PATCH | `/customer/profile` | PATCH `{ name?, email?, phone? }`; `409` if email/mobile belongs to another account |
+| GET | `/customer/orders/summary` | `{ totalOrders, activeOrders, deliveredOrders, cancelledOrders, recentOrders[] }` |
+| GET | `/customer/orders?status=active\|delivered\|cancelled&page&limit` | newest first |
+| POST | `/customer/orders/claim` | `{ orderNumber }` — adds an earlier guest order placed with the account's mobile; `404` otherwise |
+| GET | `/customer/orders/:orderNumber` | `CustomerOrder` (below) |
+| POST | `/customer/orders/:orderNumber/cancel` | `{ reason? }`; only while `PENDING` (`409` after the store confirms); stock restored |
+| GET | `/customer/orders/:orderNumber/invoice` | `application/pdf`, `Content-Disposition: attachment; filename="white-monkey-toys-invoice-<orderNumber>.pdf"`; `409` for cancelled orders |
+| GET | `/customer/orders/:orderNumber/receipt` | `application/pdf` |
+| GET | `/customer/reviews` | your reviews (paginated) |
+| POST | `/customer/reviews` | `{ orderNumber, productId, rating: 1..5, comment? (≤2000) }` → `201`. `403` order not delivered / product not in the order; `404` not your order; `409` already reviewed (customer + product + order) |
+| PATCH / DELETE | `/customer/reviews/:id` | own reviews only |
+
+```ts
+type CustomerOrder = PublicOrder & {
+  deliveredAt: string | null; cancelledAt: string | null;
+  items: (PublicOrder['items'][number] & {
+    productId: string | null;
+    review: { id: string; rating: number; comment: string | null; status: 'PENDING'|'APPROVED'|'HIDDEN'; createdAt: string; updatedAt: string } | null;
+    canReview: boolean;             // decided by the API (delivered + owned + not yet reviewed)
+  })[];
+  canCancel: boolean;               // status === PENDING
+  documents: { invoice: boolean; receipt: boolean };
+};
+```
+
+Documents are rendered from the order's own snapshot (names, SKUs, options, unit prices, totals, address), never from the live catalogue. Invoice number = order number with the prefix replaced by `INV-`.
 
 ---
 
@@ -489,3 +565,12 @@ Stock policy: stock is **decremented when the order is placed**; it is **restore
 | GET | `/admin/admins` | → `AdminProfile[]` |
 | POST | `/admin/admins` | `{ name, email, password, phone?, role }` → 201 `AdminProfile` |
 | PATCH | `/admin/admins/:id` | `{ name?, phone?, role?, isActive?, password? }` → `AdminProfile` (cannot deactivate/demote yourself) |
+
+### Reviews (moderation)
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/admin/reviews?status=PENDING\|APPROVED\|HIDDEN&rating&search&page&limit` | `Paginated<AdminReview> & { statusCounts: { ALL, PENDING, APPROVED, HIDDEN } }` |
+| PATCH | `/admin/reviews/:id/status` | `{ status: 'APPROVED' \| 'HIDDEN' }` — admins can publish or hide, **never edit** a rating or text |
+
+Store setting `reviewsRequireApproval` (in `PUT /admin/store`): when true, new and edited reviews start as `PENDING`.
+Admin order details additionally return `linkedToAccount` and `customerHasAccount`.

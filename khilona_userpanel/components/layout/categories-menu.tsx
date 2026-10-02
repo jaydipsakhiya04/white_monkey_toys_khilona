@@ -53,7 +53,7 @@ export function CategoriesMenu({ categories }: { categories: CategorySummary[] }
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "inline-flex h-11 items-center gap-2 rounded-xl px-3.5 text-[0.9375rem] font-semibold text-ink transition-colors hover:bg-sand",
+          "inline-flex h-11 items-center gap-2 rounded-full px-3.5 text-[0.9375rem] font-semibold text-ink transition-colors hover:bg-sand",
           open && "bg-sand",
         )}
       >
@@ -64,7 +64,7 @@ export function CategoriesMenu({ categories }: { categories: CategorySummary[] }
       <div
         id={panelId}
         hidden={!open}
-        className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(44rem,calc(100vw-4rem))] rounded-2xl border border-line bg-surface p-5 shadow-lift"
+        className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(44rem,calc(100vw-4rem))] animate-pop-in rounded-2xl border border-line bg-surface p-5 shadow-lift"
       >
         {categories.length === 0 ? (
           <p className="text-sm text-muted">Categories are not available right now.</p>
@@ -74,7 +74,7 @@ export function CategoriesMenu({ categories }: { categories: CategorySummary[] }
               <li key={c.id} className="min-w-0">
                 <Link
                   href={`/category/${c.slug}`}
-                  className="block rounded-md font-display text-base font-bold text-ink hover:text-coral-600"
+                  className="block rounded-md font-display text-base font-semibold text-ink underline-offset-4 hover:underline"
                 >
                   {c.name}
                 </Link>
@@ -94,10 +94,10 @@ export function CategoriesMenu({ categories }: { categories: CategorySummary[] }
           </ul>
         )}
         <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
-          <Link href="/categories" className="text-sm font-semibold text-coral-600 hover:text-coral-700">
+          <Link href="/categories" className="text-sm font-semibold text-ink underline-offset-4 hover:underline">
             Browse all categories
           </Link>
-          <Link href="/products" className="text-sm font-semibold text-ink hover:text-coral-600">
+          <Link href="/products" className="text-sm font-semibold text-ink underline-offset-4 hover:underline">
             Shop all products →
           </Link>
         </div>

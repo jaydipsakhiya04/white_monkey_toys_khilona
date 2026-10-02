@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import { AlertCircle, Banknote, Check, ShoppingBag, Zap } from "lucide-react";
 import { Button, ButtonAnchor } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
+import { RatingStars } from "@/components/ui/rating-stars";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { WhatsAppIcon } from "@/components/icons/brand";
 import { useAddToCart } from "@/features/cart/use-add-to-cart";
@@ -122,7 +123,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
             productName={product.name}
             badge={
               priceInfo.discountPercent > 0 && !showRange ? (
-                <span className="absolute left-4 top-4 rounded-full bg-coral-600 px-3 py-1 text-sm font-bold text-white">
+                <span className="absolute left-4 top-4 rounded-full bg-ink px-3 py-1 text-sm font-bold text-white">
                   {priceInfo.discountPercent}% off
                 </span>
               ) : null
@@ -133,11 +134,18 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
         <div className="min-w-0">
           <Link
             href={`/category/${product.category.slug}`}
-            className="inline-flex rounded text-xs font-bold uppercase tracking-[0.12em] text-coral-600 hover:text-coral-700"
+            className="inline-flex rounded text-xs font-bold uppercase tracking-[0.12em] text-ink underline-offset-4 hover:underline"
           >
             {product.category.name}
           </Link>
-          <h1 className="mt-2 text-[1.75rem] font-extrabold leading-tight text-ink sm:text-4xl lg:text-[2.75rem]">{product.name}</h1>
+          <h1 className="mt-2 text-[1.75rem] font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl lg:text-[2.75rem]">{product.name}</h1>
+          {product.rating.count > 0 && (
+            <a href="#reviews-title" className="mt-3 inline-flex items-center gap-2 text-sm text-muted hover:text-ink">
+              <RatingStars value={product.rating.average} size="sm" />
+              <span className="font-semibold text-ink">{product.rating.average.toFixed(1)}</span>
+              <span className="underline underline-offset-4">{product.rating.count} {product.rating.count === 1 ? "review" : "reviews"}</span>
+            </a>
+          )}
           {sku && (
             <p className="mt-2 text-sm text-muted">
               SKU: <span className="font-medium text-ink">{sku}</span>
@@ -161,7 +169,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               <p
                 className={cn(
                   "mt-3 inline-flex items-center gap-1.5 text-sm font-semibold",
-                  !inStock || comboMissing ? "text-danger-700" : lowStock ? "text-coral-700" : "text-success-700",
+                  !inStock || comboMissing ? "text-danger-700" : lowStock ? "text-ink" : "text-success-700",
                 )}
               >
                 {!inStock || comboMissing ? <AlertCircle className="size-4" aria-hidden="true" /> : <Check className="size-4" aria-hidden="true" />}
@@ -228,7 +236,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
                 );
               })}
               {attempted && guidance && (
-                <p role="alert" className="flex items-center gap-2 rounded-xl bg-coral-tint px-3.5 py-2.5 text-sm font-semibold text-coral-700">
+                <p role="alert" className="flex items-center gap-2 rounded-xl bg-sand px-3.5 py-2.5 text-sm font-semibold text-ink">
                   <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
                   {guidance} to continue
                 </p>
@@ -270,7 +278,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
           </div>
 
           <div className="mt-6 flex items-start gap-3 rounded-2xl bg-sand p-4 text-sm text-ink">
-            <Banknote className="mt-0.5 size-5 shrink-0 text-teal" aria-hidden="true" />
+            <Banknote className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden="true" />
             <p>
               <span className="font-semibold">Cash / pay on delivery.</span>{" "}
               <span className="text-muted">No online payment needed — our team will call to confirm your order.</span>

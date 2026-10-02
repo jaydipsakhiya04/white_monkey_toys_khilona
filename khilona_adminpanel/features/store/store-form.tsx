@@ -65,6 +65,7 @@ const schema = z
     closingTime: time,
     workingDays: z.string().max(80, 'Too long'),
     isOpen: z.boolean(),
+    reviewsRequireApproval: z.boolean(),
     closedMessage: z.string().max(300, 'Too long'),
   })
   .superRefine((v, ctx) => {
@@ -101,6 +102,7 @@ function toValues(s: Store): Values {
     closingTime: nn(s.closingTime).slice(0, 5),
     workingDays: nn(s.workingDays),
     isOpen: s.isOpen,
+    reviewsRequireApproval: s.reviewsRequireApproval ?? false,
     closedMessage: nn(s.closedMessage),
   };
 }
@@ -276,6 +278,25 @@ function StoreForm({ store }: { store: Store }) {
                   inputClassName="pr-28"
                 />
               </Field>
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="Customer reviews" description="Verified-purchase reviews from customers with delivered orders." />
+            <div className="p-4 sm:p-5">
+              <Controller
+                control={control}
+                name="reviewsRequireApproval"
+                render={({ field }) => (
+                  <SwitchField
+                    id="reviews-approval"
+                    label="Approve reviews before they appear"
+                    description="When on, new and edited reviews wait in Reviews → Pending until you approve them. When off, they are published immediately (you can still hide any review)."
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
             </div>
           </Card>
 

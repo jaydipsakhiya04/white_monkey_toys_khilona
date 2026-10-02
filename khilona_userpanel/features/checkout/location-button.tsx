@@ -88,7 +88,7 @@ export function UseLocationButton({
             </span>
           </p>
         ) : status.kind === "error" ? (
-          <p className="text-coral-700">{status.message}</p>
+          <p className="text-ink">{status.message}</p>
         ) : (
           <p className="text-muted">Optional — helps our delivery team find you faster.</p>
         )}

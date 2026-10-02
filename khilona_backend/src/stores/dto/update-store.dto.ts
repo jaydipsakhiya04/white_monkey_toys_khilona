@@ -7,7 +7,7 @@ const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 /** All fields optional: PUT /admin/store accepts any subset. Empty strings become null. */
 export class UpdateStoreDto {
-  @ApiPropertyOptional({ example: 'Khilona' })
+  @ApiPropertyOptional({ example: 'White Monkey Toys' })
   @IsOptional()
   @IsString()
   @Length(1, 80, { message: 'Store name is required (max 80 characters)' })
@@ -118,4 +118,8 @@ export class UpdateStoreDto {
 
   @ApiPropertyOptional() @IsOptional() @EmptyToNull() @IsString() @MaxLength(170)
   seoDescription?: string | null;
+
+  @ApiPropertyOptional({ description: 'New customer reviews wait for approval before appearing on the storefront' })
+  @IsOptional() @IsBoolean()
+  reviewsRequireApproval?: boolean;
 }

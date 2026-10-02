@@ -7,6 +7,7 @@ import type {
   AdminProductDetail,
   AdminProductListItem,
   AdminProfile,
+  AdminReviewList,
   AdminUpdateInput,
   AuthResponse,
   BulkProductAction,
@@ -21,6 +22,7 @@ import type {
   PaymentStatus,
   ProductInput,
   ProductListParams,
+  ReviewListParams,
   Store,
   StoreInput,
   UploadFolder,
@@ -91,4 +93,10 @@ export const adminService = {
   list: () => api.get<AdminProfile[]>('/admin/admins'),
   create: (body: AdminCreateInput) => api.post<AdminProfile>('/admin/admins', body),
   update: (id: string, body: AdminUpdateInput) => api.patch<AdminProfile>(`/admin/admins/${id}`, body),
+};
+
+export const reviewService = {
+  list: (params: ReviewListParams) => api.get<AdminReviewList>('/admin/reviews', params),
+  /** Moderation only: admins can publish or hide a review, never edit its rating or text. */
+  setStatus: (id: string, status: 'APPROVED' | 'HIDDEN') => api.patch<{ id: string; status: string }>(`/admin/reviews/${id}/status`, { status }),
 };

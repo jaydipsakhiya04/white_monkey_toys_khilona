@@ -4,9 +4,10 @@ export const PAGE_SIZE = 24;
 
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: "featured", label: "Featured" },
+  { value: "popular", label: "Most popular" },
   { value: "newest", label: "Newest first" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
+  { value: "price_asc", label: "Price: low → high" },
+  { value: "price_desc", label: "Price: high → low" },
   { value: "name_asc", label: "Name: A to Z" },
   { value: "name_desc", label: "Name: Z to A" },
 ];

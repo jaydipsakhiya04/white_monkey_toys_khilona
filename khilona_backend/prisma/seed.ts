@@ -16,10 +16,11 @@ import sharp from 'sharp';
 import { loadConfig } from '../src/config/configuration';
 import { compactDateInZone } from '../src/common/utils/time';
 import { recomputeProductAggregates, resolvePrice, resolveVariantPrice } from '../src/products/pricing';
+import { recomputeProductRating } from '../src/reviews/reviews.service';
 import { LocalStorageProvider } from '../src/uploads/storage/local-storage.provider';
 import { S3StorageProvider } from '../src/uploads/storage/s3-storage.provider';
 import { StorageProvider } from '../src/uploads/storage/storage.provider';
-import { ArtKind, BACKGROUNDS, heroSvg, logoSvg, productSvg } from './seed-art';
+import { ArtKind, BACKGROUNDS, heroSvg, productSvg } from './seed-art';
 
 loadEnv({ quiet: true });
 
@@ -323,21 +324,18 @@ async function seedStore() {
     console.log('  • store exists, skipped');
     return;
   }
-  const [logoUrl, coverImageUrl] = await Promise.all([
-    render(logoSvg(), 'store/logo', 512),
-    render(heroSvg(), 'store/hero', 1600),
-  ]);
+  // No logo image: the storefront renders the WHITE MONKEY TOYS wordmark.
+  const coverImageUrl = await render(heroSvg(), 'store/hero', 1600);
   await prisma.store.create({
     data: {
-      name: 'Khilona',
+      name: 'White Monkey Toys',
       tagline: 'Toys, games & joyful gifts',
       description:
-        'Khilona is a neighbourhood toy store bringing together safe, thoughtfully chosen toys, games and learning kits for children of every age. Visit us in store or order online for doorstep delivery.',
-      logoUrl,
+        'White Monkey Toys is a neighbourhood toy store bringing together safe, thoughtfully chosen toys, games and learning kits for children of every age. Visit us in store or order online for doorstep delivery.',
       coverImageUrl,
       phone: '+91 98765 43210',
       whatsapp: '919876543210',
-      email: 'hello@khilona.in',
+      email: 'hello@whitemonkeytoys.in',
       address: 'Shop 12, Sunrise Arcade, CG Road, Navrangpura',
       city: 'Ahmedabad',
       state: 'Gujarat',
@@ -350,9 +348,9 @@ async function seedStore() {
       workingDays: 'Monday – Sunday',
       isOpen: true,
       closedMessage: 'We are not accepting online orders right now. Please call us or visit the store.',
-      heroTitle: 'Discover Something Fun',
-      heroSubtitle: 'Find toys, games and products your kids will love — hand-picked, safe and delivered to your door.',
-      heroCtaLabel: 'Shop now',
+      heroTitle: 'Find Something They’ll Love',
+      heroSubtitle: 'Thoughtfully chosen toys, games and gifts — easy to order, delivered to your door, and paid for on delivery.',
+      heroCtaLabel: 'Shop toys',
       announcement: 'Free delivery across Ahmedabad · Pay on delivery · Easy returns within 7 days',
       shippingPolicy:
         'We deliver across Ahmedabad and Gandhinagar, usually within 1–3 working days. After you place an order, our team will call or WhatsApp you to confirm the order and a delivery slot.\n\nDelivery is free within city limits. For orders outside our delivery area, we will contact you with options before confirming.',
@@ -362,9 +360,9 @@ async function seedStore() {
         'We only collect the details needed to deliver your order: your name, phone number, address and optional email or location link. We never sell your data.\n\nYour information is used to confirm and deliver orders and to contact you about them.',
       termsAndConditions:
         'Prices and availability are confirmed when our team contacts you after you place an order. Payment is collected on delivery (cash or UPI). Orders may be cancelled by the store if an item becomes unavailable; you will be informed promptly.',
-      seoTitle: 'Khilona — Toys, Games & Gifts in Ahmedabad',
+      seoTitle: 'White Monkey Toys — Toys, Games & Gifts in Ahmedabad',
       seoDescription:
-        'Shop toys, board games, puzzles, learning kits and gifts for kids at Khilona. Order online with pay-on-delivery and quick local delivery.',
+        'Shop toys, board games, puzzles, learning kits and gifts for kids at White Monkey Toys. Order online with pay-on-delivery and quick local delivery.',
     },
   });
   console.log('  ✓ store');
@@ -482,13 +480,7 @@ async function seedDemoOrders() {
     return;
   }
 
-  const demo: {
-    customer: { name: string; phone: string; email?: string; address: string; landmark?: string; pincode: string };
-    items: { slug: string; variantSku?: string; qty: number }[];
-    statuses: OrderStatus[];
-    hoursAgo: number;
-    note?: string;
-  }[] = [
+  const demo: DemoOrder[] = [
     {
       customer: { name: 'Ananya Mehta', phone: '9824012345', email: 'ananya.mehta@example.com', address: 'B-402, Shaligram Heights, Satellite Road', landmark: 'Near Jodhpur Cross Roads', pincode: '380015' },
       items: [{ slug: 'turbo-racer-remote-control-car', variantSku: 'KH-RC-TURBO-RED', qty: 1 }, { slug: 'speed-cube-3x3', qty: 2 }],
@@ -524,10 +516,23 @@ async function seedDemoOrders() {
   ];
 
   const admin = await prisma.admin.findFirst({ where: { role: AdminRole.SUPER_ADMIN } });
+  for (const d of demo) await createDemoOrder(d, admin);
+}
 
-  for (const d of demo) {
-    const createdAt = new Date(Date.now() - d.hoursAgo * 3600_000);
-    await prisma.$transaction(async (tx) => {
+interface DemoOrder {
+  customer: { name: string; phone: string; email?: string; address: string; landmark?: string; pincode: string };
+  items: { slug: string; variantSku?: string; qty: number }[];
+  statuses: OrderStatus[];
+  hoursAgo: number;
+  note?: string;
+  /** Link the order to this customer account ("My orders"). */
+  accountId?: string;
+}
+
+/** Creates one historical order exactly like the API would (snapshots, stock, history). */
+async function createDemoOrder(d: DemoOrder, admin: { id: string; name: string } | null) {
+  const createdAt = new Date(Date.now() - d.hoursAgo * 3600_000);
+  return prisma.$transaction(async (tx) => {
       const lines = [];
       for (const item of d.items) {
         const product = await tx.product.findUniqueOrThrow({
@@ -549,11 +554,13 @@ async function seedDemoOrders() {
 
       const subtotal = lines.reduce((s, l) => s + l.pricing.price * l.qty, 0);
       const discount = lines.reduce((s, l) => s + (l.pricing.price - l.pricing.effectivePrice) * l.qty, 0);
-      const customer = await tx.customer.upsert({
-        where: { phone: d.customer.phone },
-        create: { name: d.customer.name, phone: d.customer.phone, email: d.customer.email },
-        update: {},
-      });
+      const customer = d.accountId
+        ? { id: d.accountId }
+        : await tx.customer.upsert({
+            where: { phone: d.customer.phone },
+            create: { name: d.customer.name, phone: d.customer.phone, email: d.customer.email },
+            update: {},
+          });
 
       const history: Prisma.OrderStatusHistoryCreateWithoutOrderInput[] = [
         { toStatus: 'PENDING', note: 'Order placed by customer', createdAt },
@@ -572,10 +579,11 @@ async function seedDemoOrders() {
       });
       const status = prev as OrderStatus;
 
-      await tx.order.create({
+      const order = await tx.order.create({
         data: {
           orderNumber,
           customerId: customer.id,
+          accountLinkedAt: d.accountId ? createdAt : null,
           status,
           customerName: d.customer.name,
           customerPhone: d.customer.phone,
@@ -629,19 +637,82 @@ async function seedDemoOrders() {
       }
       for (const productId of new Set(lines.map((l) => l.product.id))) await recomputeProductAggregates(tx, productId);
       console.log(`  ✓ demo order ${orderNumber} (${status})`);
+      return { id: order.id, orderNumber, productIds: lines.map((l) => l.product.id) };
     });
-  }
 }
 
+/**
+ * A demo customer account with a few orders (two delivered, with verified reviews) so the
+ * storefront account area and product reviews have content in development. Idempotent.
+ */
+async function seedDemoAccount() {
+  if (process.env.SEED_DEMO_ORDERS === 'false' || config.isProduction) return;
+  if (await prisma.customer.findUnique({ where: { accountEmail: DEMO_CUSTOMER.email } })) {
+    console.log('  • demo customer exists, skipped');
+    return;
+  }
+  const passwordHash = await bcrypt.hash(DEMO_CUSTOMER.password, 12);
+  const account = await prisma.customer.upsert({
+    where: { phone: DEMO_CUSTOMER.phone },
+    create: {
+      name: DEMO_CUSTOMER.name,
+      phone: DEMO_CUSTOMER.phone,
+      email: DEMO_CUSTOMER.email,
+      accountEmail: DEMO_CUSTOMER.email,
+      passwordHash,
+      registeredAt: new Date(Date.now() - 30 * 86400_000),
+    },
+    update: { name: DEMO_CUSTOMER.name, accountEmail: DEMO_CUSTOMER.email, email: DEMO_CUSTOMER.email, passwordHash, registeredAt: new Date() },
+  });
+  const admin = await prisma.admin.findFirst({ where: { role: AdminRole.SUPER_ADMIN } });
+  const customer = { name: DEMO_CUSTOMER.name, phone: DEMO_CUSTOMER.phone, email: DEMO_CUSTOMER.email, address: '9, Riverfront Residency, Ashram Road', landmark: 'Opp. City Library', pincode: '380009' };
+
+  const reviews: { slug: string; rating: number; comment: string }[][] = [
+    [
+      { slug: 'creative-building-blocks-250-pcs', rating: 5, comment: 'Excellent quality bricks — they click together firmly and the storage tub is a bonus. Kept my daughter busy all weekend.' },
+      { slug: 'jumbo-crayons-24-colours', rating: 4, comment: 'Bright colours and easy for small hands to hold. A couple were broken in the box but still usable.' },
+    ],
+    [{ slug: 'cuddly-teddy-bear', rating: 5, comment: 'So soft! Stitching is neat and it survived the washing machine. Lovely gift.' }],
+  ];
+  const plans: DemoOrder[] = [
+    { customer, accountId: account.id, items: [{ slug: 'creative-building-blocks-250-pcs', qty: 1 }, { slug: 'jumbo-crayons-24-colours', qty: 2 }], statuses: ['CONFIRMED', 'PROCESSING', 'OUT_FOR_DELIVERY', 'DELIVERED'], hoursAgo: 24 * 18 },
+    { customer, accountId: account.id, items: [{ slug: 'cuddly-teddy-bear', variantSku: 'KH-TED-CUD-M', qty: 1 }], statuses: ['CONFIRMED', 'READY', 'DELIVERED'], hoursAgo: 24 * 6 },
+    { customer, accountId: account.id, items: [{ slug: 'speed-cube-3x3', qty: 1 }], statuses: ['CONFIRMED', 'PROCESSING'], hoursAgo: 26 },
+  ];
+
+  for (const [i, plan] of plans.entries()) {
+    const order = await createDemoOrder(plan, admin);
+    for (const r of reviews[i] ?? []) {
+      const product = await prisma.product.findUniqueOrThrow({ where: { slug: r.slug }, select: { id: true } });
+      await prisma.review.create({
+        data: {
+          customerId: account.id,
+          productId: product.id,
+          orderId: order.id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: new Date(Date.now() - (plan.hoursAgo - 48) * 3600_000),
+        },
+      });
+      await recomputeProductRating(prisma, product.id);
+    }
+  }
+  console.log(`  ✓ demo customer ${DEMO_CUSTOMER.email} / ${DEMO_CUSTOMER.password} (3 orders, 3 reviews)`);
+}
+
+const DEMO_CUSTOMER = { name: 'Priya Shah', email: 'demo@whitemonkeytoys.in', phone: '9811122233', password: 'Demo@12345' };
+
 async function main() {
-  console.log('Seeding Khilona…');
+  console.log('Seeding White Monkey Toys (Khilona)…');
   await seedAdmins();
   await seedStore();
   const categoryIds = await seedCategories();
   await seedProducts(categoryIds);
   await seedDemoOrders();
+  await seedDemoAccount();
   console.log('\nDone. Development admin logins (change before production!):');
   for (const a of DEV_ADMINS) console.log(`  ${a.role.padEnd(11)} ${a.email} / ${a.password}`);
+  console.log(`  CUSTOMER    ${DEMO_CUSTOMER.email} / ${DEMO_CUSTOMER.password} (storefront)`);
 }
 
 main()
