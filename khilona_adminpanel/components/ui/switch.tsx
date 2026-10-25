@@ -29,7 +29,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         'relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-colors duration-150',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50',
         sm ? 'h-5 w-9' : 'h-6 w-11',
-        checked ? 'bg-brand' : 'bg-stone-300',
+        checked ? 'bg-gradient-to-r from-[#FF7A3D] to-brand shadow-[inset_0_1px_2px_rgb(0_0_0/0.12)]' : 'bg-stone-200 shadow-[inset_0_1px_2px_rgb(16_24_40/0.12)]',
         className,
       )}
       {...props}

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { InitialsAvatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
@@ -37,15 +38,6 @@ const createSchema = z.object({
 });
 type CreateValues = z.infer<typeof createSchema>;
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join('');
-}
-
 export function AdminUsers() {
   const qc = useQueryClient();
   const { admin: me } = useAuth();
@@ -71,7 +63,7 @@ export function AdminUsers() {
     );
 
   return (
-    <Card id="admins" className="scroll-mt-20">
+    <Card id="admins" className="scroll-mt-24">
       <CardHeader
         title={
           <span className="flex items-center gap-2">
@@ -101,9 +93,7 @@ export function AdminUsers() {
             const isMe = a.id === me?.id;
             return (
               <li key={a.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:px-5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-subtle text-xs font-semibold text-ink-soft">
-                  {initials(a.name)}
-                </span>
+                <InitialsAvatar name={a.name} size={38} />
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold">
                     <span className="truncate">{a.name}</span>

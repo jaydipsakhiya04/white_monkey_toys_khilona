@@ -21,7 +21,7 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn('mb-5 sm:mb-6', className)}>
+    <header className={cn('mb-6 animate-enter sm:mb-7', className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav aria-label="Breadcrumb" className="mb-2">
           <ol className="flex flex-wrap items-center gap-1 text-xs text-muted">
@@ -45,10 +45,10 @@ export function PageHeader({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-[22px]">{title}</h1>
+            <h1 className="font-display text-[22px] font-bold tracking-[-0.025em] text-ink sm:text-[26px]">{title}</h1>
             {meta}
           </div>
-          {description && <p className="mt-1 text-[13px] leading-relaxed text-muted">{description}</p>}
+          {description && <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>

@@ -11,13 +11,13 @@ export function OfflineScreen({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-page px-6 text-center">
       <BrandMark />
-      <div className="mt-4 flex size-12 items-center justify-center rounded-xl border border-line bg-surface text-muted">
-        <WifiOff className="size-5" aria-hidden />
+      <div className="mt-4 flex size-14 items-center justify-center rounded-2xl border border-line bg-surface text-brand shadow-raised">
+        <WifiOff className="size-6" aria-hidden />
       </div>
       <div>
-        <h1 className="text-base font-semibold">Can&apos;t reach the server</h1>
+        <h1 className="font-display text-lg font-bold">Can&apos;t reach the server</h1>
         <p className="mt-1 max-w-sm text-sm text-muted">
-          The KHILONA API is not responding. Check that the backend is running and try again.
+          The White Monkey Toys API is not responding. Check that the backend is running and try again.
         </p>
       </div>
       <Button onClick={onRetry}>Try again</Button>

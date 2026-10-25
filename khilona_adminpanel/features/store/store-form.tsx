@@ -238,7 +238,7 @@ function StoreForm({ store }: { store: Store }) {
                 <Input {...register('whatsapp')} type="tel" inputMode="numeric" placeholder="919876543210" leading={<MessageCircle />} />
               </Field>
               <Field label="Email" error={errors.email?.message}>
-                <Input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="hello@khilona.in" leading={<Mail />} />
+                <Input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="hello@whitemonkeytoys.in" leading={<Mail />} />
               </Field>
             </div>
           </Card>
@@ -350,10 +350,10 @@ function StoreForm({ store }: { store: Store }) {
             <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
               {(
                 [
-                  ['instagram', 'Instagram', 'https://instagram.com/khilona'],
-                  ['facebook', 'Facebook', 'https://facebook.com/khilona'],
-                  ['youtube', 'YouTube', 'https://youtube.com/@khilona'],
-                  ['website', 'Website', 'https://khilona.in'],
+                  ['instagram', 'Instagram', 'https://instagram.com/whitemonkeytoys'],
+                  ['facebook', 'Facebook', 'https://facebook.com/whitemonkeytoys'],
+                  ['youtube', 'YouTube', 'https://youtube.com/@whitemonkeytoys'],
+                  ['website', 'Website', 'https://whitemonkeytoys.in'],
                 ] as const
               ).map(([key, label, ph]) => (
                 <Field key={key} label={label} error={errors[key]?.message}>
@@ -364,16 +364,22 @@ function StoreForm({ store }: { store: Store }) {
           </Card>
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Preview</p>
-          <Card className="overflow-hidden">
-            <div className="relative aspect-[16/7] bg-subtle">
+        <aside className="xl:sticky xl:top-24 xl:self-start">
+          <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
+            <span className="relative flex size-2">
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/70" />
+              <span className="relative size-2 rounded-full bg-emerald-500" />
+            </span>
+            Live preview
+          </p>
+          <Card className="overflow-hidden shadow-raised">
+            <div className="relative aspect-[16/7] bg-gradient-to-br from-stone-100 to-stone-200">
               {v.coverImageUrl ? (
                 <img src={v.coverImageUrl} alt="" className="size-full object-cover" width={680} height={300} />
               ) : (
                 <div className="flex size-full items-center justify-center text-xs text-stone-400">No cover image</div>
               )}
-              <div className="absolute -bottom-7 left-4 size-14 overflow-hidden rounded-xl border-2 border-surface bg-surface shadow-xs">
+              <div className="absolute -bottom-7 left-4 size-14 overflow-hidden rounded-2xl border-[3px] border-surface bg-surface shadow-raised">
                 {v.logoUrl ? (
                   <img src={v.logoUrl} alt="" className="size-full object-cover" width={56} height={56} />
                 ) : (
@@ -386,13 +392,13 @@ function StoreForm({ store }: { store: Store }) {
             <div className="px-4 pb-4 pt-9">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-base font-semibold">{v.name || 'Store name'}</p>
+                  <p className="truncate font-display text-base font-bold">{v.name || 'Store name'}</p>
                   {v.tagline && <p className="text-[13px] text-muted">{v.tagline}</p>}
                 </div>
                 <span
                   className={cn(
-                    'shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
-                    v.isOpen ? 'bg-green-50 text-green-700 ring-green-200' : 'bg-red-50 text-red-700 ring-red-200',
+                    'shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
+                    v.isOpen ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/15' : 'bg-red-50 text-red-700 ring-red-600/15',
                   )}
                 >
                   {v.isOpen ? 'Open' : 'Closed'}
@@ -427,9 +433,13 @@ function StoreForm({ store }: { store: Store }) {
         </aside>
       </div>
 
-      <div className="sticky bottom-16 z-20 -mx-4 mt-6 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mt-6 rounded-2xl border border-line bg-surface/90 px-3 py-2.5 shadow-pop backdrop-blur-xl sm:px-4 md:bottom-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="hidden text-[13px] text-muted sm:block" aria-live="polite">
+          <p className="hidden items-center gap-2 text-[13px] text-muted sm:flex" aria-live="polite">
+            <span
+              className={cn('size-2 shrink-0 rounded-full', isDirty ? 'bg-amber-500 shadow-[0_0_0_3px_rgb(245_158_11/0.2)]' : 'bg-emerald-500')}
+              aria-hidden
+            />
             {isDirty ? 'You have unsaved changes' : 'All changes saved'}
           </p>
           <div className="flex flex-1 gap-2 sm:flex-none">

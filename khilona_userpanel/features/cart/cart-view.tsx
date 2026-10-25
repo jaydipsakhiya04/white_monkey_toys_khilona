@@ -177,7 +177,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
   return (
     <li className={cn("flex gap-3 p-3 sm:gap-4 sm:p-4", blocking && "bg-danger-tint/40")} data-testid="cart-line">
       <Link href={`/product/${slug}`} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-sand sm:size-24" tabIndex={-1} aria-hidden="true">
-        <SmartImage src={image} alt="" fill sizes="96px" className={cn("object-contain p-1.5", blocking && "opacity-50")} />
+        <SmartImage src={image} alt="" fill sizes="96px" className={cn("object-cover", blocking && "opacity-50")} />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-2">

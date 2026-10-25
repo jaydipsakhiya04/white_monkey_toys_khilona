@@ -137,7 +137,7 @@ export function DropdownMenu({
 
   const itemClass = (danger?: boolean, disabled?: boolean) =>
     cn(
-      'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] outline-none transition-colors',
+      'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium outline-none transition-colors',
       '[&_svg]:size-4 [&_svg]:shrink-0',
       disabled
         ? 'cursor-not-allowed text-stone-400'
@@ -182,7 +182,7 @@ export function DropdownMenu({
               minWidth: pos?.minWidth ?? 180,
             }}
             className={cn(
-              'z-[60] max-w-[calc(100vw-16px)] animate-fade-in rounded-lg border border-line bg-surface p-1 shadow-pop',
+              'z-[60] max-w-[calc(100vw-16px)] animate-pop rounded-xl border border-line bg-surface/95 p-1.5 shadow-pop backdrop-blur-xl',
               menuClassName,
             )}
           >

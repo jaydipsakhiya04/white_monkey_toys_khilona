@@ -42,7 +42,7 @@ export function Tabs<V extends string>({
         role="tablist"
         aria-label={label}
         onKeyDown={onKeyDown}
-        className="inline-flex min-w-full gap-1 border-b border-line sm:min-w-0"
+        className="inline-flex gap-1 rounded-xl border border-line bg-stone-100/70 p-1"
       >
         {items.map((item) => {
           const active = item.value === value;
@@ -56,9 +56,11 @@ export function Tabs<V extends string>({
               tabIndex={active ? 0 : -1}
               onClick={() => onChange(item.value)}
               className={cn(
-                'relative -mb-px inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-2.5 text-[13px] font-medium transition-colors',
+                'relative inline-flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-[9px] px-3 text-[13px] font-medium transition-all duration-150',
                 'focus-visible:outline-offset-[-2px]',
-                active ? 'border-brand text-ink' : 'border-transparent text-muted hover:text-ink',
+                active
+                  ? 'bg-surface text-ink shadow-[0_1px_2px_rgb(16_24_40/0.08),0_0_0_1px_rgb(16_24_40/0.04)]'
+                  : 'text-muted hover:bg-white/60 hover:text-ink',
               )}
             >
               {item.dotClass && <span className={cn('size-1.5 rounded-full', item.dotClass)} aria-hidden />}
@@ -67,7 +69,7 @@ export function Tabs<V extends string>({
                 <span
                   className={cn(
                     'min-w-5 rounded-full px-1.5 py-px text-center text-[11px] font-semibold tabular',
-                    active ? 'bg-brand-tint text-brand-hover' : 'bg-subtle text-muted',
+                    active ? 'bg-brand text-white' : 'bg-stone-200/80 text-stone-600',
                   )}
                 >
                   {item.count}
@@ -94,7 +96,7 @@ export function Segmented<V extends string>({
   label: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-line bg-subtle p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-[10px] border border-line bg-stone-100/70 p-0.5">
       {options.map((o) => (
         <button
           key={o.value}
@@ -103,8 +105,8 @@ export function Segmented<V extends string>({
           aria-checked={o.value === value}
           onClick={() => onChange(o.value)}
           className={cn(
-            'h-7 rounded-md px-2.5 text-xs font-medium transition-colors',
-            o.value === value ? 'bg-surface text-ink shadow-xs' : 'text-muted hover:text-ink',
+            'h-7 rounded-[8px] px-3 text-xs font-medium transition-all duration-150',
+            o.value === value ? 'bg-surface text-ink shadow-[0_1px_2px_rgb(16_24_40/0.1)]' : 'text-muted hover:text-ink',
           )}
         >
           {o.label}

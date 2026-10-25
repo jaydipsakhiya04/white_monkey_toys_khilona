@@ -4,6 +4,7 @@ import { CalendarDays, Eye, MessageCircle, MoreHorizontal, Phone, Search, Shoppi
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { InitialsAvatar } from '@/components/ui/avatar';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, type MenuEntry } from '@/components/ui/dropdown-menu';
@@ -121,7 +122,7 @@ export function OrdersList() {
       />
 
       <Card>
-        <div className="flex flex-col gap-2 border-b border-line p-3 sm:p-4 xl:flex-row xl:items-center">
+        <div className="flex flex-col gap-2 border-b border-line bg-stone-50/40 p-3 sm:p-4 xl:flex-row xl:items-center">
           <Input
             type="search"
             aria-label="Search orders"
@@ -244,10 +245,15 @@ export function OrdersList() {
                         </p>
                       </TD>
                       <TD>
-                        <p className="max-w-[180px] truncate font-medium">{o.customerName}</p>
-                        <a href={telLink(o.customerPhone)} className="text-xs text-muted tabular hover:text-brand">
-                          {formatPhone(o.customerPhone)}
-                        </a>
+                        <div className="flex items-center gap-2.5">
+                          <InitialsAvatar name={o.customerName} size={32} />
+                          <div className="min-w-0">
+                            <p className="max-w-[180px] truncate font-medium">{o.customerName}</p>
+                            <a href={telLink(o.customerPhone)} className="text-xs text-muted tabular hover:text-brand">
+                              {formatPhone(o.customerPhone)}
+                            </a>
+                          </div>
+                        </div>
                       </TD>
                       <TD className="max-w-[120px] truncate text-ink-soft">{o.city}</TD>
                       <TD>
@@ -258,7 +264,7 @@ export function OrdersList() {
                           {o.itemsCount} item{o.itemsCount === 1 ? '' : 's'}
                         </p>
                       </TD>
-                      <TD className="text-right font-semibold tabular">{formatCurrency(o.total)}</TD>
+                      <TD className="text-right font-display text-[13.5px] font-bold tabular">{formatCurrency(o.total)}</TD>
                       <TD>
                         <OrderStatusBadge status={o.status} />
                       </TD>
@@ -279,9 +285,9 @@ export function OrdersList() {
             </div>
 
             {/* Mobile / tablet cards */}
-            <ul className="divide-y divide-line xl:hidden">
+            <ul className="divide-y divide-line/80 xl:hidden">
               {items.map((o) => (
-                <li key={o.id} className="flex gap-3 px-4 py-3.5">
+                <li key={o.id} className="flex gap-3 px-4 py-4 sm:px-5">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link href={`/orders/${o.id}`} className="text-sm font-semibold tabular hover:text-brand">
@@ -294,7 +300,7 @@ export function OrdersList() {
                     </p>
                     <p className="truncate text-xs text-muted">{o.itemsPreview.join(', ')}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                      <span className="text-sm font-semibold text-ink tabular">{formatCurrency(o.total)}</span>
+                      <span className="font-display text-[15px] font-bold text-ink tabular">{formatCurrency(o.total)}</span>
                       <PaymentStatusBadge status={o.paymentStatus} />
                       <span className="tabular">
                         {formatDate(o.createdAt)}, {formatTime(o.createdAt)}
@@ -303,7 +309,7 @@ export function OrdersList() {
                     <div className="mt-3 flex gap-2">
                       <a
                         href={telLink(o.customerPhone)}
-                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line text-[13px] font-medium hover:bg-subtle"
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface text-[13px] font-medium shadow-xs transition-colors hover:bg-stone-50 active:scale-[0.98]"
                         aria-label={`Call ${o.customerName}`}
                       >
                         <Phone className="size-4" aria-hidden /> Call
@@ -312,14 +318,14 @@ export function OrdersList() {
                         href={whatsappLink(o.customerPhone, `Hello ${o.customerName}, this is White Monkey Toys about your order ${o.orderNumber}.`)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line text-[13px] font-medium hover:bg-subtle"
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-emerald-200 bg-emerald-50 text-[13px] font-medium text-emerald-800 transition-colors hover:bg-emerald-100 active:scale-[0.98]"
                         aria-label={`WhatsApp ${o.customerName}`}
                       >
                         <MessageCircle className="size-4" aria-hidden /> WhatsApp
                       </a>
                       <Link
                         href={`/orders/${o.id}`}
-                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-ink text-[13px] font-medium text-white hover:bg-ink-soft"
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-night text-[13px] font-medium text-white transition-colors hover:bg-ink-soft active:scale-[0.98]"
                       >
                         Open
                       </Link>

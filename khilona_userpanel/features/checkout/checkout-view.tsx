@@ -482,7 +482,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             {summaryLines.map(({ item, line }) => (
               <li key={item.key} className="flex items-center gap-3">
                 <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-sand">
-                  <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="56px" className="object-contain p-1" />
+                  <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="56px" className="object-cover" />
                   <span className="absolute -right-0 -top-0 grid h-5 min-w-5 place-items-center rounded-bl-lg bg-ink px-1 text-[0.6875rem] font-bold text-white">
                     {line?.quantity ?? item.quantity}
                   </span>
@@ -626,7 +626,7 @@ function ReviewStep({
           {lines.map(({ item, line, blocking: bad }) => (
             <li key={item.key} className={cn("flex items-center gap-3 p-3", bad && "bg-danger-tint/40")}>
               <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-sand">
-                <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="48px" className="object-contain p-1" />
+                <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="48px" className="object-cover" />
               </span>
               <div className="min-w-0 flex-1 text-sm">
                 <p className="line-clamp-1 font-semibold text-ink">{line?.product?.name ?? item.snapshot.name}</p>

@@ -4,7 +4,7 @@ import { cn } from '@/utils/cn';
 import { Button } from './button';
 
 export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div aria-hidden className={cn('animate-pulse rounded-md bg-stone-200/70', className)} {...props} />;
+  return <div aria-hidden className={cn('shimmer rounded-md', className)} {...props} />;
 }
 
 export function Spinner({ className, label = 'Loading' }: { className?: string; label?: string }) {
@@ -40,11 +40,14 @@ export function EmptyState({
       )}
     >
       {Icon && (
-        <div className="mb-3 flex size-11 items-center justify-center rounded-xl border border-line bg-subtle text-muted">
-          <Icon className="size-5" aria-hidden />
+        <div className="relative mb-4">
+          <div className="absolute inset-0 -m-3 rounded-full bg-brand/10 blur-xl" aria-hidden />
+          <div className="relative flex size-12 items-center justify-center rounded-2xl border border-line bg-surface text-brand shadow-raised">
+            <Icon className="size-5" aria-hidden />
+          </div>
         </div>
       )}
-      <h3 className="text-sm font-semibold text-ink">{title}</h3>
+      <h3 className="font-display text-[15px] font-semibold text-ink">{title}</h3>
       {description && <p className="mt-1 max-w-sm text-[13px] leading-relaxed text-muted">{description}</p>}
       {action && <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>}
     </div>
@@ -79,7 +82,7 @@ export function ErrorState({
 }
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('rounded-xl border border-line bg-surface', className)} {...props} />;
+  return <div className={cn('overflow-clip rounded-card border border-line bg-surface shadow-card', className)} {...props} />;
 }
 
 export function CardHeader({
@@ -94,9 +97,9 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 border-b border-line px-4 py-3 sm:px-5', className)}>
+    <div className={cn('flex items-start justify-between gap-3 border-b border-line px-4 py-3.5 sm:px-5', className)}>
       <div className="min-w-0">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        <h2 className="font-display text-[14.5px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
         {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
       </div>
       {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
@@ -117,7 +120,7 @@ export function Thumb({
 }) {
   return (
     <div
-      className={cn('shrink-0 overflow-hidden rounded-lg border border-line bg-subtle', className)}
+      className={cn('shrink-0 overflow-hidden rounded-[10px] border border-line bg-stone-50 ring-1 ring-inset ring-black/[0.02]', className)}
       style={{ width: size, height: size }}
     >
       {src ? (

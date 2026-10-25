@@ -15,7 +15,7 @@ export function Checkbox({ indeterminate, className, ...props }: CheckboxProps) 
       ref={ref}
       type="checkbox"
       className={cn(
-        'size-4 shrink-0 cursor-pointer rounded border-line-strong accent-[#E4572E]',
+        'size-4 shrink-0 cursor-pointer rounded border-line-strong accent-[#F05A22]',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
         className,
       )}

@@ -34,7 +34,7 @@ export function CategoryCard({ category, index = 0, className }: { category: Cat
       </div>
       <div className="px-2 pb-1.5 pt-3">
         <h3 className="font-display text-[0.9875rem] font-semibold leading-tight text-ink sm:text-[1.0625rem]">{category.name}</h3>
-        <p className="mt-0.5 text-xs text-muted sm:text-[0.8125rem]">{pluralize(category.productCount, "toy")}</p>
+        <p className="mt-0.5 text-xs text-muted sm:text-[0.8125rem]">{pluralize(category.productCount, "product")}</p>
       </div>
     </Link>
   );

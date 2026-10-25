@@ -5,27 +5,36 @@ import { BRAND_NAME } from "@/lib/brand";
 import { cn } from "@/utils/cn";
 
 /**
- * Minimal brand mark: a geometric monkey face — black head and ears, a white face.
- * Drawn on a 32×32 grid so it stays crisp from favicon size up.
+ * "WM" monogram: a white W and a tangerine M drawn as rounded strokes on a midnight tile
+ * (32×32 grid, crisp from favicon size up). `inverted` uses a white tile for dark backgrounds.
  */
-export function MonkeyMark({ className, face = "#fff", ...props }: SVGProps<SVGSVGElement> & { face?: string }) {
+export function WmMark({ className, inverted, ...props }: SVGProps<SVGSVGElement> & { inverted?: boolean }) {
+  // fixed ids: every instance defines the same gradient, so duplicates are harmless (works in server components)
+  const id = inverted ? "wm-tile-inverted" : "wm-tile";
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("shrink-0", className)} {...props}>
-      <circle cx="5.6" cy="15" r="4.6" fill="currentColor" />
-      <circle cx="26.4" cy="15" r="4.6" fill="currentColor" />
-      <circle cx="16" cy="16" r="12" fill="currentColor" />
-      <path
-        d="M16 12.1c1-.95 2.2-1.45 3.55-1.45 2.55 0 4.25 1.85 4.25 4.25 0 .95-.27 1.8-.72 2.5.5.6.8 1.37.8 2.22 0 3.05-3.3 5.35-7.88 5.35s-7.88-2.3-7.88-5.35c0-.85.3-1.62.8-2.22a4.6 4.6 0 0 1-.72-2.5c0-2.4 1.7-4.25 4.25-4.25 1.35 0 2.55.5 3.55 1.45Z"
-        fill={face}
-      />
-      <circle cx="12.7" cy="15.1" r="1.25" fill="currentColor" />
-      <circle cx="19.3" cy="15.1" r="1.25" fill="currentColor" />
-      <path d="M13.6 20.4c1.4 1.05 3.4 1.05 4.8 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={inverted ? "#ffffff" : "#23263a"} />
+          <stop offset="1" stopColor={inverted ? "#ece8e1" : "#0c0d16"} />
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="8.5" fill={`url(#${id})`} />
+      <g fill="none" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.7 10.6 7.35 21.4 10.05 14.3 12.75 21.4 15.4 10.6" stroke={inverted ? "#0c0d16" : "#ffffff"} />
+        <path d="M17 21.4V10.6l5.2 7 5.2-7v10.8" stroke="#ff5a1f" />
+      </g>
     </svg>
   );
 }
 
-/** Black uppercase wordmark with the monkey mark. `name` comes from the store settings. */
+/** Splits "White Monkey Toys" into the main line ("White Monkey") and the small tag ("Toys"). */
+function splitName(name: string) {
+  const m = name.trim().match(/^(.*?)\s+(toys?)$/i);
+  return m ? { main: m[1], tag: m[2] } : { main: name.trim(), tag: "" };
+}
+
+/** WM | WHITE MONKEY lockup. `name` comes from the store settings. */
 export function Wordmark({
   name = BRAND_NAME,
   className,
@@ -37,19 +46,28 @@ export function Wordmark({
   className?: string;
   markClassName?: string;
   compact?: boolean;
-  /** white wordmark for dark backgrounds */
+  /** light lockup for dark backgrounds */
   inverted?: boolean;
 }) {
+  const { main, tag } = splitName(name);
   return (
-    <span className={cn("inline-flex items-center gap-2", inverted ? "text-white" : "text-ink", className)}>
-      <MonkeyMark className={cn("size-6 min-[360px]:size-7 sm:size-8", markClassName)} face={inverted ? "#0a0a0a" : "#fff"} />
-      <span
-        className={cn(
-          "font-display font-extrabold uppercase leading-none tracking-[0.09em]",
-          compact ? "text-[0.875rem]" : "text-[0.8rem] min-[360px]:text-[0.9rem] xs:text-[0.98rem] sm:text-[1.08rem]",
+    <span className={cn("inline-flex items-center", inverted ? "text-white" : "text-ink", className)}>
+      <WmMark inverted={inverted} className={cn("size-8 sm:size-9", markClassName)} />
+      <span aria-hidden="true" className={cn("mx-2.5 h-7 w-px sm:mx-3", inverted ? "bg-white/25" : "bg-ink/20")} />
+      <span className="flex flex-col justify-center leading-none">
+        <span
+          className={cn(
+            "font-display font-extrabold uppercase tracking-[0.08em]",
+            compact ? "text-[0.875rem]" : "text-[0.84rem] min-[360px]:text-[0.92rem] sm:text-[1.05rem]",
+          )}
+        >
+          {main}
+        </span>
+        {tag && (
+          <span className="mt-[3px] text-[0.5625rem] font-bold uppercase tracking-[0.42em] text-accent-deep sm:text-[0.625rem]">
+            <span className={inverted ? "text-accent" : undefined}>{tag}</span>
+          </span>
         )}
-      >
-        {name}
       </span>
     </span>
   );

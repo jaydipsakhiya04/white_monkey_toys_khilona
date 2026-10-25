@@ -63,7 +63,7 @@ export default async function HomePage() {
         />
       )}
 
-      <Hero store={store} showcase={featured.length ? featured : popular} />
+      <Hero store={store} showcase={featured.length ? featured : popular} categories={categories ?? []} />
       <PromiseMarquee />
 
       {apiDown ? (

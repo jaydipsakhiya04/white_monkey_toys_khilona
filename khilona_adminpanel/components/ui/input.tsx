@@ -3,9 +3,9 @@ import { ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 export const controlBase =
-  'w-full rounded-lg border border-line bg-surface text-sm text-ink placeholder:text-stone-400 shadow-xs ' +
-  'transition-colors duration-150 hover:border-line-strong ' +
-  'focus:outline-none focus:border-brand focus:ring-3 focus:ring-brand/15 ' +
+  'w-full rounded-[10px] border border-line bg-surface text-sm text-ink placeholder:text-stone-400 shadow-xs ' +
+  'transition-[border-color,box-shadow] duration-150 hover:border-line-strong ' +
+  'focus:outline-none focus:border-brand/70 focus:ring-4 focus:ring-brand/12 ' +
   'disabled:cursor-not-allowed disabled:bg-subtle disabled:text-muted ' +
   'aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/15';
 

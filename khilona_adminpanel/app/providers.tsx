@@ -15,7 +15,12 @@ export function Providers({ children }: { children: ReactNode }) {
         position="top-right"
         closeButton
         richColors
-        toastOptions={{ classNames: { toast: 'font-sans text-sm' } }}
+        toastOptions={{
+          classNames: {
+            toast: 'font-sans text-sm !rounded-xl !shadow-pop',
+            title: 'font-medium',
+          },
+        }}
         offset={16}
         mobileOffset={{ top: 12 }}
       />

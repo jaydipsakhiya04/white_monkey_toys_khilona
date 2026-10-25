@@ -46,7 +46,7 @@ export function OrderCard({ order }: { order: CustomerOrderListItem }) {
           <div className="flex -space-x-3">
             {order.itemsPreview.slice(0, 4).map((it, i) => (
               <span key={i} className="relative size-12 overflow-hidden rounded-xl border-2 border-surface bg-sand">
-                <SmartImage src={it.imageUrl} alt="" fill sizes="48px" className="object-contain p-1" />
+                <SmartImage src={it.imageUrl} alt="" fill sizes="48px" className="object-cover" />
               </span>
             ))}
             {extra > 0 && (

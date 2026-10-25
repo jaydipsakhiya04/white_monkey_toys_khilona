@@ -53,7 +53,7 @@ function Section({
   action?: ReactNode;
 }) {
   return (
-    <Card id={id} className="scroll-mt-20">
+    <Card id={id} className="scroll-mt-24">
       <CardHeader title={title} description={description} action={action} />
       <div className="p-4 sm:p-5">{children}</div>
     </Card>
@@ -307,9 +307,14 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
               >
                 <Input {...register('salePrice')} inputMode="decimal" leading={<span className="text-sm">₹</span>} placeholder="—" />
               </Field>
-              <div className="flex flex-col justify-center rounded-lg border border-line bg-page px-3 py-2">
+              <div
+                className={cn(
+                  'flex flex-col justify-center rounded-xl border px-3.5 py-2.5 transition-colors',
+                  off > 0 ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-surface' : 'border-line bg-stone-50',
+                )}
+              >
                 <span className="text-xs text-muted">Discount</span>
-                <span className={cn('text-lg font-semibold tabular', off > 0 ? 'text-success' : 'text-muted')}>
+                <span className={cn('font-display text-xl font-bold tabular', off > 0 ? 'text-success' : 'text-muted')}>
                   {off > 0 ? `${off}% off` : '—'}
                 </span>
               </div>
@@ -337,7 +342,7 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
               </Field>
             </div>
             {hasVariants && (
-              <p className="mt-3 flex items-start gap-2 rounded-lg bg-info-tint px-3 py-2 text-xs text-info">
+              <p className="mt-3 flex items-start gap-2 rounded-xl border border-teal-200/70 bg-info-tint px-3 py-2.5 text-xs text-info">
                 <Info className="mt-px size-3.5 shrink-0" aria-hidden />
                 This product has variants, so stock is managed per variant below and the total is calculated automatically.
               </p>
@@ -403,7 +408,7 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
           </Section>
         </div>
 
-        <aside className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-24 xl:self-start">
           <Card>
             <CardHeader title="Visibility" />
             <div className="flex flex-col gap-3 p-4 sm:p-5">
@@ -438,15 +443,17 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
               </Field>
             </div>
           </Card>
-          <nav aria-label="Form sections" className="hidden rounded-xl border border-line bg-surface p-2 xl:block">
+          <nav aria-label="Form sections" className="hidden rounded-card border border-line bg-surface p-2 shadow-card xl:block">
+            <p className="px-2.5 pb-1.5 pt-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-400">On this page</p>
             <ul>
               {SECTIONS.map(([sid, label]) => (
                 <li key={sid}>
                   <a
                     href={`#${sid}`}
                     data-skip-unsaved-guard="true"
-                    className="block rounded-md px-2.5 py-1.5 text-[13px] text-ink-soft hover:bg-subtle hover:text-ink"
+                    className="group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] text-ink-soft transition-colors hover:bg-stone-100 hover:text-ink"
                   >
+                    <span className="size-1.5 rounded-full bg-stone-300 transition-colors group-hover:bg-brand" aria-hidden />
                     {label}
                   </a>
                 </li>
@@ -457,9 +464,16 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
       </div>
 
       {/* Sticky save bar */}
-      <div className="sticky bottom-16 z-20 -mx-4 mt-6 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 mt-6 rounded-2xl border border-line bg-surface/90 px-3 py-2.5 shadow-pop backdrop-blur-xl sm:px-4 md:bottom-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="hidden truncate text-[13px] text-muted sm:block" aria-live="polite">
+          <p className="hidden min-w-0 items-center gap-2 truncate text-[13px] text-muted sm:flex" aria-live="polite">
+            <span
+              className={cn(
+                'size-2 shrink-0 rounded-full',
+                uploading ? 'animate-pulse bg-info' : isDirty ? 'bg-amber-500 shadow-[0_0_0_3px_rgb(245_158_11/0.2)]' : 'bg-emerald-500',
+              )}
+              aria-hidden
+            />
             {uploading ? 'Uploading images…' : isDirty ? 'You have unsaved changes' : product ? 'All changes saved' : 'Fill in the details and save'}
           </p>
           <div className="flex flex-1 gap-2 sm:flex-none">
