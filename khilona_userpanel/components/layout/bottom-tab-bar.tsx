@@ -24,13 +24,16 @@ export function BottomTabBar() {
   useEffect(() => setSearchOpen(false), [pathname]);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
-  const tone = (active: boolean) => (active ? "text-ink" : "text-muted hover:text-ink");
+  const tone = (active: boolean) =>
+    active
+      ? "text-ink before:absolute before:top-0 before:h-[3px] before:w-8 before:rounded-b-full before:bg-accent before:content-['']"
+      : "text-muted hover:text-ink";
 
   return (
     <>
       <nav
         aria-label="Primary"
-        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-sm md:hidden"
+        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 shadow-[0_-8px_30px_-12px_rgb(17_18_26/0.12)] backdrop-blur-xl md:hidden"
       >
         <ul className="mx-auto flex h-[var(--tabbar-h)] max-w-lg items-stretch px-1">
           <li className="flex flex-1">

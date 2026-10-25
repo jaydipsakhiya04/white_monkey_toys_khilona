@@ -18,7 +18,7 @@ export function RatingStars({ value, size = "sm", className }: { value: number; 
             <Star className={cn("absolute inset-0 text-line-strong", px)} fill="currentColor" strokeWidth={0} />
             {fill > 0 && (
               <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-                <Star className={cn("text-accent", px)} fill="currentColor" strokeWidth={0} />
+                <Star className={cn("text-star", px)} fill="currentColor" strokeWidth={0} />
               </span>
             )}
           </span>
@@ -95,7 +95,7 @@ export function RatingInput({
               onMouseEnter={() => setHover(i)}
               className="rounded-md p-0.5 transition-transform hover:scale-110 active:scale-95"
             >
-              <Star className={cn(px, i <= shown ? "text-accent" : "text-line-strong")} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+              <Star className={cn(px, i <= shown ? "text-star" : "text-line-strong")} fill="currentColor" strokeWidth={0} aria-hidden="true" />
             </button>
           ))}
         </span>

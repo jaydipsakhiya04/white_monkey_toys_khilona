@@ -37,7 +37,7 @@ export function Price({ price, effectivePrice, discountPercent = 0, minPrice, ma
         </p>
       )}
       {onSale && showBadge && discountPercent > 0 && (
-        <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-semibold text-white">{discountPercent}% off</span>
+        <span className="rounded-full bg-accent-tint px-2.5 py-0.5 text-xs font-bold text-accent-deep">{discountPercent}% off</span>
       )}
     </div>
   );

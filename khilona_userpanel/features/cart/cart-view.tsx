@@ -77,7 +77,7 @@ export function CartView() {
           </div>
         ) : null}
 
-        <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface" aria-busy={v.isFetching || undefined}>
+        <ul className="divide-y divide-line overflow-hidden rounded-[1.5rem] border border-line bg-surface shadow-soft" aria-busy={v.isFetching || undefined}>
           {v.lines.map((l) => (
             <CartRow key={l.item.key} view={l} note={v.notes[l.item.key]} onDismissNote={() => v.dismissNote(l.item.key)} />
           ))}
@@ -90,7 +90,7 @@ export function CartView() {
       </section>
 
       <aside aria-labelledby="summary-title" className="lg:sticky lg:top-24">
-        <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+        <div className="rounded-[1.5rem] border border-line bg-surface shadow-soft p-5 sm:p-6">
           <h2 id="summary-title" className="text-xl font-bold text-ink">
             Order summary
           </h2>
@@ -109,6 +109,7 @@ export function CartView() {
           </div>
           <Button
             size="lg"
+            variant="accent"
             block
             className="mt-5"
             disabled={!canCheckout || v.isFetching}
@@ -254,7 +255,7 @@ function CartSkeleton() {
     <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-hidden="true">
       <div className="space-y-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex gap-4 rounded-2xl border border-line bg-surface p-4">
+          <div key={i} className="flex gap-4 rounded-[1.5rem] border border-line bg-surface shadow-soft p-4">
             <Skeleton className="size-24" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-3/4" />

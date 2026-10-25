@@ -130,7 +130,7 @@ export function SearchForm({
         placeholder="Search toys, games, gifts…"
         maxLength={100}
         className={cn(
-          "h-11 w-full rounded-full border border-line bg-sand pl-10 pr-10 text-[0.9375rem] text-ink transition-colors placeholder:text-muted/80 hover:border-line-strong focus:border-ink focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ink/10 [&::-webkit-search-cancel-button]:hidden",
+          "h-11 w-full rounded-full border border-line bg-sand pl-10 pr-10 text-[0.9375rem] text-ink transition-colors placeholder:text-muted/80 hover:border-line-strong focus:border-accent focus:bg-surface focus:outline-none focus:ring-4 focus:ring-accent/15 [&::-webkit-search-cancel-button]:hidden",
           inputClassName,
         )}
       />
@@ -164,7 +164,7 @@ export function SearchForm({
                   className={cn("flex items-center gap-3 rounded-xl p-2", i === active ? "bg-sand" : "hover:bg-sand")}
                 >
                   <span className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-sand">
-                    <SmartImage src={p.thumbnailUrl} alt="" fill sizes="44px" className="object-contain p-1" />
+                    <SmartImage src={p.thumbnailUrl} alt="" fill sizes="44px" className="object-cover" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-ink">{p.name}</span>
