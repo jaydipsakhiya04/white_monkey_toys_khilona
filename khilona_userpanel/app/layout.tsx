@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { connection } from "next/server";
 import { AnnouncementBar, Header } from "@/components/layout/header";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Footer } from "@/components/layout/footer";
+import { RevealObserver } from "@/components/ui/reveal";
 import { brandName } from "@/lib/brand";
 import { SITE_URL } from "@/lib/env";
 import { getCategoryTree, getStore } from "@/services/catalog.server";
@@ -11,7 +12,7 @@ import { toPlainText } from "@/utils/format";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const display = Inter_Tight({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-display-face",
   display: "swap",
@@ -69,7 +70,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const [store, categories] = await Promise.all([getStore(), getCategoryTree()]);
 
   return (
-    <html lang="en-IN" className={`${display.variable} ${body.variable}`}>
+    <html lang="en-IN" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <head>
+        {/* enables scroll-reveal styles only when JS runs, so content is never hidden without it */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#main"
@@ -85,6 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </main>
           <Footer store={store} categories={categories ?? []} />
           <BottomTabBar />
+          <RevealObserver />
         </Providers>
       </body>
     </html>

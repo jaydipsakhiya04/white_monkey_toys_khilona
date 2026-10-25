@@ -63,6 +63,24 @@ Each app has its own README with details.
 
 ## Getting started (local)
 
+### Quick start (Windows, macOS, Linux)
+
+Only Node.js ≥ 20 is required — PostgreSQL is downloaded and run for you.
+
+```bash
+npm run setup        # once: env files, install all three apps, generate Prisma client
+npm run start:all    # first run: start PostgreSQL, create tables + demo data, start all apps
+```
+
+Then open http://localhost:3000 (storefront) and http://localhost:3001 (admin, see *Seed credentials* below). Press **Ctrl+C** to stop everything.
+
+| Later runs | |
+|---|---|
+| `npm run dev:db` | embedded PostgreSQL + API + storefront + admin in one terminal |
+| `npm run dev` | API + storefront + admin only (your own PostgreSQL or `docker compose up -d db` is already running) |
+
+The step-by-step setup below does the same thing manually.
+
 ### 1. Prerequisites
 - Node.js ≥ 20 and npm
 - PostgreSQL 16 — **any one of**:
@@ -86,7 +104,7 @@ Defaults work for local development (API :4000, storefront :3000, admin :3001).
 ### 4. Database: migrate + seed
 ```bash
 npm run db:dev        # only if you use the embedded PostgreSQL — keep this terminal open
-npm run db:setup      # prisma migrate deploy + seed
+npm run db:setup      # prisma generate + migrate deploy + seed
 ```
 
 ### 5. Run (three terminals)

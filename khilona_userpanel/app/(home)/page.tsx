@@ -7,7 +7,7 @@ import { AccountCta } from "@/features/auth/account-cta";
 import { CategoryCard } from "@/features/catalog/category-card";
 import { ProductGrid } from "@/features/catalog/product-card";
 import { Hero } from "@/features/store/hero";
-import { HowOrderingWorks, WhySection } from "@/features/store/home-sections";
+import { HowOrderingWorks, PromiseMarquee, PromoBanners, WhySection } from "@/features/store/home-sections";
 import { StoreInfoCard, storeJsonLd } from "@/features/store/store-info";
 import { brandName } from "@/lib/brand";
 import { absoluteUrl } from "@/lib/env";
@@ -64,6 +64,7 @@ export default async function HomePage() {
       )}
 
       <Hero store={store} showcase={featured.length ? featured : popular} />
+      <PromiseMarquee />
 
       {apiDown ? (
         <Container className="py-12">
@@ -72,16 +73,17 @@ export default async function HomePage() {
       ) : (
         <>
           {homeCategories.length > 0 && (
-            <section aria-labelledby="cats-title" className="py-12 sm:py-16">
+            <section aria-labelledby="cats-title" className="py-14 sm:py-20">
               <Container>
                 <SectionHeader
                   id="cats-title"
                   eyebrow="Shop by category"
                   title="Find the perfect pick"
+                  description="From hobby-grade RC to family game night — explore every corner of the toy shop."
                   href="/categories"
                   linkLabel="All categories"
                 />
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
                   {homeCategories.slice(0, 12).map((c, i) => (
                     <li key={c.id}>
                       <CategoryCard category={c} index={i} />
@@ -93,11 +95,11 @@ export default async function HomePage() {
           )}
 
           {featured.length > 0 && (
-            <section aria-labelledby="featured-title" className="py-12 sm:py-16">
+            <section aria-labelledby="featured-title" className="bg-sand/60 py-14 sm:py-20">
               <Container>
                 <SectionHeader
                   id="featured-title"
-                  eyebrow="Featured"
+                  eyebrow="Bestsellers"
                   title="Our favourite finds"
                   description="Hand-picked toys and games families keep coming back for."
                   href="/products?featured=true"
@@ -107,8 +109,10 @@ export default async function HomePage() {
             </section>
           )}
 
+          <PromoBanners categories={categories ?? []} />
+
           {popular.length > 0 && (
-            <section aria-labelledby="popular-title" className="py-12 sm:py-16">
+            <section aria-labelledby="popular-title" className="py-14 sm:py-20">
               <Container>
                 <SectionHeader
                   id="popular-title"

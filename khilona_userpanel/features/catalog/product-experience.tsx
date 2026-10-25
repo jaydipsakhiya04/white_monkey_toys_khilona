@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { AlertCircle, Banknote, Check, ShoppingBag, Zap } from "lucide-react";
+import { AlertCircle, Banknote, Check, PackageCheck, ShieldCheck, ShoppingBag, Truck, Zap } from "lucide-react";
 import { Button, ButtonAnchor } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { RatingStars } from "@/components/ui/rating-stars";
@@ -259,7 +259,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               </Button>
               <Button
                 size="lg"
-                variant="dark"
+                variant="accent"
                 disabled={complete && !inStock}
                 onClick={() => {
                   if (doAdd(true)) router.push("/checkout");
@@ -277,12 +277,28 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
             )}
           </div>
 
-          <div className="mt-6 flex items-start gap-3 rounded-2xl bg-sand p-4 text-sm text-ink">
-            <Banknote className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden="true" />
-            <p>
-              <span className="font-semibold">Cash / pay on delivery.</span>{" "}
-              <span className="text-muted">No online payment needed — our team will call to confirm your order.</span>
-            </p>
+          <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-line bg-surface">
+            <div className="flex items-start gap-3 bg-accent-tint/70 p-4 text-sm text-ink">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-midnight">
+                <Banknote className="size-[1.125rem]" aria-hidden="true" />
+              </span>
+              <p>
+                <span className="font-semibold">Cash / pay on delivery.</span>{" "}
+                <span className="text-muted">No online payment needed — our team will call to confirm your order.</span>
+              </p>
+            </div>
+            <ul className="grid grid-cols-3 divide-x divide-line text-center text-xs font-medium text-ink">
+              {[
+                { Icon: Truck, label: "Local delivery" },
+                { Icon: ShieldCheck, label: "Quality checked" },
+                { Icon: PackageCheck, label: "Order tracking" },
+              ].map(({ Icon, label }) => (
+                <li key={label} className="flex flex-col items-center gap-1.5 px-2 py-3.5">
+                  <Icon className="size-[1.125rem] text-accent-deep" aria-hidden="true" />
+                  {label}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

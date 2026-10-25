@@ -4,10 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, type Crumb } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
-import { SmartImage } from "@/components/ui/smart-image";
+import { BannerPill, PageBanner } from "@/components/ui/page-banner";
 import { ProductListing } from "@/features/catalog/product-listing";
 import { getCategory, getStore } from "@/services/catalog.server";
-import { cn } from "@/utils/cn";
 import { pluralize, toPlainText } from "@/utils/format";
 import { parseListingParams, type RawSearchParams } from "@/utils/listing";
 
@@ -59,29 +58,20 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     <Container className="py-6 sm:py-10">
       <Breadcrumbs items={crumbs} />
 
-      <header
-        className={cn(
-          "mt-4 grid gap-5 overflow-hidden rounded-3xl border border-line bg-sand/70 p-5 sm:p-7",
-          category.imageUrl && "md:grid-cols-[1fr_auto] md:items-center",
-        )}
-      >
-        <div className="min-w-0">
-          <h1 className="text-3xl font-extrabold text-ink sm:text-4xl lg:text-5xl">{category.name}</h1>
-          {category.description && <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-muted sm:text-base">{category.description}</p>}
-          <p className="mt-3 text-sm font-semibold text-ink">{pluralize(category.productCount, "product")}</p>
-        </div>
-        {category.imageUrl && (
-          <div className="relative hidden aspect-[4/3] w-56 overflow-hidden rounded-2xl bg-surface md:block lg:w-72">
-            <SmartImage src={category.imageUrl} alt={category.name} fill priority sizes="288px" className="object-cover" />
-          </div>
-        )}
-      </header>
+      <PageBanner
+        eyebrow={category.parent?.name ?? "Category"}
+        title={category.name}
+        description={category.description ? <p>{category.description}</p> : undefined}
+        meta={<BannerPill>{pluralize(category.productCount, "product")}</BannerPill>}
+        imageUrl={category.imageUrl}
+        imageAlt={category.name}
+      />
 
       {category.children.length > 0 && (
         <nav aria-label={`${category.name} sub-categories`} className="mt-5">
           <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             <li className="shrink-0">
-              <span className="inline-flex h-10 items-center rounded-full bg-ink px-4 text-sm font-semibold text-white" aria-current="page">
+              <span className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-sm font-semibold text-midnight" aria-current="page">
                 All {category.name}
               </span>
             </li>

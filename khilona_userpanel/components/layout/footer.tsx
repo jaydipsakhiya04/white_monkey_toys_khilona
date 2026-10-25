@@ -29,7 +29,11 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
   const policies = (Object.keys(POLICY_TYPES) as (keyof typeof POLICY_TYPES)[]).filter((k) => !store || store[POLICY_TYPES[k].field]);
 
   return (
-    <footer className="mt-20 bg-ink text-white/80 md:mt-28">
+    <footer className="relative isolate mt-20 overflow-hidden bg-midnight text-white/80 md:mt-28">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -left-32 -top-40 size-[32rem] rounded-full bg-accent/[0.12] blur-[120px]" />
+        <div className="absolute -bottom-48 right-0 size-[28rem] rounded-full bg-[#6d5dfc]/[0.12] blur-[120px]" />
+      </div>
       <Container className="grid gap-10 py-14 sm:grid-cols-2 md:py-20 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-4">
           <Wordmark name={name} inverted />
@@ -46,7 +50,7 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${name} on ${label} (opens in new tab)`}
-                    className="grid size-11 place-items-center rounded-full border border-white/15 text-white transition-colors hover:border-white/40 hover:bg-white/5"
+                    className="grid size-11 place-items-center rounded-full border border-white/15 text-white transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent hover:text-midnight"
                   >
                     <Icon className="size-5" />
                   </a>
@@ -154,6 +158,11 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
             ))}
           </ul>
         </nav>
+      </Container>
+      <Container aria-hidden="true" className="select-none overflow-hidden">
+        <p className="bg-gradient-to-b from-white/[0.14] to-white/0 bg-clip-text pb-2 font-display text-[16vw] font-extrabold uppercase leading-[0.8] tracking-[-0.04em] text-transparent lg:text-[11.5rem]">
+          {name.split(" ").slice(-1)[0] || name}
+        </p>
       </Container>
       <div className="border-t border-white/10">
         <Container className="flex flex-col gap-2 pt-6 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+1.5rem)] text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between md:pb-6">

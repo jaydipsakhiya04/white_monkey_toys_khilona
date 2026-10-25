@@ -2,6 +2,7 @@ import { brandName } from "@/lib/brand";
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
+import { PageBanner } from "@/components/ui/page-banner";
 import { ProductListing } from "@/features/catalog/product-listing";
 import { getStore } from "@/services/catalog.server";
 import { parseListingParams, type RawSearchParams } from "@/utils/listing";
@@ -37,14 +38,20 @@ export default async function ProductsPage({ searchParams }: Props) {
   return (
     <Container className="py-6 sm:py-10">
       <Breadcrumbs items={[{ name: params.search ? "Search" : "All products" }]} />
-      <header className="mb-6 mt-4 sm:mb-8">
-        <h1 className="text-3xl font-extrabold text-ink sm:text-4xl lg:text-5xl">{heading}</h1>
-        {params.search && (
-          <p className="mt-2 text-muted">
-            Showing products for <span className="font-semibold text-ink">“{params.search}”</span>
-          </p>
-        )}
-      </header>
+      <PageBanner
+        className="mb-8 sm:mb-10"
+        eyebrow={params.search ? "Search" : params.featured ? "Bestsellers" : "The toy shop"}
+        title={heading}
+        description={
+          params.search ? (
+            <p>
+              Showing products for <span className="font-semibold text-white">“{params.search}”</span>
+            </p>
+          ) : (
+            <p>RC cars and drones, board and card games, puzzles, building sets and more — all pay on delivery.</p>
+          )
+        }
+      />
       <ProductListing basePath="/products" params={params} rawSearchParams={raw} showCategories searchLabel="Search all products" />
     </Container>
   );

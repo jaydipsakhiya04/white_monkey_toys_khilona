@@ -15,8 +15,10 @@ import { MobileMenu } from "./mobile-menu";
 export function AnnouncementBar({ text }: { text: string | null | undefined }) {
   if (!text?.trim()) return null;
   return (
-    <div className="bg-ink text-white">
-      <Container className="flex min-h-9 items-center justify-center py-1.5 text-center text-[0.8125rem] font-medium leading-snug tracking-[0.01em]">
+    <div className="relative overflow-hidden bg-midnight text-white">
+      <span aria-hidden="true" className="absolute inset-y-0 left-1/2 w-1/2 -translate-x-1/2 bg-accent/20 blur-2xl" />
+      <Container className="relative flex min-h-9 items-center justify-center gap-2 py-1.5 text-center text-[0.8125rem] font-medium leading-snug tracking-[0.01em]">
+        <span aria-hidden="true" className="size-1.5 shrink-0 animate-pulse rounded-full bg-accent" />
         <p>{text}</p>
       </Container>
     </div>
@@ -28,7 +30,7 @@ export function Header({ store, categories }: { store: PublicStore | null; categ
   const wa = store?.whatsappUrl ?? (store?.whatsapp ? whatsappLink(store.whatsapp) : null);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-page/90 backdrop-blur-md supports-[backdrop-filter]:bg-page/80">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-page/90 shadow-[0_1px_0_rgb(255_255_255/0.6)_inset] backdrop-blur-xl supports-[backdrop-filter]:bg-page/75">
       <Container className="flex h-16 items-center gap-2 md:h-[4.5rem] md:gap-3">
         <div className="-ml-2 md:hidden">
           <MobileMenu categories={categories} storeName={name} />
