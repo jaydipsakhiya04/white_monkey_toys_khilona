@@ -56,7 +56,7 @@ export function ProductGallery({
 
   if (list.length === 0) {
     return (
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-sand">
+      <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-sand">
         <SmartImage src={null} alt={productName} fill />
         {badge}
       </div>
@@ -71,7 +71,7 @@ export function ProductGallery({
         <div
           ref={trackRef}
           onScroll={onScroll}
-          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-3xl bg-sand"
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-[2rem] bg-sand"
           tabIndex={0}
           aria-label="Product images, swipe or use arrow keys"
           onKeyDown={(e) => {
@@ -99,7 +99,7 @@ export function ProductGallery({
                 fill
                 priority={i === 0}
                 sizes="(min-width: 1280px) 640px, (min-width: 768px) 50vw, 100vw"
-                className="object-contain p-4 sm:p-8"
+                className="object-cover"
               />
             </div>
           ))}
@@ -156,7 +156,7 @@ export function ProductGallery({
                   i === index ? "border-ink" : "border-transparent hover:border-line-strong",
                 )}
               >
-                <SmartImage src={img.url} alt="" fill sizes="88px" className="object-contain p-1.5" />
+                <SmartImage src={img.url} alt="" fill sizes="88px" className="object-cover" />
               </button>
             </li>
           ))}

@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from "@/components/icons/brand";
 import { OpenNowBadge } from "@/features/store/open-badge";
 import { POLICY_TYPES, storeAddressLines, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "@/features/store/store-utils";
-import { brandName } from "@/lib/brand";
+import { brandName, WHOLESALE_INSTAGRAM } from "@/lib/brand";
 import type { CategorySummary, PublicStore } from "@/types/api";
 import { Wordmark } from "./logo";
 
@@ -58,6 +58,21 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
               ))}
             </ul>
           )}
+          <a
+            href={WHOLESALE_INSTAGRAM.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group mt-6 flex max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 pr-4 transition-colors hover:border-accent/50 hover:bg-white/[0.07]"
+          >
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#ff8a3d] to-[#ff3d6e] text-white">
+              <InstagramIcon className="size-5" />
+            </span>
+            <span className="min-w-0 leading-tight">
+              <span className="block text-sm font-semibold text-white">Wholesale &amp; bulk orders</span>
+              <span className="block truncate text-xs text-white/55">{WHOLESALE_INSTAGRAM.handle}</span>
+            </span>
+            <span className="sr-only">(opens in new tab)</span>
+          </a>
         </div>
 
         <nav aria-label="Footer categories" className="lg:col-span-3">
@@ -160,8 +175,8 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
         </nav>
       </Container>
       <Container aria-hidden="true" className="select-none overflow-hidden">
-        <p className="bg-gradient-to-b from-white/[0.14] to-white/0 bg-clip-text pb-2 font-display text-[16vw] font-extrabold uppercase leading-[0.8] tracking-[-0.04em] text-transparent lg:text-[11.5rem]">
-          {name.split(" ").slice(-1)[0] || name}
+        <p className="whitespace-nowrap bg-gradient-to-b from-white/[0.16] to-white/0 bg-clip-text pb-3 pt-2 font-display text-[8.4vw] font-extrabold uppercase leading-[0.85] tracking-[-0.04em] text-transparent lg:text-[7.6rem] xl:text-[8.1rem]">
+          {name}
         </p>
       </Container>
       <div className="border-t border-white/10">

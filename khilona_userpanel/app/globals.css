@@ -244,6 +244,18 @@
   }
 }
 
+/* angle animated by the hero's rotating glow ring */
+@property --a {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes hero-spin {
+  to {
+    --a: 360deg;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -50,7 +50,7 @@ function ReviewRow({ review }: { review: MyReview }) {
     <li className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
       <div className="flex gap-4">
         <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-sand">
-          <SmartImage src={review.product.thumbnailUrl} alt="" fill sizes="64px" className="object-contain p-1.5" />
+          <SmartImage src={review.product.thumbnailUrl} alt="" fill sizes="64px" className="object-cover" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">

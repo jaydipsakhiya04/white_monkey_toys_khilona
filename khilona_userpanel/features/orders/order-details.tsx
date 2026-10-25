@@ -65,7 +65,7 @@ export function OrderItems({ order, renderExtra }: { order: PublicOrder; renderE
         <li key={`${it.productName}-${i}`} className="py-4 first:pt-2">
           <div className="flex items-start gap-3 sm:gap-4">
             <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-sand sm:size-[4.5rem]">
-              <SmartImage src={it.imageUrl} alt="" fill sizes="72px" className="object-contain p-1.5" />
+              <SmartImage src={it.imageUrl} alt="" fill sizes="72px" className="object-cover" />
             </span>
             <div className="min-w-0 flex-1 text-sm">
               {it.productSlug ? (

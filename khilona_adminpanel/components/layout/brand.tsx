@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import { cn } from '@/utils/cn';
 
-/** The White Monkey Toys logo tile (tangerine square with a monkey face). */
-export function BrandLogo({ size = 28, className }: { size?: number; className?: string }) {
+/** The White Monkey Toys "WM" monogram: white W + tangerine M on a midnight tile. */
+export function BrandLogo({ size = 30, className }: { size?: number; className?: string }) {
   const id = useId();
   return (
     <svg
@@ -10,25 +10,19 @@ export function BrandLogo({ size = 28, className }: { size?: number; className?:
       width={size}
       height={size}
       aria-hidden
-      className={cn('shrink-0 drop-shadow-[0_2px_6px_rgb(240_90_34/0.35)]', className)}
+      className={cn('shrink-0 drop-shadow-[0_3px_8px_rgb(12_13_22/0.35)]', className)}
     >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF7A3D" />
-          <stop offset="1" stopColor="#E2470F" />
+          <stop offset="0" stopColor="#23263A" />
+          <stop offset="1" stopColor="#0C0D16" />
         </linearGradient>
       </defs>
-      <rect width="32" height="32" rx="9" fill={`url(#${id})`} />
-      <g transform="translate(4 4)">
-        <circle cx="5" cy="12" r="3.2" fill="#fff" />
-        <circle cx="19" cy="12" r="3.2" fill="#fff" />
-        <circle cx="12" cy="12" r="7" fill="#fff" />
-        <circle cx="9.6" cy="10.6" r="2.5" fill="#FFE0D1" />
-        <circle cx="14.4" cy="10.6" r="2.5" fill="#FFE0D1" />
-        <ellipse cx="12" cy="14.4" rx="4.6" ry="3.3" fill="#FFE0D1" />
-        <circle cx="9.8" cy="10.9" r="0.95" fill="#0F1115" />
-        <circle cx="14.2" cy="10.9" r="0.95" fill="#0F1115" />
-        <path d="M10.2 15.1q1.8 1.4 3.6 0" fill="none" stroke="#0F1115" strokeWidth="1.1" strokeLinecap="round" />
+      <rect width="32" height="32" rx="8.5" fill={`url(#${id})`} />
+      <rect x="0.5" y="0.5" width="31" height="31" rx="8" fill="none" stroke="#fff" strokeOpacity="0.12" />
+      <g fill="none" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.7 10.6 7.35 21.4 10.05 14.3 12.75 21.4 15.4 10.6" stroke="#fff" />
+        <path d="M17 21.4V10.6l5.2 7 5.2-7v10.8" stroke="#FF5A1F" />
       </g>
     </svg>
   );
@@ -46,11 +40,13 @@ export function BrandMark({
 }) {
   const dark = tone === 'dark';
   return (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
+    <span className={cn('inline-flex items-center', className)}>
       <BrandLogo />
+      <span aria-hidden className={cn('mx-2.5 h-7 w-px', dark ? 'bg-white/20' : 'bg-ink/15')} />
       <span className="flex flex-col leading-none">
-        <span className={cn('font-display text-[15px] font-bold tracking-[-0.01em]', dark ? 'text-white' : 'text-ink')}>
-          White Monkey Toys
+        <span className="sr-only">White Monkey Toys</span>
+        <span aria-hidden className={cn('font-display text-[14px] font-extrabold uppercase tracking-[0.08em]', dark ? 'text-white' : 'text-ink')}>
+          White Monkey
         </span>
         {showAdmin && (
           <span

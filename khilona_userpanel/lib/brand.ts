@@ -10,6 +10,9 @@ export function brandName(store: { name?: string | null } | null | undefined): s
   return store?.name?.trim() || BRAND_NAME;
 }
 
+/** Wholesale / trade Instagram account (the store settings hold the retail one). */
+export const WHOLESALE_INSTAGRAM = { handle: "@white_monkey_toy.wholesale", url: "https://www.instagram.com/white_monkey_toy.wholesale/" };
+
 /** Prefix used in the visual order number examples (backend: ORDER_NUMBER_PREFIX). */
 export const ORDER_NUMBER_EXAMPLE = "WMT-20261002-0001";
 
