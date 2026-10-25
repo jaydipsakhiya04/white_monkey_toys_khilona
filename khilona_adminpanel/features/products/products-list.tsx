@@ -213,8 +213,8 @@ export function ProductsList() {
       />
 
       <Card>
-        <div className="flex flex-col gap-2 border-b border-line p-3 sm:p-4">
-          <div className="flex flex-col gap-2 lg:flex-row">
+        <div className="border-b border-line bg-stone-50/40 p-3 sm:p-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))]">
             <Input
               type="search"
               aria-label="Search products"
@@ -222,22 +222,21 @@ export function ProductsList() {
               leading={<Search />}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="lg:max-w-xs lg:flex-1"
+              className="col-span-2 sm:col-span-3 xl:col-span-1"
             />
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-1 lg:flex-wrap">
+            <div className="contents">
               <CategorySelect
                 aria-label="Filter by category"
                 options={categoryOptions}
                 placeholder="All categories"
                 value={values.categoryId ?? ''}
                 onChange={(e) => set({ categoryId: e.target.value || undefined })}
-                wrapperClassName="col-span-2 sm:col-span-1 lg:w-44"
+                wrapperClassName="col-span-2 sm:col-span-1"
               />
               <Select
                 aria-label="Filter by status"
                 value={values.status ?? ''}
                 onChange={(e) => set({ status: e.target.value || undefined })}
-                wrapperClassName="lg:w-32"
               >
                 <option value="">Any status</option>
                 <option value="active">Active</option>
@@ -247,7 +246,6 @@ export function ProductsList() {
                 aria-label="Filter by stock"
                 value={values.stock ?? ''}
                 onChange={(e) => set({ stock: e.target.value || undefined })}
-                wrapperClassName="lg:w-32"
               >
                 <option value="">Any stock</option>
                 <option value="in">In stock</option>
@@ -258,7 +256,6 @@ export function ProductsList() {
                 aria-label="Filter by featured"
                 value={values.featured ?? ''}
                 onChange={(e) => set({ featured: e.target.value || undefined })}
-                wrapperClassName="lg:w-36"
               >
                 <option value="">Featured: any</option>
                 <option value="true">Featured only</option>
@@ -268,7 +265,6 @@ export function ProductsList() {
                 aria-label="Sort products"
                 value={sort}
                 onChange={(e) => set({ sort: e.target.value === 'newest' ? undefined : e.target.value })}
-                wrapperClassName="lg:w-44"
               >
                 {SORTS.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -276,21 +272,24 @@ export function ProductsList() {
                   </option>
                 ))}
               </Select>
-              {hasFilters && (
-                <Button variant="ghost" size="md" onClick={clearAll} className="col-span-2 sm:col-span-1">
-                  <X />
-                  Clear
-                </Button>
-              )}
             </div>
           </div>
+          {hasFilters && (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs text-muted">Filters applied</span>
+              <Button variant="ghost" size="xs" onClick={clearAll}>
+                <X />
+                Clear all
+              </Button>
+            </div>
+          )}
         </div>
 
         {selected.size > 0 && (
           <div
             role="region"
             aria-label="Bulk actions"
-            className="sticky top-14 z-20 flex flex-wrap items-center gap-2 border-b border-line bg-brand-tint/70 px-3 py-2 backdrop-blur-sm sm:px-4 md:top-0"
+            className="sticky top-14 z-10 flex animate-pop flex-wrap items-center gap-2 border-b border-brand/20 bg-brand-tint/90 px-3 py-2 backdrop-blur-md sm:px-4 md:top-16"
           >
             <span className="mr-1 text-[13px] font-medium tabular">{selected.size} selected</span>
             <Button size="xs" variant="secondary" onClick={() => setBulkAction('activate')}>

@@ -11,11 +11,12 @@ import {
   Navigation,
   Phone,
   StickyNote,
-  UserRound,
+  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { InitialsAvatar } from '@/components/ui/avatar';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/badge';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Card, CardHeader, ErrorState, Skeleton, Thumb } from '@/components/ui/feedback';
@@ -53,13 +54,19 @@ function ContactButton({
 }) {
   const toneCls =
     tone === 'green'
-      ? 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100'
+      ? 'text-emerald-800 hover:border-emerald-300'
       : tone === 'brand'
-        ? 'text-brand-hover bg-brand-tint border-orange-200 hover:bg-orange-100'
-        : 'text-ink bg-surface border-line hover:bg-subtle';
+        ? 'text-brand-hover hover:border-brand/40'
+        : 'text-ink hover:border-line-strong';
+  const iconCls =
+    tone === 'green'
+      ? 'bg-gradient-to-br from-[#34D399] to-[#059669] text-white shadow-[0_6px_14px_-6px_rgb(5_150_105/0.6)]'
+      : tone === 'brand'
+        ? 'bg-gradient-to-br from-[#FF8A55] to-brand text-white shadow-brand'
+        : 'bg-gradient-to-br from-[#93C5FD] to-[#3B82F6] text-white shadow-[0_6px_14px_-6px_rgb(59_130_246/0.6)]';
   if (!href)
     return (
-      <span className="flex min-h-14 flex-1 cursor-not-allowed flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed border-line px-2 text-center text-stone-400">
+      <span className="flex min-h-16 flex-1 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line px-2 text-center text-stone-400">
         <Icon className="size-5" aria-hidden />
         <span className="text-xs font-medium">{label}</span>
         <span className="sr-only">(not available)</span>
@@ -71,16 +78,92 @@ function ContactButton({
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
       className={cn(
-        'flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-2 text-center transition-colors sm:flex-row sm:gap-2',
+        'group flex min-h-16 flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl border border-line bg-surface px-2 py-2.5 text-center shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-raised sm:flex-row sm:justify-start sm:gap-3 sm:px-4',
         toneCls,
       )}
     >
-      <Icon className="size-5 shrink-0" aria-hidden />
-      <span className="flex flex-col sm:items-start">
+      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105', iconCls)}>
+        <Icon className="size-[18px]" aria-hidden />
+      </span>
+      <span className="flex min-w-0 flex-col sm:items-start">
         <span className="text-[13px] font-semibold">{label}</span>
-        {sub && <span className="hidden text-[11px] font-normal opacity-80 tabular sm:block">{sub}</span>}
+        {sub && <span className="hidden truncate text-[11.5px] font-normal text-muted tabular sm:block">{sub}</span>}
       </span>
     </a>
+  );
+}
+
+const PROGRESS_STEPS: { status: OrderStatus; label: string }[] = [
+  { status: 'PENDING', label: 'Placed' },
+  { status: 'CONFIRMED', label: 'Confirmed' },
+  { status: 'PROCESSING', label: 'Processing' },
+  { status: 'READY', label: 'Ready' },
+  { status: 'OUT_FOR_DELIVERY', label: 'Out for delivery' },
+  { status: 'DELIVERED', label: 'Delivered' },
+];
+
+/** Horizontal lifecycle stepper (or a cancelled banner). Display only. */
+function OrderProgress({ order }: { order: AdminOrderDetail }) {
+  if (order.status === 'CANCELLED') {
+    const at = order.history.find((h) => h.toStatus === 'CANCELLED')?.createdAt;
+    return (
+      <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 to-surface px-4 py-3.5">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+          <XCircle className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0 text-[13px]">
+          <p className="font-semibold text-red-800">This order was cancelled</p>
+          <p className="text-red-700/80">
+            {at ? `${formatDateTime(at)} · ` : ''}
+            {order.stockRestored ? 'Stock has been returned to inventory.' : 'No further changes are possible.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  const visited = new Set(order.history.map((h) => h.toStatus));
+  const current = PROGRESS_STEPS.findIndex((s) => s.status === order.status);
+  const pct = (current / (PROGRESS_STEPS.length - 1)) * 100;
+  return (
+    <Card className="mb-5 px-4 py-4 sm:px-6 sm:py-5">
+      <ol aria-label="Order progress" className="relative grid grid-cols-6">
+        <span className="absolute left-[8.33%] right-[8.33%] top-[15px] h-[3px] rounded-full bg-stone-100" aria-hidden />
+        <span
+          className="absolute left-[8.33%] top-[15px] h-[3px] rounded-full bg-gradient-to-r from-[#FF8A55] to-brand transition-[width] duration-700"
+          style={{ width: `calc(${pct}% * 0.8334)` }}
+          aria-hidden
+        />
+        {PROGRESS_STEPS.map((s, i) => {
+          const isCurrent = i === current;
+          const reached = i <= current;
+          const skipped = reached && !isCurrent && !visited.has(s.status);
+          return (
+            <li key={s.status} className="relative flex flex-col items-center gap-2 text-center">
+              <span
+                className={cn(
+                  'relative flex size-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors',
+                  isCurrent
+                    ? 'border-brand bg-brand text-white shadow-brand'
+                    : reached
+                      ? skipped
+                        ? 'border-brand/30 bg-surface text-brand/60'
+                        : 'border-brand bg-brand-tint text-brand'
+                      : 'border-stone-200 bg-surface text-stone-400',
+                )}
+                aria-hidden
+              >
+                {isCurrent && <span className="absolute inset-0 animate-ping rounded-full bg-brand/30" />}
+                {reached && !isCurrent ? <Check className="size-4" /> : i + 1}
+              </span>
+              <span className={cn('text-[11px] font-medium leading-tight sm:text-xs', reached ? 'text-ink' : 'text-muted')}>
+                {s.label}
+                <span className="sr-only">{isCurrent ? ' (current)' : skipped ? ' (skipped)' : reached ? ' (done)' : ''}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </Card>
   );
 }
 
@@ -111,7 +194,7 @@ function StatusPanel({ order }: { order: AdminOrderDetail }) {
       <CardHeader title="Update status" description={`Currently ${ORDER_STATUS_LABEL[order.status].toLowerCase()}`} />
       <div className="p-4 sm:p-5">
         {order.allowedTransitions.length === 0 ? (
-          <div className="rounded-lg border border-line bg-page px-3 py-3 text-[13px] text-ink-soft">
+          <div className="rounded-xl border border-line bg-stone-50 px-3.5 py-3 text-[13px] text-ink-soft">
             <p className="font-medium text-ink">This order is {ORDER_STATUS_LABEL[order.status].toLowerCase()}.</p>
             <p className="mt-0.5 text-muted">
               It&apos;s a final status, so no further changes are possible.
@@ -133,12 +216,12 @@ function StatusPanel({ order }: { order: AdminOrderDetail }) {
                       aria-checked={selected}
                       onClick={() => setTarget(s)}
                       className={cn(
-                        'flex h-11 items-center gap-2.5 rounded-lg border px-3 text-left text-[13px] font-medium transition-colors',
+                        'flex h-11 items-center gap-2.5 rounded-xl border px-3 text-left text-[13px] font-medium transition-all duration-150 active:scale-[0.98]',
                         selected
                           ? s === 'CANCELLED'
-                            ? 'border-danger bg-danger-tint text-red-800 ring-3 ring-danger/10'
-                            : 'border-brand bg-brand-tint text-ink ring-3 ring-brand/10'
-                          : 'border-line hover:bg-subtle',
+                            ? 'border-danger/60 bg-danger-tint text-red-800 ring-4 ring-danger/10'
+                            : 'border-brand/60 bg-brand-tint text-ink ring-4 ring-brand/10'
+                          : 'border-line bg-surface hover:border-line-strong hover:bg-stone-50',
                       )}
                     >
                       <span className={cn('size-2 shrink-0 rounded-full', ORDER_STATUS_STYLE[s].dot)} aria-hidden />
@@ -222,7 +305,7 @@ function PaymentAndNotes({ order }: { order: AdminOrderDetail }) {
         {order.customerNote && (
           <div>
             <p className="mb-1.5 text-[13px] font-medium">Customer note</p>
-            <p className="whitespace-pre-wrap rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-950">
+            <p className="whitespace-pre-wrap rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/60 px-3.5 py-2.5 text-[13px] text-amber-950">
               {order.customerNote}
             </p>
           </div>
@@ -351,24 +434,24 @@ export function OrderDetail({ id }: { id: string }) {
         }
       />
 
-      <div className="mb-4 flex gap-2">
+      <OrderProgress order={order} />
+
+      <div className="mb-5 flex gap-2 sm:gap-3">
         <ContactButton href={order.contact.callUrl} icon={Phone} label="Call" sub={formatPhone(order.customerPhone)} tone="brand" />
         <ContactButton href={order.contact.whatsappUrl} icon={MessageCircle} label="WhatsApp" sub="Chat with customer" external tone="green" />
         <ContactButton href={mapsUrl ?? coordsUrl} icon={Navigation} label="Location" sub={order.city} external />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start xl:grid-cols-[minmax(0,1fr)_380px]">
         {/* Right column first on mobile (status & customer are what you need on the move) */}
-        <div className="order-first flex flex-col gap-4 lg:order-none lg:col-start-2 lg:row-start-1">
+        <div className="order-first flex flex-col gap-5 lg:order-none lg:col-start-2 lg:row-start-1">
           <StatusPanel order={order} />
 
           <Card>
             <CardHeader title="Customer" />
             <div className="flex flex-col gap-3 p-4 text-[13px] sm:p-5">
-              <div className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-full bg-subtle text-muted">
-                  <UserRound className="size-4" aria-hidden />
-                </span>
+              <div className="flex items-center gap-3 rounded-xl bg-stone-50 p-3">
+                <InitialsAvatar name={order.customerName} size={44} />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{order.customerName}</p>
                   <Link
@@ -470,7 +553,7 @@ export function OrderDetail({ id }: { id: string }) {
           <PaymentAndNotes order={order} />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
+        <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
           <Card>
             <CardHeader title="Items" description={`${order.itemsCount} item${order.itemsCount === 1 ? '' : 's'}`} />
             <ul className="divide-y divide-line">
@@ -478,7 +561,7 @@ export function OrderDetail({ id }: { id: string }) {
                 const discounted = item.unitMrp > item.unitPrice;
                 return (
                   <li key={item.id} className="flex gap-3 px-4 py-3.5 sm:px-5">
-                    <Thumb src={item.imageUrl} alt={item.productName} size={56} />
+                    <Thumb src={item.imageUrl} alt={item.productName} size={64} className="rounded-xl" />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="min-w-0">
@@ -492,7 +575,7 @@ export function OrderDetail({ id }: { id: string }) {
                           {item.options.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {item.options.map((o) => (
-                                <span key={o.name} className="rounded bg-subtle px-1.5 py-0.5 text-[11px] text-ink-soft">
+                                <span key={o.name} className="rounded-full border border-line bg-stone-50 px-2 py-0.5 text-[11px] text-ink-soft">
                                   {o.name}: <span className="font-medium text-ink">{o.value}</span>
                                 </span>
                               ))}
@@ -512,7 +595,7 @@ export function OrderDetail({ id }: { id: string }) {
                             {discounted && <s className="mr-1 text-stone-400">{formatCurrency(item.unitMrp)}</s>}
                             <span className="text-ink">{formatCurrency(item.unitPrice)}</span>
                           </p>
-                          <p className="text-sm font-semibold tabular">{formatCurrency(item.lineTotal)}</p>
+                          <p className="font-display text-[15px] font-bold tabular">{formatCurrency(item.lineTotal)}</p>
                         </div>
                       </div>
                     </div>
@@ -520,7 +603,7 @@ export function OrderDetail({ id }: { id: string }) {
                 );
               })}
             </ul>
-            <dl className="space-y-1.5 border-t border-line bg-page/60 px-4 py-4 text-[13px] sm:px-5">
+            <dl className="space-y-2 border-t border-line bg-stone-50/70 px-4 py-4 text-[13px] sm:px-5">
               <div className="flex justify-between">
                 <dt className="text-muted">Subtotal</dt>
                 <dd className="tabular">{formatCurrency(order.subtotal)}</dd>
@@ -535,9 +618,9 @@ export function OrderDetail({ id }: { id: string }) {
                 <dt className="text-muted">Shipping</dt>
                 <dd className="tabular">{order.shippingFee > 0 ? formatCurrency(order.shippingFee) : 'Free'}</dd>
               </div>
-              <div className="flex justify-between border-t border-line pt-2 text-sm font-semibold">
-                <dt>Total</dt>
-                <dd className="tabular">{formatCurrency(order.total)}</dd>
+              <div className="flex items-baseline justify-between border-t border-dashed border-line-strong pt-3">
+                <dt className="text-sm font-semibold">Total</dt>
+                <dd className="font-display text-xl font-bold tracking-[-0.02em] tabular">{formatCurrency(order.total)}</dd>
               </div>
               <div className="flex justify-between text-xs text-muted">
                 <dt>Payment</dt>
@@ -551,8 +634,16 @@ export function OrderDetail({ id }: { id: string }) {
             <ol className="px-4 py-4 sm:px-5" aria-label="Order status history">
               {history.map((h, i) => (
                 <li key={h.id} className="relative flex gap-3 pb-5 last:pb-0">
-                  {i < history.length - 1 && <span className="absolute left-[7px] top-5 h-[calc(100%-12px)] w-px bg-line" aria-hidden />}
-                  <span className={cn('relative mt-1 size-[15px] shrink-0 rounded-full border-[3px] border-surface ring-1 ring-line', ORDER_STATUS_STYLE[h.toStatus].dot)} aria-hidden />
+                  {i < history.length - 1 && (
+                    <span className="absolute left-[8px] top-6 h-[calc(100%-16px)] w-0.5 rounded-full bg-gradient-to-b from-line-strong to-line" aria-hidden />
+                  )}
+                  <span
+                    className={cn(
+                      'relative mt-1 size-[18px] shrink-0 rounded-full border-4 border-surface shadow-[0_0_0_1px_var(--color-line-strong)]',
+                      ORDER_STATUS_STYLE[h.toStatus].dot,
+                    )}
+                    aria-hidden
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="text-[13px] font-semibold">{h.fromStatus ? ORDER_STATUS_LABEL[h.toStatus] : 'Order placed'}</span>
@@ -565,7 +656,9 @@ export function OrderDetail({ id }: { id: string }) {
                       {' · '}
                       {h.changedByName ? `by ${h.changedByName}` : h.fromStatus ? 'by system' : 'by customer'}
                     </p>
-                    {h.note && <p className="mt-1.5 whitespace-pre-wrap rounded-md bg-subtle px-2.5 py-1.5 text-[13px] text-ink-soft">{h.note}</p>}
+                    {h.note && (
+                      <p className="mt-2 whitespace-pre-wrap rounded-xl border border-line bg-stone-50 px-3 py-2 text-[13px] text-ink-soft">{h.note}</p>
+                    )}
                   </div>
                 </li>
               ))}

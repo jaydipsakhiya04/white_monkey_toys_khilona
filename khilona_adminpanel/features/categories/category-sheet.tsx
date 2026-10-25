@@ -218,7 +218,7 @@ function CategoryForm({
           <Textarea {...register('seoDescription')} rows={2} />
         </Field>
       </fieldset>
-      <div className="sticky bottom-0 -mx-5 -mb-4 flex gap-2 border-t border-line bg-surface px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end">
+      <div className="sticky -bottom-4 -mx-5 -mb-4 flex gap-2 border-t border-line bg-surface px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end">
         <Button variant="secondary" onClick={onDone} disabled={save.isPending} className="flex-1 sm:flex-none">
           Cancel
         </Button>

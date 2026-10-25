@@ -101,7 +101,7 @@ function SubsetForm({ section, store }: { section: SectionDef; store: Store }) {
 
   const Icon = section.icon;
   return (
-    <Card id={section.id} className="scroll-mt-20">
+    <Card id={section.id} className="scroll-mt-24">
       <CardHeader
         title={
           <span className="flex items-center gap-2">
@@ -156,12 +156,12 @@ export function SettingsView() {
         description="Storefront content, policies, SEO defaults and team access."
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Settings' }]}
       />
-      <nav aria-label="Settings sections" className="mb-4 flex gap-1 overflow-x-auto scrollbar-none">
+      <nav aria-label="Settings sections" className="mb-5 flex gap-1.5 overflow-x-auto scrollbar-none">
         {[...SECTIONS.map((s) => [s.id, s.title] as const), ...(isSuper ? ([['admins', 'Admin users']] as const) : [])].map(([id, title]) => (
           <a
             key={id}
             href={`#${id}`}
-            className="shrink-0 rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-subtle hover:text-ink"
+            className="shrink-0 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-medium text-ink-soft shadow-xs transition-colors hover:border-brand/40 hover:bg-brand-tint hover:text-brand-hover"
           >
             {title}
           </a>

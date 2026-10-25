@@ -34,7 +34,7 @@ export function OrdersChart({ data }: { data: Point[] }) {
     <div>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-2xl font-semibold tracking-tight tabular">
+          <p className="font-display text-[28px] font-bold tracking-[-0.03em] tabular">
             {metric === 'count' ? formatNumber(sumCount) : formatCurrency(sumTotal)}
           </p>
           <p className="text-xs text-muted">{metric === 'count' ? 'orders' : 'order value'} in the last 14 days</p>
@@ -52,7 +52,7 @@ export function OrdersChart({ data }: { data: Point[] }) {
 
       <div className="flex gap-2">
         {/* y axis */}
-        <div className="flex h-44 w-10 shrink-0 flex-col justify-between text-right text-[10px] text-muted tabular" aria-hidden>
+        <div className="flex h-52 w-10 shrink-0 flex-col justify-between text-right text-[10px] text-muted tabular" aria-hidden>
           {ticks.map((t) => (
             <span key={t} className="-translate-y-1/2 first:translate-y-0 last:translate-y-0">
               {fmt(t)}
@@ -61,13 +61,14 @@ export function OrdersChart({ data }: { data: Point[] }) {
         </div>
         <div className="relative min-w-0 flex-1">
           {/* grid */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-44" aria-hidden>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-52" aria-hidden>
             <div className="absolute inset-x-0 top-0 border-t border-dashed border-line" />
             <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-line" />
             <div className="absolute inset-x-0 bottom-0 border-t border-line-strong" />
           </div>
+          <style>{`@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}`}</style>
           <ul
-            className="relative flex h-44 items-end gap-[3px] sm:gap-1.5"
+            className="relative flex h-52 items-end gap-[3px] sm:gap-1.5"
             aria-label={`Orders per day, last 14 days, ${metric === 'count' ? 'order count' : 'order value'}`}
           >
             {data.map((d, i) => {
@@ -88,18 +89,22 @@ export function OrdersChart({ data }: { data: Point[] }) {
                   >
                     <span
                       className={cn(
-                        'block w-full rounded-t-[3px] transition-[height,background-color] duration-300',
-                        v === 0 ? 'bg-stone-200' : isToday ? 'bg-brand' : 'bg-brand/55 group-hover:bg-brand/80',
-                        active === i && 'bg-brand',
+                        'block w-full origin-bottom animate-[grow_600ms_cubic-bezier(0.2,0.8,0.2,1)_both] rounded-t-md transition-[height,opacity,filter] duration-300',
+                        v === 0
+                          ? 'bg-stone-200'
+                          : isToday
+                            ? 'bg-gradient-to-t from-brand to-[#FF8A55] shadow-[0_-4px_16px_-4px_rgb(240_90_34/0.5)]'
+                            : 'bg-gradient-to-t from-[#FFB088] to-[#FFD3BD] group-hover:from-[#FF8A55] group-hover:to-[#FFB088]',
+                        active === i && v > 0 && 'from-brand to-[#FF8A55]',
                       )}
-                      style={{ height: v === 0 ? 2 : `${Math.max(h, 2)}%` }}
+                      style={{ height: v === 0 ? 2 : `${Math.max(h, 2)}%`, animationDelay: `${i * 25}ms` }}
                     />
                   </button>
                   {active === i && (
                     <div
                       role="tooltip"
                       className={cn(
-                        'pointer-events-none absolute bottom-full z-10 mb-2 w-max rounded-md bg-ink px-2.5 py-1.5 text-[11px] text-white shadow-pop',
+                        'pointer-events-none absolute bottom-full z-10 mb-2 w-max animate-pop rounded-lg bg-night px-3 py-2 text-[11px] text-white shadow-pop ring-1 ring-white/10',
                         i < 3 ? 'left-0' : i > data.length - 4 ? 'right-0' : 'left-1/2 -translate-x-1/2',
                       )}
                     >

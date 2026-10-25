@@ -212,7 +212,7 @@ export function CategoriesList() {
       />
 
       <Card>
-        <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center sm:p-4">
+        <div className="flex flex-col gap-2 border-b border-line bg-stone-50/40 p-3 sm:flex-row sm:items-center sm:p-4">
           <Input
             type="search"
             aria-label="Search categories"
@@ -280,7 +280,7 @@ export function CategoriesList() {
           )
         ) : (
           <div className={cn('transition-opacity', isFetching && 'opacity-70')}>
-            <div className="hidden grid-cols-[32px_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_90px_80px_96px_44px] items-center gap-3 border-b border-line bg-page/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted lg:grid">
+            <div className="hidden grid-cols-[32px_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_90px_80px_96px_44px] items-center gap-3 border-b border-line bg-stone-50/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-stone-500 lg:grid">
               <span><span className="sr-only">Reorder</span></span>
               <span>Category</span>
               <span>Parent</span>

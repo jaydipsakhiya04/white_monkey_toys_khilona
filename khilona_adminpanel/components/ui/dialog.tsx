@@ -87,7 +87,7 @@ function DialogInner({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div
-        className="absolute inset-0 animate-fade-in bg-stone-900/40"
+        className="absolute inset-0 animate-fade-in bg-stone-900/45 backdrop-blur-[3px]"
         aria-hidden
         onClick={() => dismissible && onClose()}
       />
@@ -99,14 +99,14 @@ function DialogInner({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={cn(
-          'relative flex max-h-[92dvh] w-full animate-slide-up flex-col overflow-hidden rounded-t-2xl bg-surface shadow-pop outline-none sm:rounded-xl',
+          'relative flex max-h-[92dvh] w-full animate-slide-up flex-col overflow-hidden rounded-t-[20px] bg-surface shadow-pop ring-1 ring-black/5 outline-none sm:rounded-[18px]',
           sizes[size ?? 'md'],
           className,
         )}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-semibold text-ink">
+            <h2 id={titleId} className="font-display text-[17px] font-bold tracking-[-0.015em] text-ink">
               {title}
             </h2>
             {description && (
@@ -123,7 +123,7 @@ function DialogInner({
         </div>
         {children && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>}
         {footer && (
-          <div className="flex flex-col-reverse gap-2 border-t border-line bg-page/60 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 border-t border-line bg-stone-50/80 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
             {footer}
           </div>
         )}
@@ -224,7 +224,7 @@ function SheetInner({
   useFocusTrap(ref, true, () => dismissible && onClose());
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 animate-fade-in bg-stone-900/40" aria-hidden onClick={() => dismissible && onClose()} />
+      <div className="absolute inset-0 animate-fade-in bg-stone-900/45 backdrop-blur-[3px]" aria-hidden onClick={() => dismissible && onClose()} />
       <div
         ref={ref}
         role="dialog"
@@ -239,7 +239,7 @@ function SheetInner({
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-semibold text-ink">
+            <h2 id={titleId} className="font-display text-[17px] font-bold tracking-[-0.015em] text-ink">
               {title}
             </h2>
             {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
@@ -252,7 +252,7 @@ function SheetInner({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer && (
-          <div className="flex gap-2 border-t border-line bg-page/60 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end [&>*]:flex-1 sm:[&>*]:flex-none">
+          <div className="flex gap-2 border-t border-line bg-stone-50/80 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end [&>*]:flex-1 sm:[&>*]:flex-none">
             {footer}
           </div>
         )}
