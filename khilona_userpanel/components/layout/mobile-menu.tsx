@@ -1,18 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Menu, Package, Phone, ShoppingBag, Store as StoreIcon, Truck } from "lucide-react";
+import { Building2, LogOut, Menu, Package, Phone, ShoppingBag, Store as StoreIcon, Truck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/overlay";
 import { firstName, useAuth } from "@/features/auth/auth-provider";
 import type { CategorySummary } from "@/types/api";
 import { ACCOUNT_LINKS, Avatar, useLogout } from "./account-menu";
-import { Wordmark } from "./logo";
+import { BrandLogo } from "./logo";
 
 const row = "flex h-12 items-center gap-3 rounded-xl px-3 font-medium text-ink transition-colors hover:bg-sand";
 
-export function MobileMenu({ categories, storeName }: { categories: CategorySummary[]; storeName: string }) {
+export function MobileMenu({
+  categories,
+  storeName,
+  logoUrl = null,
+}: {
+  categories: CategorySummary[];
+  storeName: string;
+  logoUrl?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { status, customer } = useAuth();
@@ -22,6 +30,7 @@ export function MobileMenu({ categories, storeName }: { categories: CategorySumm
   const links = [
     { href: "/", label: "Home", icon: StoreIcon },
     { href: "/products", label: "Shop all toys", icon: Package },
+    { href: "/wholesale", label: "Wholesale & retailer pricing", icon: Building2 },
     { href: "/cart", label: "Cart", icon: ShoppingBag },
     { href: "/track-order", label: "Track your order", icon: Truck },
     { href: "/contact", label: "Contact us", icon: Phone },
@@ -38,7 +47,7 @@ export function MobileMenu({ categories, storeName }: { categories: CategorySumm
       >
         <Menu className="size-6" aria-hidden="true" />
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} side="left" title={<Wordmark name={storeName} compact markClassName="size-6" />}>
+      <Sheet open={open} onClose={() => setOpen(false)} side="left" title={<BrandLogo name={storeName} logoUrl={logoUrl} className="h-7" />}>
         <nav aria-label="Mobile" className="px-3 py-3">
           {/* Account */}
           <div className="mb-3 rounded-2xl bg-sand p-3">

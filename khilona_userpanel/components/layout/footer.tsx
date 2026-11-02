@@ -2,17 +2,28 @@ import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from "@/components/icons/brand";
+import { GatedAnchor } from "@/features/auth/login-gate";
 import { OpenNowBadge } from "@/features/store/open-badge";
 import { POLICY_TYPES, storeAddressLines, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "@/features/store/store-utils";
 import { brandName, WHOLESALE_INSTAGRAM } from "@/lib/brand";
 import type { CategorySummary, PublicStore } from "@/types/api";
-import { Wordmark } from "./logo";
+import { BrandLogo } from "./logo";
 
 function FooterHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-white/50">{children}</h2>;
+  return <h2 className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-white/45">{children}</h2>;
 }
 
-const linkClass = "inline-flex min-h-9 items-center text-white/80 transition-colors hover:text-white";
+const linkClass = "inline-flex min-h-9 items-center text-[0.9375rem] text-white/75 transition-colors hover:text-white";
+
+/** Links that only point somewhere real: a bare "https://www.instagram.com/" placeholder is skipped. */
+function socialProfile(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).pathname.replace(/\/+$/, "") ? url : null;
+  } catch {
+    return null;
+  }
+}
 
 export function Footer({ store, categories }: { store: PublicStore | null; categories: CategorySummary[] }) {
   const name = brandName(store);
@@ -22,24 +33,20 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
   const wa = storeWhatsappUrl(store);
   const map = storeMapUrl(store);
   const socials = [
-    { href: store?.instagram, label: "Instagram", Icon: InstagramIcon },
-    { href: store?.facebook, label: "Facebook", Icon: FacebookIcon },
-    { href: store?.youtube, label: "YouTube", Icon: YouTubeIcon },
+    { href: socialProfile(store?.instagram), label: "Instagram", Icon: InstagramIcon },
+    { href: socialProfile(store?.facebook), label: "Facebook", Icon: FacebookIcon },
+    { href: socialProfile(store?.youtube), label: "YouTube", Icon: YouTubeIcon },
   ].filter((s): s is { href: string; label: string; Icon: typeof InstagramIcon } => !!s.href);
   const policies = (Object.keys(POLICY_TYPES) as (keyof typeof POLICY_TYPES)[]).filter((k) => !store || store[POLICY_TYPES[k].field]);
 
   return (
-    <footer className="relative isolate mt-20 overflow-hidden bg-midnight text-white/80 md:mt-28">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-32 -top-40 size-[32rem] rounded-full bg-accent/[0.12] blur-[120px]" />
-        <div className="absolute -bottom-48 right-0 size-[28rem] rounded-full bg-[#6d5dfc]/[0.12] blur-[120px]" />
-      </div>
-      <Container className="grid gap-10 py-14 sm:grid-cols-2 md:py-20 lg:grid-cols-12 lg:gap-8">
+    <footer className="mt-20 bg-ink text-white/75 md:mt-28">
+      <Container className="grid gap-12 py-14 sm:grid-cols-2 md:py-20 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-4">
-          <Wordmark name={name} inverted />
-          {(store?.tagline || store?.description) && (
-            <p className="mt-5 max-w-sm text-[0.9375rem] leading-relaxed text-white/65">{store?.tagline ?? store?.description}</p>
-          )}
+          <BrandLogo name={name} logoUrl={store?.logoUrl} inverted className="h-9" />
+          <p className="mt-6 max-w-sm text-[0.9375rem] leading-relaxed text-white/60">
+            {store?.tagline || "RC cars, drones, action figures and collectibles — carefully selected, delivered to your door, paid for on delivery."}
+          </p>
           {store && <OpenNowBadge store={store} className="mt-5" />}
           {socials.length > 0 && (
             <ul className="mt-6 flex gap-2" aria-label="Social media">
@@ -50,9 +57,9 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${name} on ${label} (opens in new tab)`}
-                    className="grid size-11 place-items-center rounded-full border border-white/15 text-white transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent hover:text-midnight"
+                    className="grid size-10 place-items-center rounded-full border border-white/15 text-white transition-colors hover:border-white hover:bg-white hover:text-ink"
                   >
-                    <Icon className="size-5" />
+                    <Icon className="size-[1.125rem]" />
                   </a>
                 </li>
               ))}
@@ -62,25 +69,35 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
             href={WHOLESALE_INSTAGRAM.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group mt-6 flex max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 pr-4 transition-colors hover:border-accent/50 hover:bg-white/[0.07]"
+            className="mt-6 inline-flex items-center gap-3 rounded-full border border-white/15 py-1.5 pl-1.5 pr-4 text-sm transition-colors hover:border-white/40"
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#ff8a3d] to-[#ff3d6e] text-white">
-              <InstagramIcon className="size-5" />
+            <span className="grid size-8 place-items-center rounded-full bg-white text-ink">
+              <InstagramIcon className="size-4" />
             </span>
-            <span className="min-w-0 leading-tight">
-              <span className="block text-sm font-semibold text-white">Wholesale &amp; bulk orders</span>
-              <span className="block truncate text-xs text-white/55">{WHOLESALE_INSTAGRAM.handle}</span>
+            <span className="leading-tight">
+              <span className="block font-semibold text-white">Wholesale &amp; bulk orders</span>
+              <span className="block text-xs text-white/55">{WHOLESALE_INSTAGRAM.handle}</span>
             </span>
             <span className="sr-only">(opens in new tab)</span>
           </a>
         </div>
 
-        <nav aria-label="Footer categories" className="lg:col-span-3">
+        <nav aria-label="Shop" className="lg:col-span-2">
           <FooterHeading>Shop</FooterHeading>
           <ul className="mt-4 space-y-0.5">
             <li>
               <Link href="/products" className={linkClass}>
-                All toys
+                Shop All
+              </Link>
+            </li>
+            <li>
+              <Link href="/categories" className={linkClass}>
+                Categories
+              </Link>
+            </li>
+            <li>
+              <Link href="/wholesale" className={linkClass}>
+                Wholesale Toys
               </Link>
             </li>
             {categories.slice(0, 7).map((c) => (
@@ -93,75 +110,17 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
           </ul>
         </nav>
 
-        <div className="lg:col-span-3">
-          <FooterHeading>Visit or call</FooterHeading>
-          <ul className="mt-4 space-y-3.5 text-[0.9375rem]">
-            {address.length > 0 && (
-              <li className="flex gap-3">
-                <MapPin className="mt-0.5 size-[1.125rem] shrink-0 text-white/50" aria-hidden="true" />
-                <span>
-                  {address.map((l) => (
-                    <span key={l} className="block">
-                      {l}
-                    </span>
-                  ))}
-                  {map && (
-                    <a href={map} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block font-semibold text-white underline-offset-4 hover:underline">
-                      Get directions
-                    </a>
-                  )}
-                </span>
-              </li>
-            )}
-            {store?.phone && phoneUrl && (
-              <li className="flex gap-3">
-                <Phone className="mt-0.5 size-[1.125rem] shrink-0 text-white/50" aria-hidden="true" />
-                <a href={phoneUrl} className="hover:text-white">
-                  {store.phone}
-                </a>
-              </li>
-            )}
-            {wa && (
-              <li className="flex gap-3">
-                <WhatsAppIcon className="mt-0.5 size-[1.125rem] shrink-0 text-white/50" />
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                  WhatsApp us
-                </a>
-              </li>
-            )}
-            {store?.email && (
-              <li className="flex gap-3">
-                <Mail className="mt-0.5 size-[1.125rem] shrink-0 text-white/50" aria-hidden="true" />
-                <a href={`mailto:${store.email}`} className="break-all hover:text-white">
-                  {store.email}
-                </a>
-              </li>
-            )}
-            {hours && (
-              <li className="flex gap-3">
-                <Clock className="mt-0.5 size-[1.125rem] shrink-0 text-white/50" aria-hidden="true" />
-                <span>{hours}</span>
-              </li>
-            )}
-          </ul>
-        </div>
-
-        <nav aria-label="Help" className="lg:col-span-2">
-          <FooterHeading>Help</FooterHeading>
+        <nav aria-label="Customer support" className="lg:col-span-3">
+          <FooterHeading>Customer Support</FooterHeading>
           <ul className="mt-4 space-y-0.5">
             <li>
-              <Link href="/account" className={linkClass}>
-                My account
+              <Link href="/contact" className={linkClass}>
+                Contact Us
               </Link>
             </li>
             <li>
               <Link href="/track-order" className={linkClass}>
-                Track your order
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className={linkClass}>
-                Contact us
+                Track Order
               </Link>
             </li>
             {policies.map((k) => (
@@ -171,20 +130,73 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/account" className={linkClass}>
+                My Account
+              </Link>
+            </li>
           </ul>
         </nav>
-      </Container>
-      <Container aria-hidden="true" className="select-none overflow-hidden">
-        <p className="whitespace-nowrap bg-gradient-to-b from-white/[0.16] to-white/0 bg-clip-text pb-3 pt-2 font-display text-[8.4vw] font-extrabold uppercase leading-[0.85] tracking-[-0.04em] text-transparent lg:text-[7.6rem] xl:text-[8.1rem]">
-          {name}
-        </p>
+
+        <div className="lg:col-span-3">
+          <FooterHeading>Contact</FooterHeading>
+          <ul className="mt-4 space-y-4 text-[0.9375rem]">
+            {store?.phone && phoneUrl && (
+              <li className="flex gap-3">
+                <Phone className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" strokeWidth={1.75} aria-hidden="true" />
+                <a href={phoneUrl} className="font-semibold text-white hover:underline hover:underline-offset-4">
+                  {store.phone}
+                </a>
+              </li>
+            )}
+            {wa && (
+              <li className="flex gap-3">
+                <WhatsAppIcon className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" />
+                <GatedAnchor href={wa} action="chat with us on WhatsApp" target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  WhatsApp us
+                </GatedAnchor>
+              </li>
+            )}
+            {address.length > 0 && (
+              <li className="flex gap-3">
+                <MapPin className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" strokeWidth={1.75} aria-hidden="true" />
+                <span className="leading-relaxed">
+                  {address.map((l) => (
+                    <span key={l} className="block">
+                      {l}
+                    </span>
+                  ))}
+                  {map && (
+                    <a href={map} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block font-semibold text-white underline-offset-4 hover:underline">
+                      Get directions
+                    </a>
+                  )}
+                </span>
+              </li>
+            )}
+            {store?.email && (
+              <li className="flex gap-3">
+                <Mail className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" strokeWidth={1.75} aria-hidden="true" />
+                <GatedAnchor href={`mailto:${store.email}`} action="email us" className="break-all hover:text-white">
+                  {store.email}
+                </GatedAnchor>
+              </li>
+            )}
+            {hours && (
+              <li className="flex gap-3">
+                <Clock className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" strokeWidth={1.75} aria-hidden="true" />
+                <span>{hours}</span>
+              </li>
+            )}
+          </ul>
+        </div>
       </Container>
       <div className="border-t border-white/10">
-        <Container className="flex flex-col gap-2 pt-6 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+1.5rem)] text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between md:pb-6">
+        <Container className="flex flex-col gap-2 pt-6 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom)+1.5rem)] text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between md:pb-6">
           <p>
             © {new Date().getFullYear()} {name}. All rights reserved.
           </p>
-          <p>Pay on delivery · Order tracking · Verified reviews</p>
+          <p>Cash on Delivery · Order Tracking · WhatsApp Support</p>
         </Container>
       </div>
     </footer>

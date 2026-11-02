@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import { API_URL, signInAsNewCustomer } from "./auth";
 
 // prefix is configurable (ORDER_NUMBER_PREFIX); older orders may still use the previous one
 const ORDER_NUMBER = /^[A-Z]{2,6}-\d{8}-\d{4,}$/;
-const API_URL = (process.env.E2E_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").replace(/\/+$/, "");
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@khilona.in";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Admin@12345";
 
@@ -26,6 +26,11 @@ async function openFirstInStockProduct(page: Page) {
 }
 
 test.describe("critical purchase flow", () => {
+  // ordering needs an account
+  test.beforeEach(async ({ page }) => {
+    await signInAsNewCustomer(page, "Playwright Tester");
+  });
+
   test("home → category → product → cart → checkout → success", async ({ page, request }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -66,10 +71,10 @@ test.describe("critical purchase flow", () => {
 
     // step 2: address
     await expect(page.getByRole("heading", { name: /Delivery address/ })).toBeVisible();
-    await page.getByLabel("Full address").fill("Flat 12, Test Residency, MG Road, Navrangpura");
-    await page.getByLabel("City").fill("Ahmedabad");
+    await page.getByLabel("Full address").fill("Flat 12, Test Residency, Varachha Main Road");
+    await page.getByLabel("City").fill("Surat");
     await page.getByLabel("State").fill("Gujarat");
-    await page.getByLabel("Pincode").fill("380009");
+    await page.getByLabel("Pincode").fill("395006");
     await page.getByLabel(/Landmark/).fill("Near Test Garden");
     await page.getByLabel(/Special note/).fill("Automated e2e test order — please ignore.");
     await page.getByRole("button", { name: /Continue/ }).click();
@@ -119,6 +124,10 @@ test.describe("critical purchase flow", () => {
 });
 
 test.describe("cart", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAsNewCustomer(page);
+  });
+
   test("simple product: add to cart and change quantity", async ({ page }) => {
     await page.goto("/products?inStock=true&sort=name_asc");
     const quickAdd = page.getByRole("button", { name: /^Add .* to cart$/ }).first();
@@ -170,6 +179,10 @@ test.describe("cart", () => {
 });
 
 test.describe("checkout error handling", () => {
+  test.beforeEach(async ({ page }) => {
+    await signInAsNewCustomer(page, "Error Case");
+  });
+
   async function addFirstSimpleProductAndGoToReview(page: Page) {
     await page.goto("/products?inStock=true&sort=name_asc");
     await page.getByRole("button", { name: /^Add .* to cart$/ }).first().click();
@@ -179,9 +192,9 @@ test.describe("checkout error handling", () => {
     await page.getByLabel("Mobile number", { exact: true }).fill("9876543210");
     await page.getByRole("button", { name: /Continue/ }).click();
     await page.getByLabel("Full address").fill("House 1, Some Street, Some Area");
-    await page.getByLabel("City").fill("Ahmedabad");
+    await page.getByLabel("City").fill("Surat");
     await page.getByLabel("State").fill("Gujarat");
-    await page.getByLabel("Pincode").fill("380009");
+    await page.getByLabel("Pincode").fill("395006");
     await page.getByRole("button", { name: /Continue/ }).click();
     await expect(page.getByRole("heading", { name: "Review your order" })).toBeVisible();
   }
@@ -189,6 +202,7 @@ test.describe("checkout error handling", () => {
   test("validation: invalid phone and pincode are rejected client-side", async ({ page }) => {
     await page.goto("/products?inStock=true&sort=name_asc");
     await page.getByRole("button", { name: /^Add .* to cart$/ }).first().click();
+    await expect(page.getByText("Added to cart").first()).toBeVisible();
     await page.goto("/checkout");
     await page.getByLabel("Full name").fill("Val Idation");
     await page.getByLabel("Mobile number", { exact: true }).fill("12345");

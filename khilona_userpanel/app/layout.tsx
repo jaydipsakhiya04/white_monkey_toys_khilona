@@ -1,18 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { connection } from "next/server";
 import { AnnouncementBar, Header } from "@/components/layout/header";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { Footer } from "@/components/layout/footer";
 import { RevealObserver } from "@/components/ui/reveal";
 import { brandName } from "@/lib/brand";
+import { ALL_KEYWORDS } from "@/lib/seo";
 import { SITE_URL } from "@/lib/env";
 import { getCategoryTree, getStore } from "@/services/catalog.server";
 import { toPlainText } from "@/utils/format";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({
+const display = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display-face",
   display: "swap",
@@ -36,15 +37,20 @@ export async function generateMetadata(): Promise<Metadata> {
   await connection();
   const store = await getStore();
   const name = brandName(store);
-  const title = store?.seoTitle || (store?.tagline ? `${name} – ${store.tagline}` : `${name} – Premium Toys, Games & Gifts`);
+  const city = store?.city || "Surat";
+  const title = store?.seoTitle || `${name} | Toy Shop in ${city} – Retail & Wholesale Toys`;
   const description =
-    toPlainText(store?.seoDescription || store?.description) ||
-    `Shop quality toys, games and gifts at ${name}. Easy ordering, order tracking and pay on delivery.`;
+    toPlainText(store?.seoDescription || store?.description, 300) ||
+    `${name} is a toy shop in ${city} for RC cars, drones, action figures and collectibles — retail and wholesale, with cash on delivery.`;
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: title, template: `%s | ${name}` },
     description,
+    keywords: ALL_KEYWORDS,
     applicationName: name,
+    category: "shopping",
+    // regional hints for local search (the store's city / state)
+    other: { "geo.region": "IN-GJ", "geo.placename": city },
     openGraph: {
       type: "website",
       siteName: name,

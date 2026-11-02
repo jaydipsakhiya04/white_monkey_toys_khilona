@@ -5,6 +5,7 @@ import { Mail, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
 import { ErrorState } from "@/components/ui/error-state";
+import { GatedAnchor } from "@/features/auth/login-gate";
 import { JsonLd } from "@/components/ui/json-ld";
 import { StoreInfoCard, storeJsonLd } from "@/features/store/store-info";
 import { getStore } from "@/services/catalog.server";
@@ -12,9 +13,10 @@ import { getStore } from "@/services/catalog.server";
 export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore();
   const name = brandName(store);
+  const where = store?.city ? ` – Toy Shop in ${store.city}` : "";
   return {
-    title: "Contact us",
-    description: `Call, WhatsApp or visit ${name}. Store address, opening hours and directions.`,
+    title: `Contact ${name}${where}`,
+    description: `Call, WhatsApp or visit ${name}${store?.city ? `, the toy shop in ${store.city}` : ""}. Store address, opening hours, directions and wholesale enquiries.`,
     alternates: { canonical: "/contact" },
     openGraph: { url: "/contact" },
   };
@@ -34,7 +36,11 @@ export default async function ContactPage() {
           <StoreInfoCard store={store} headingLevel="h2" />
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {store.email && (
-              <a href={`mailto:${store.email}`} className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
+              <GatedAnchor
+                href={`mailto:${store.email}`}
+                action="email us"
+                className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 hover:border-line-strong"
+              >
                 <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-ink">
                   <Mail className="size-5" aria-hidden="true" />
                 </span>
@@ -42,7 +48,7 @@ export default async function ContactPage() {
                   <span className="block font-bold text-ink">Email us</span>
                   <span className="block break-all text-sm text-muted">{store.email}</span>
                 </span>
-              </a>
+              </GatedAnchor>
             )}
             <Link href="/track-order" className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 hover:border-line-strong">
               <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-ink">

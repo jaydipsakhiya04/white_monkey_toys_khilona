@@ -1,11 +1,20 @@
 import { Clock, MapPin, Navigation, Phone } from "lucide-react";
-import { ButtonAnchor } from "@/components/ui/button";
+import { ButtonAnchor, buttonClasses } from "@/components/ui/button";
 import { WhatsAppIcon } from "@/components/icons/brand";
+import { GatedAnchor } from "@/features/auth/login-gate";
 import { absoluteUrl } from "@/lib/env";
+import { BRAND_NAMES, GLOBAL_KEYWORDS, LOCAL_KEYWORDS, SURAT_AREAS } from "@/lib/seo";
 import type { PublicStore } from "@/types/api";
 import { cn } from "@/utils/cn";
 import { OpenNowBadge } from "./open-badge";
 import { storeAddressLines, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "./store-utils";
+
+/** "919662725685" → "+91 96627 25685" (other formats are shown as plain digits). */
+function displayWhatsapp(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  const m = digits.match(/^91(\d{5})(\d{5})$/);
+  return m ? `+91 ${m[1]} ${m[2]}` : `+${digits}`;
+}
 
 /** Store details card: address, phone, WhatsApp, hours + open badge, map link. */
 export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store: PublicStore; className?: string; headingLevel?: "h1" | "h2" }) {
@@ -35,10 +44,10 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
             </ButtonAnchor>
           )}
           {wa && (
-            <ButtonAnchor href={wa} target="_blank" rel="noopener noreferrer" variant="whatsapp">
+            <GatedAnchor href={wa} action="chat with us on WhatsApp" target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "whatsapp" })}>
               <WhatsAppIcon className="size-4" />
               WhatsApp
-            </ButtonAnchor>
+            </GatedAnchor>
           )}
           {map && (
             <ButtonAnchor href={map} target="_blank" rel="noopener noreferrer" variant="outline">
@@ -84,9 +93,13 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
               <span className="sr-only">WhatsApp</span>
             </dt>
             <dd>
-              <a href={wa ?? undefined} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink hover:underline underline-offset-4">
-                +{store.whatsapp.replace(/\D/g, "")}
-              </a>
+              {wa ? (
+                <GatedAnchor href={wa} action="chat with us on WhatsApp" target="_blank" rel="noopener noreferrer" className="font-semibold text-ink hover:underline underline-offset-4">
+                  {displayWhatsapp(store.whatsapp)}
+                </GatedAnchor>
+              ) : (
+                <span className="font-semibold text-ink">{displayWhatsapp(store.whatsapp)}</span>
+              )}
             </dd>
           </div>
         )}
@@ -145,7 +158,35 @@ export function storeJsonLd(store: PublicStore): Record<string, unknown> {
         }
       : {}),
     currenciesAccepted: store.currency || "INR",
-    paymentAccepted: "Cash",
+    paymentAccepted: "Cash, UPI",
+    priceRange: "₹₹",
+    alternateName: BRAND_NAMES.filter((n) => n !== store.name),
+    ...(store.tagline ? { slogan: store.tagline } : {}),
+    keywords: [...LOCAL_KEYWORDS, ...GLOBAL_KEYWORDS].join(", "),
+    ...(store.city
+      ? {
+          areaServed: [
+            { "@type": "City", name: store.city },
+            ...(store.city.toLowerCase() === "surat" ? SURAT_AREAS.map((a) => ({ "@type": "Place", name: `${a}, Surat` })) : []),
+          ],
+        }
+      : {}),
+    // the store sells to families (retail, home delivery) and to shops (wholesale)
+    makesOffer: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Retail toy shopping with home delivery",
+          description: store.city ? `Toys delivered free across ${store.city}, cash on delivery.` : "Toys delivered to your door, cash on delivery.",
+        },
+      },
+      {
+        "@type": "Offer",
+        url: absoluteUrl("/wholesale"),
+        itemOffered: { "@type": "Service", name: "Wholesale toys for retailers and resellers", description: "Bulk and retailer pricing on RC cars, drones, action figures and collectibles." },
+      },
+    ],
     ...(sameAs.length ? { sameAs } : {}),
   };
 }

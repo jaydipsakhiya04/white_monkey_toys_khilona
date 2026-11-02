@@ -74,7 +74,7 @@ export function SignupForm() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Track every order, download invoices and review the toys you receive. Checkout as a guest is always available too."
+      subtitle="Create a free account to order toys, request wholesale pricing, track every order and download invoices."
       footer={
         <>
           Already have an account? <TextLink href={`/login${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`}>Log in</TextLink>

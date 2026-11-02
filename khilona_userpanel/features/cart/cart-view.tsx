@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
+import { useRequireLogin } from "@/features/auth/login-gate";
 import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
@@ -19,6 +20,7 @@ import { useCartValidation, type LineView } from "./use-cart-validation";
 
 export function CartView() {
   const router = useRouter();
+  const requireLogin = useRequireLogin();
   const v = useCartValidation();
   const clear = useCartStore((s) => s.clear);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -115,7 +117,9 @@ export function CartView() {
             disabled={!canCheckout || v.isFetching}
             loading={v.isLoading}
             loadingText="Checking stock…"
-            onClick={() => router.push("/checkout")}
+            onClick={() => {
+              if (requireLogin("place your order")) router.push("/checkout");
+            }}
           >
             Proceed to checkout
           </Button>
@@ -177,7 +181,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
   return (
     <li className={cn("flex gap-3 p-3 sm:gap-4 sm:p-4", blocking && "bg-danger-tint/40")} data-testid="cart-line">
       <Link href={`/product/${slug}`} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-sand sm:size-24" tabIndex={-1} aria-hidden="true">
-        <SmartImage src={image} alt="" fill sizes="96px" className={cn("object-cover", blocking && "opacity-50")} />
+        <SmartImage src={image} alt="" fill sizes="96px" className={cn("object-contain p-1 mix-blend-multiply", blocking && "opacity-50")} />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-2">

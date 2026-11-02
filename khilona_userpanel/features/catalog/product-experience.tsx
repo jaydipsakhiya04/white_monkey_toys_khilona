@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { AlertCircle, Banknote, Check, PackageCheck, ShieldCheck, ShoppingBag, Truck, Zap } from "lucide-react";
-import { Button, ButtonAnchor } from "@/components/ui/button";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { WhatsAppIcon } from "@/components/icons/brand";
+import { GatedAnchor } from "@/features/auth/login-gate";
 import { useAddToCart } from "@/features/cart/use-add-to-cart";
 import { absoluteUrl } from "@/lib/env";
 import type { ProductDetail } from "@/types/api";
@@ -77,7 +78,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
 
   function doAdd(silent = false) {
     if (!requireSelection() || !inStock) return false;
-    addToCart(
+    const added = addToCart(
       {
         productId: product.id,
         variantId: variant?.id ?? null,
@@ -95,7 +96,8 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
       },
       { silent },
     );
-    return true;
+    // null: a guest was sent to log in instead
+    return added !== null;
   }
 
   const waText = `Hi! I'm interested in "${product.name}"${variant ? ` (${variant.title})` : ""}. ${absoluteUrl(`/product/${product.slug}`)}`;
@@ -134,11 +136,11 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
         <div className="min-w-0">
           <Link
             href={`/category/${product.category.slug}`}
-            className="inline-flex rounded text-xs font-bold uppercase tracking-[0.12em] text-ink underline-offset-4 hover:underline"
+            className="inline-flex rounded text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-muted underline-offset-4 hover:text-ink hover:underline"
           >
             {product.category.name}
           </Link>
-          <h1 className="mt-2 text-[1.75rem] font-bold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl lg:text-[2.75rem]">{product.name}</h1>
+          <h1 className="mt-3 text-[1.75rem] font-bold leading-[1.1] tracking-[-0.035em] text-ink sm:text-[2.25rem] lg:text-[2.5rem]">{product.name}</h1>
           {product.rating.count > 0 && (
             <a href="#reviews-title" className="mt-3 inline-flex items-center gap-2 text-sm text-muted hover:text-ink">
               <RatingStars value={product.rating.average} size="sm" />
@@ -259,7 +261,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               </Button>
               <Button
                 size="lg"
-                variant="accent"
+                variant="outline"
                 disabled={complete && !inStock}
                 onClick={() => {
                   if (doAdd(true)) router.push("/checkout");
@@ -270,17 +272,23 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               </Button>
             </div>
             {waUrl && (
-              <ButtonAnchor href={waUrl} target="_blank" rel="noopener noreferrer" variant="outline" size="lg" block>
+              <GatedAnchor
+                href={waUrl}
+                action="ask about this product"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonClasses({ variant: "outline", size: "lg", block: true })}
+              >
                 <WhatsAppIcon className="size-5 text-success-700" />
                 Ask about this on WhatsApp
-              </ButtonAnchor>
+              </GatedAnchor>
             )}
           </div>
 
           <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-line bg-surface">
-            <div className="flex items-start gap-3 bg-accent-tint/70 p-4 text-sm text-ink">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-midnight">
-                <Banknote className="size-[1.125rem]" aria-hidden="true" />
+            <div className="flex items-start gap-3 bg-sand p-4 text-sm text-ink">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-ink text-white">
+                <Banknote className="size-[1.125rem]" strokeWidth={1.75} aria-hidden="true" />
               </span>
               <p>
                 <span className="font-semibold">Cash / pay on delivery.</span>{" "}
@@ -294,7 +302,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
                 { Icon: PackageCheck, label: "Order tracking" },
               ].map(({ Icon, label }) => (
                 <li key={label} className="flex flex-col items-center gap-1.5 px-2 py-3.5">
-                  <Icon className="size-[1.125rem] text-accent-deep" aria-hidden="true" />
+                  <Icon className="size-[1.125rem] text-ink" strokeWidth={1.75} aria-hidden="true" />
                   {label}
                 </li>
               ))}

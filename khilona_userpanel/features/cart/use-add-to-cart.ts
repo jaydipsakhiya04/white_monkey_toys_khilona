@@ -3,15 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { useRequireLogin } from "@/features/auth/login-gate";
 import { useCartStore, type CartSnapshot } from "./cart-store";
 
-/** Adds to the cart and shows a toast with a "View cart" action. */
+/**
+ * Adds to the cart and shows a toast with a "View cart" action. Shopping needs an account: guests
+ * are sent to log in instead and `null` is returned.
+ */
 export function useAddToCart() {
   const add = useCartStore((s) => s.add);
   const router = useRouter();
+  const requireLogin = useRequireLogin();
 
   return useCallback(
     (input: { productId: string; variantId: string | null; quantity: number; snapshot: CartSnapshot }, opts?: { silent?: boolean }) => {
+      if (!requireLogin("add items to your cart")) return null;
       const res = add(input);
       if (opts?.silent) return res;
       const title = input.snapshot.variantTitle ? `${input.snapshot.name} (${input.snapshot.variantTitle})` : input.snapshot.name;
@@ -28,6 +34,6 @@ export function useAddToCart() {
       }
       return res;
     },
-    [add, router],
+    [add, router, requireLogin],
   );
 }

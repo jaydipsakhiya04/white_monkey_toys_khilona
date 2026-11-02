@@ -10,12 +10,12 @@ const base =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-[-0.005em] whitespace-nowrap select-none transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-ink text-white shadow-[0_1px_0_rgb(255_255_255/0.08)_inset] hover:bg-ink-soft hover:shadow-lift",
-  /** signature tangerine CTA — dark text keeps it AA on the bright fill */
-  accent: "bg-accent text-midnight shadow-glow hover:bg-[#ff6d36] hover:-translate-y-px",
+  primary: "bg-ink text-white hover:bg-ink-soft hover:shadow-lift",
+  /** main conversion CTA: solid black with a subtle lift (the orange accent is kept for small highlights) */
+  accent: "bg-ink text-white hover:bg-ink-soft hover:-translate-y-px hover:shadow-glow",
   dark: "bg-ink text-white hover:bg-ink-soft",
   secondary: "bg-sand text-ink hover:bg-sand-deep",
-  outline: "border border-line-strong bg-surface text-ink hover:border-ink hover:shadow-soft",
+  outline: "border border-line-strong bg-surface text-ink hover:border-ink",
   ghost: "text-ink hover:bg-sand",
   whatsapp: "bg-success-700 text-white hover:bg-[#12522a]",
   danger: "bg-danger-700 text-white hover:bg-[#991b1b]",

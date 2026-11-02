@@ -41,21 +41,29 @@ test('category → product (with image) → public order → confirm order', asy
   await expect(page.getByText(`“${productName}” created`)).toBeVisible();
   await expect(page).toHaveURL(/\/products$/);
 
-  // ---- place an order through the public API ----
+  // ---- place an order through the public API (ordering needs a customer account) ----
   const list = await request.get(`${API_URL}/products`, { params: { search: productName, limit: 5 } });
   expect(list.ok()).toBeTruthy();
   const product = (await list.json()).data.items.find((p: { name: string }) => p.name === productName);
   expect(product, 'new product is visible in the public catalogue').toBeTruthy();
 
+  const n = `${Date.now()}`.slice(-9);
+  const signup = await request.post(`${API_URL}/auth/customer/signup`, {
+    data: { name: 'E2E Customer', email: `e2e.${n}@example.com`, phone: `9${n}`, password: 'Toys2026e2e' },
+  });
+  expect(signup.ok(), await signup.text()).toBeTruthy();
+  const customerToken = (await signup.json()).data.accessToken as string;
+
   const orderRes = await request.post(`${API_URL}/orders`, {
+    headers: { Authorization: `Bearer ${customerToken}` },
     data: {
       customerName: 'E2E Customer',
       phone: '9812345678',
       email: 'e2e@example.com',
-      address: '12, Test Street, Navrangpura',
-      city: 'Ahmedabad',
+      address: '12, Test Street, Varachha Main Road',
+      city: 'Surat',
       state: 'Gujarat',
-      pincode: '380009',
+      pincode: '395006',
       landmark: 'Opposite test park',
       note: 'Automated e2e order',
       items: [{ productId: product.id, quantity: 2 }],

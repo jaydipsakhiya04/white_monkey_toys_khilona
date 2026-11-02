@@ -19,6 +19,8 @@ process.env.THROTTLE_LOGIN_LIMIT = '100000';
 process.env.THROTTLE_ORDER_LIMIT = '100000';
 process.env.THROTTLE_TRACK_LIMIT = '100000';
 process.env.ORDER_NUMBER_PREFIX = 'WMT';
+// most suites exercise guest checkout; customer.e2e-spec switches login-required back on to test it
+process.env.ORDERS_REQUIRE_LOGIN = 'false';
 process.env.STORAGE_PROVIDER = 'local';
 process.env.STORAGE_LOCAL_DIR = 'uploads-test';
 process.env.SWAGGER_ENABLED = 'false';

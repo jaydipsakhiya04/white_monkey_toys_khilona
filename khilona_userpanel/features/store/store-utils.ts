@@ -3,9 +3,9 @@ import { formatTime24 } from "@/utils/format";
 import { telLink, whatsappLink } from "@/utils/phone";
 
 export const HERO_FALLBACK = {
-  title: "Find Something They’ll Love",
-  subtitle: "Thoughtfully chosen toys, games and gifts — easy to order, delivered to your door, and paid for on delivery.",
-  cta: "Shop toys",
+  title: "Little Moments. Big Adventures.",
+  subtitle: "Discover thoughtfully selected toys, creative games, and educational essentials that bring joy to every little adventure.",
+  cta: "Explore Collection",
 };
 
 export function storeHours(store: PublicStore | null): string | null {

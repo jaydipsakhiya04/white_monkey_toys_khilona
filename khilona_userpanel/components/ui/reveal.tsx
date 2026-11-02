@@ -18,12 +18,17 @@ export function RevealObserver() {
       document.querySelectorAll("[data-reveal]").forEach(show);
       return;
     }
+    // Streamed (Suspense) content arrives in the DOM before React hydrates it; changing its attributes
+    // then causes a hydration mismatch. React tags nodes it owns with a "__reactFiber$…" key, so wait for it.
+    const hydrated = (el: Element) => Object.keys(el).some((k) => k.startsWith("__reactFiber$"));
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          show(entry.target);
-          io.unobserve(entry.target);
+          const el = entry.target;
+          io.unobserve(el);
+          if (hydrated(el)) show(el);
+          else window.setTimeout(() => io.observe(el), 60);
         }
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },

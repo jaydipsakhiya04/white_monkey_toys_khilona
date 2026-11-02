@@ -147,6 +147,7 @@ The seed creates the store profile (logo, hero, hours, policies), 11 categories 
 | `COOKIE_SECURE` / `COOKIE_SAMESITE` / `COOKIE_DOMAIN` | `true` / `lax` / `.khilona.in` | refresh-token cookie |
 | `APP_TIMEZONE` | `Asia/Kolkata` | order-number dates, opening hours, reports |
 | `ORDER_NUMBER_PREFIX` | `WMT` | new orders look like `WMT-20261002-0001`; existing orders keep their numbers |
+| `ORDERS_REQUIRE_LOGIN` | `true` | customers must be signed in to place an order; `false` re-enables guest checkout |
 | `STORAGE_PROVIDER` | `local` \| `s3` | |
 | `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_PUBLIC_URL` | | for S3 / R2 / MinIO / Spaces |
 | `UPLOAD_MAX_FILE_SIZE_MB` | `5` | |
@@ -171,7 +172,9 @@ The seed creates the store profile (logo, hero, hours, policies), 11 categories 
 
 ## Business rules (summary)
 
-- **Guest checkout** — name, mobile, address, city/state/pincode, landmark, Google Maps link, browser location (optional) and notes. Never requires an account.
+- **Login required for actions** — guests can browse every page, but adding to cart, checkout, wholesale enquiries and messaging the store (WhatsApp / email) need a free customer account. The API enforces it for orders (`ORDERS_REQUIRE_LOGIN`, default `true`). Checkout collects name, mobile, address, city/state/pincode, landmark, Google Maps link, browser location (optional) and notes.
+- **Wholesale & retail** — `/wholesale` lets shops request a retailer or wholesale price list; the enquiry opens in WhatsApp for the store team.
+- **Catalogue** — `npm --prefix khilona_backend run catalogue:import` builds the real catalogue from `data/WHITE MONKEY/` (part of `db:setup`).
 - **Customer accounts** — signup / login (email or mobile) / logout / password change. JWT access token kept in memory only + rotating httpOnly refresh cookie (`wmt_crt`, separate JWT audience from admins). Orders placed while signed in are linked to the account.
 - **Guest → account** — mobile numbers are not verified, so signing up never exposes earlier guest orders automatically. A customer can *claim* an earlier guest order with its order number when it was placed with the account's mobile — the same proof guest tracking already requires. A guest checkout using an account's mobile never overwrites that account's details.
 - **Password reset** — single-use, hashed, 30-minute tokens. No email/SMS provider ships with the project: the API reports `deliveryAvailable: false` and the storefront honestly tells the customer to contact the store. Register a `NotificationChannel` with `passwordResetRequested` to deliver links (in development the link is logged to the API console).

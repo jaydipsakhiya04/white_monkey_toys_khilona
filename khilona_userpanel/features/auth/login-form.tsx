@@ -59,7 +59,7 @@ export function LoginForm() {
         <>
           New here? <TextLink href={`/signup${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`}>Create an account</TextLink>
           <span className="mx-2" aria-hidden="true">·</span>
-          <TextLink href="/track-order">Track an order as a guest</TextLink>
+          <TextLink href="/track-order">Track an order without logging in</TextLink>
         </>
       }
     >

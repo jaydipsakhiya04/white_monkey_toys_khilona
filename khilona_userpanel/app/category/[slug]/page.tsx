@@ -23,10 +23,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
   if (!category) return { title: "Category not found", robots: { index: false } };
   const store = await getStore();
-  const title = category.seoTitle || category.name;
-  const description =
-    toPlainText(category.seoDescription || category.description) ||
-    `Shop ${category.name} at ${brandName(store)}. ${pluralize(category.productCount, "product")} available — pay on delivery.`;
+  // local intent: "Hobby-Grade RC Cars in Surat" (an admin-set SEO title always wins)
+  const city = store?.city;
+  const title = category.seoTitle || (city ? `${category.name} in ${city}` : category.name);
+  const local = city ? ` Free delivery across ${city}, cash on delivery, retail & wholesale.` : " Pay on delivery.";
+  const base =
+    toPlainText(category.seoDescription || category.description, 220) ||
+    `Shop ${category.name} at ${brandName(store)}. ${pluralize(category.productCount, "product")} available.`;
+  const description = `${base}${local}`;
   const canonical = `/category/${category.slug}${sp.page > 1 ? `?page=${sp.page}` : ""}`;
   return {
     title,
@@ -71,7 +75,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <nav aria-label={`${category.name} sub-categories`} className="mt-5">
           <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             <li className="shrink-0">
-              <span className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-sm font-semibold text-midnight" aria-current="page">
+              <span className="inline-flex h-10 items-center rounded-full bg-ink px-4 text-sm font-semibold text-white" aria-current="page">
                 All {category.name}
               </span>
             </li>

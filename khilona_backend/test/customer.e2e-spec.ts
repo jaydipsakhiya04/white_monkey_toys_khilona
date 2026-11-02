@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { APP_CONFIG, AppConfig } from '../src/config/configuration';
 import { PrismaService } from '../src/database/prisma.service';
 import { createApp, login, resetDatabase, seedBasics } from './helpers';
 
@@ -165,6 +166,19 @@ describe('Customer accounts (e2e)', () => {
       const guest = await placeOrder(null, '9123400009').expect(201);
       expect(guest.body.data.linkedToAccount).toBe(false);
       await http().get('/api/orders/track').query({ orderNumber: guest.body.data.orderNumber, phone: '9123400009' }).expect(200);
+    });
+
+    it('rejects guest orders when login is required (ORDERS_REQUIRE_LOGIN, the default)', async () => {
+      const config = app.get<AppConfig>(APP_CONFIG);
+      config.ordersRequireLogin = true;
+      try {
+        const before = (await prisma.product.findUniqueOrThrow({ where: { id: productId } })).stock;
+        const res = await placeOrder(null, '9123400010').expect(401);
+        expect(res.body.message).toMatch(/log in/i);
+        expect((await prisma.product.findUniqueOrThrow({ where: { id: productId } })).stock).toBe(before);
+      } finally {
+        config.ordersRequireLogin = false;
+      }
     });
 
     it('server-prices signed-in orders too', async () => {

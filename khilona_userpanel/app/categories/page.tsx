@@ -22,8 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const TINTS = ["bg-sand", "bg-accent-tint", "bg-sand", "bg-sand"];
-
 export default async function CategoriesPage() {
   const categories = await getCategoryTree();
 
@@ -44,28 +42,31 @@ export default async function CategoriesPage() {
           <ButtonLink href="/products">Shop all products</ButtonLink>
         </EmptyState>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <ul className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
           {categories.map((c, i) => (
             <li
               key={c.id}
               data-reveal
               style={{ "--reveal-delay": `${(i % 4) * 70}ms` } as React.CSSProperties}
-              className="flex flex-col overflow-hidden rounded-[1.75rem] border border-line bg-surface transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-lift"
+              className="flex flex-col overflow-hidden rounded-[1.5rem] border border-line bg-surface p-2 transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-1 hover:border-line-strong hover:shadow-lift"
             >
-              <Link href={`/category/${c.slug}`} className="group flex items-center gap-4 p-3">
-                <span className={`relative size-20 shrink-0 overflow-hidden rounded-[1.25rem] sm:size-24 ${TINTS[i % TINTS.length]}`}>
+              <Link href={`/category/${c.slug}`} className="group flex flex-1 flex-col">
+                <span className="photo-stage relative block aspect-[4/3] overflow-hidden rounded-[1.1rem]">
                   <SmartImage
                     src={c.imageUrl}
                     alt=""
                     fill
-                    sizes="96px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-contain p-6 transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                     fallbackClassName="bg-transparent"
                   />
                 </span>
-                <span className="min-w-0">
-                  <span className="block font-display text-lg font-bold leading-tight text-ink group-hover:text-ink sm:text-xl">{c.name}</span>
-                  <span className="mt-1 block text-sm text-muted">{pluralize(c.productCount, "product")}</span>
+                <span className="flex flex-1 flex-col px-3 pb-3 pt-4">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-lg font-bold leading-tight text-ink underline-offset-4 group-hover:underline">{c.name}</span>
+                    <span className="shrink-0 text-sm text-muted">{pluralize(c.productCount, "product")}</span>
+                  </span>
+                  {c.description && <span className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted">{c.description}</span>}
                 </span>
               </Link>
               {c.children.length > 0 && (

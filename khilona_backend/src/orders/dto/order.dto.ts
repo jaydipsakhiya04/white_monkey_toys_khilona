@@ -88,7 +88,7 @@ export class CreateOrderDto extends ValidateCartDto {
   @Length(5, 500, { message: 'Address must be 5–500 characters' })
   address: string;
 
-  @ApiProperty({ example: 'Ahmedabad' })
+  @ApiProperty({ example: 'Surat' })
   @IsString()
   @Length(2, 60, { message: 'City must be 2–60 characters' })
   city: string;

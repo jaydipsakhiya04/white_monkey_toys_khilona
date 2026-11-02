@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { forwardRef, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { z } from "zod";
 import { TextField } from "@/components/ui/field";
-import { Wordmark } from "@/components/layout/logo";
+import { BrandLogo } from "@/components/layout/logo";
 import { cn } from "@/utils/cn";
 
 /** Mirrors the API rule (8–72 chars, at least one letter and one number). */
@@ -26,7 +26,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
     <div className="mx-auto grid w-full max-w-[64rem] gap-6 px-4 py-10 sm:py-14 lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
       <div className="mx-auto flex w-full max-w-[28rem] flex-col lg:max-w-none">
         <div className="flex-1 animate-rise rounded-[2rem] border border-line bg-surface p-6 shadow-soft sm:p-10">
-          <Wordmark compact markClassName="size-7" />
+          <BrandLogo className="h-7" />
           <h1 className="mt-7 text-[1.875rem] font-bold leading-tight tracking-tight text-ink sm:text-[2.125rem]">{title}</h1>
           {subtitle && <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">{subtitle}</p>}
           <div className="mt-7">{children}</div>
@@ -37,18 +37,16 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
         aria-hidden="true"
         className="relative isolate hidden animate-rise overflow-hidden rounded-[2rem] bg-midnight p-10 text-white [animation-delay:120ms] lg:flex lg:flex-col lg:justify-between"
       >
-        <div className="absolute -right-24 -top-24 -z-10 size-80 rounded-full bg-accent/30 blur-[100px]" />
-        <div className="absolute -bottom-28 -left-16 -z-10 size-80 rounded-full bg-[#6d5dfc]/25 blur-[100px]" />
         <div className="bg-grain absolute inset-0 -z-10 opacity-60" />
-        <p className="eyebrow !text-accent">Your toy-shop account</p>
+        <p className="eyebrow !text-white/60">Your toy-shop account</p>
         <div>
           <p className="font-display text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.035em]">
             Every order, <span className="text-gradient-accent">tracked</span> from shop to doorstep.
           </p>
           <ul className="mt-8 space-y-3.5 text-[0.9375rem] text-white/75">
-            {["Live status for every order", "Invoices & receipts as PDF", "Review the toys you received", "Guest checkout always available"].map((t) => (
+            {["Live status for every order", "Invoices & receipts as PDF", "Review the toys you received", "Wholesale & retailer pricing"].map((t) => (
               <li key={t} className="flex items-center gap-3">
-                <span className="grid size-6 place-items-center rounded-full bg-accent text-[0.75rem] font-bold text-midnight">✓</span>
+                <span className="grid size-6 place-items-center rounded-full bg-white text-[0.75rem] font-bold text-ink">✓</span>
                 {t}
               </li>
             ))}

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Spinner } from "@/components/ui/spinner";
 import { firstName, useAuth } from "@/features/auth/auth-provider";
+import { loginHref } from "@/features/auth/login-gate";
 import { useCartStore, type CartItem } from "@/features/cart/cart-store";
 import { OrderSummaryRows } from "@/features/cart/order-summary";
 import { useCartValidation, type LineView } from "@/features/cart/use-cart-validation";
@@ -192,7 +193,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
         return;
       }
       if (err.status === 401) {
-        setIssue({ kind: "other", message: "Your session has expired. Log in again, or place the order as a guest — your cart is safe." });
+        setIssue({ kind: "other", message: "Please log in again to place your order — your cart is safe." });
         return;
       }
       if (err.status === 403) {
@@ -228,7 +229,24 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
       </div>
     );
   }
-  if (!cart.hydrated || !restored) {
+  // ordering needs an account (the API enforces this too)
+  if (authStatus === "guest") {
+    return (
+      <EmptyState
+        icon={<User />}
+        title="Log in to place your order"
+        description="Ordering is available for registered customers. Log in or create a free account — your cart will be waiting for you."
+      >
+        <div className="flex flex-col gap-3 xs:flex-row">
+          <ButtonLink href={loginHref("/checkout")}>Log in</ButtonLink>
+          <ButtonLink href={`/signup?next=${encodeURIComponent("/checkout")}`} variant="outline">
+            Create an account
+          </ButtonLink>
+        </div>
+      </EmptyState>
+    );
+  }
+  if (!cart.hydrated || !restored || authStatus === "loading") {
     return (
       <div className="grid gap-8 lg:grid-cols-[1fr_24rem]" aria-hidden="true">
         <Skeleton className="h-[28rem] w-full rounded-2xl" />
@@ -258,14 +276,6 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             <span>
               Signed in as <span className="font-semibold">{firstName(customer.name)}</span> — this order will be saved to your account.
             </span>
-          </p>
-        ) : authStatus === "guest" ? (
-          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-sand px-4 py-3 text-sm text-ink">
-            <span>Checking out as a guest.</span>
-            <span className="text-muted">Have an account?</span>
-            <Link href="/login?next=/checkout" className="font-semibold underline underline-offset-4">
-              Log in for faster checkout
-            </Link>
           </p>
         ) : null}
 
@@ -482,7 +492,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             {summaryLines.map(({ item, line }) => (
               <li key={item.key} className="flex items-center gap-3">
                 <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-sand">
-                  <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="56px" className="object-cover" />
+                  <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="56px" className="object-contain p-0.5 mix-blend-multiply" />
                   <span className="absolute -right-0 -top-0 grid h-5 min-w-5 place-items-center rounded-bl-lg bg-ink px-1 text-[0.6875rem] font-bold text-white">
                     {line?.quantity ?? item.quantity}
                   </span>
@@ -626,7 +636,7 @@ function ReviewStep({
           {lines.map(({ item, line, blocking: bad }) => (
             <li key={item.key} className={cn("flex items-center gap-3 p-3", bad && "bg-danger-tint/40")}>
               <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-sand">
-                <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="48px" className="object-cover" />
+                <SmartImage src={line?.variant?.imageUrl ?? line?.product?.thumbnailUrl ?? item.snapshot.imageUrl} alt="" fill sizes="48px" className="object-contain p-0.5 mix-blend-multiply" />
               </span>
               <div className="min-w-0 flex-1 text-sm">
                 <p className="line-clamp-1 font-semibold text-ink">{line?.product?.name ?? item.snapshot.name}</p>

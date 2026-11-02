@@ -64,7 +64,7 @@ export function ForgotPasswordForm({ phoneUrl, whatsappUrl }: { phoneUrl: string
               )}
               {!phoneUrl && !whatsappUrl && <ButtonLink href="/contact">Contact us</ButtonLink>}
             </div>
-            <p className="text-sm">You can still place orders as a guest and track them with your order number and mobile number.</p>
+            <p className="text-sm">You can still track existing orders with your order number and mobile number.</p>
           </div>
         )}
       </AuthShell>

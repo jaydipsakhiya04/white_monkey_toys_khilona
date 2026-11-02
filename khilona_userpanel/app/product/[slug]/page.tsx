@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RotateCcw, Truck } from "lucide-react";
 import { Breadcrumbs, type Crumb } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
 import { JsonLd } from "@/components/ui/json-ld";
@@ -14,6 +16,37 @@ import type { ProductDetail, ProductReviews as ProductReviewsData, PublicStore }
 import { toPlainText } from "@/utils/format";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/** First paragraph of a store policy, as a short summary next to the product. */
+function policySummary(text: string | null | undefined): string | null {
+  const first = toPlainText(text?.split(/\n\s*\n/)[0], 280);
+  return first || null;
+}
+
+/** Shipping & returns summaries from the store's own policies (nothing is shown when a policy is empty). */
+function DeliveryAndReturns({ store }: { store: PublicStore | null }) {
+  const items = [
+    { Icon: Truck, title: "Shipping information", text: policySummary(store?.shippingPolicy), href: "/policies/shipping", link: "Shipping policy" },
+    { Icon: RotateCcw, title: "Returns", text: policySummary(store?.returnPolicy), href: "/policies/returns", link: "Return policy" },
+  ].filter((i) => i.text);
+  if (items.length === 0) return null;
+  return (
+    <section aria-label="Delivery and returns" className="mt-10 grid gap-4 sm:grid-cols-2">
+      {items.map(({ Icon, title, text, href, link }) => (
+        <div key={title} className="rounded-[1.5rem] border border-line bg-surface p-6">
+          <span className="grid size-10 place-items-center rounded-full border border-line-strong text-ink">
+            <Icon className="size-[1.125rem]" strokeWidth={1.5} aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 font-display text-lg font-semibold text-ink">{title}</h2>
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">{text}</p>
+          <Link href={href} className="mt-3 inline-flex text-sm font-semibold text-ink underline underline-offset-4 hover:no-underline">
+            {link}
+          </Link>
+        </div>
+      ))}
+    </section>
+  );
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -146,6 +179,8 @@ export default async function ProductPage({ params }: Props) {
             )}
           </div>
         )}
+
+        <DeliveryAndReturns store={store} />
 
         <ProductReviews slug={product.slug} initial={reviews} />
 

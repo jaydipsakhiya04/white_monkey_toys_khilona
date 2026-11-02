@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /*
- * WHITE MONKEY TOYS design tokens — "premium toy boutique".
- * Warm ivory surfaces, a deep midnight ink for type and primary actions, and one signature
- * tangerine accent for highlights, sale tags and focus moments. Stars use a separate gold.
- * Text on white/ivory always uses ink, muted or accent-deep (all pass AA contrast).
+ * WHITE MONKEY TOYS design tokens — premium black & white.
+ * Clean white pages, deep charcoal type and actions, soft warm-grey surfaces for product
+ * photography, and one burnt-orange accent used sparingly (a highlighted word, a sale tag).
+ * Text on white/grey always uses ink, muted or accent-deep (all pass AA contrast).
  */
 @theme inline {
   --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
@@ -12,23 +12,23 @@
 }
 
 @theme {
-  --color-ink: #11121a;
-  --color-ink-soft: #272938;
-  --color-muted: #5e606e;
-  --color-page: #fbf9f6;
+  --color-ink: #111111;
+  --color-ink-soft: #2a2a2a;
+  --color-muted: #686868;
+  --color-page: #ffffff;
   --color-surface: #ffffff;
-  --color-sand: #f3f0ea;
-  --color-sand-deep: #e7e2d8;
-  --color-line: #ebe6dd;
-  --color-line-strong: #d5cec2;
+  --color-sand: #f7f7f5;
+  --color-sand-deep: #efefec;
+  --color-line: #eaeaea;
+  --color-line-strong: #d4d4d1;
 
-  --color-accent: #ff5a1f;
-  --color-accent-deep: #c2410c;
-  --color-accent-tint: #fff1e9;
-  --color-star: #ffb21e;
+  --color-accent: #e85d2a;
+  --color-accent-deep: #b4441a;
+  --color-accent-tint: #fdf2ed;
+  --color-star: #f5a524;
 
-  --color-midnight: #0c0d16;
-  --color-midnight-soft: #171926;
+  --color-midnight: #111111;
+  --color-midnight-soft: #1c1c1c;
 
   --color-success: #16a34a;
   --color-success-700: #166534;
@@ -38,9 +38,9 @@
   --color-danger-700: #b91c1c;
   --color-danger-tint: #fdf1f1;
 
-  --shadow-soft: 0 1px 2px rgb(17 18 26 / 0.04), 0 6px 20px rgb(17 18 26 / 0.05);
-  --shadow-lift: 0 2px 8px rgb(17 18 26 / 0.06), 0 22px 48px -8px rgb(17 18 26 / 0.14);
-  --shadow-glow: 0 10px 30px -6px rgb(255 90 31 / 0.45);
+  --shadow-soft: 0 1px 2px rgb(17 17 17 / 0.04), 0 6px 20px rgb(17 17 17 / 0.04);
+  --shadow-lift: 0 2px 6px rgb(17 17 17 / 0.04), 0 18px 40px -12px rgb(17 17 17 / 0.12);
+  --shadow-glow: 0 10px 30px -10px rgb(17 17 17 / 0.35);
 
   --breakpoint-xs: 25rem;
   --breakpoint-3xl: 112rem;
@@ -139,18 +139,22 @@
     overflow-x: hidden;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
 
   ::selection {
-    background: var(--color-accent);
-    color: var(--color-ink);
+    background: var(--color-ink);
+    color: #fff;
   }
 
   :focus-visible {
@@ -199,19 +203,19 @@
   .eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
+    gap: 0.625rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-accent-deep);
+    color: var(--color-muted);
   }
   .eyebrow::before {
     content: "";
-    width: 1.25rem;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--color-accent);
   }
   .eyebrow-plain::before {
     display: none;
@@ -230,29 +234,24 @@
     transform: none;
   }
   .text-gradient-accent {
-    background: linear-gradient(100deg, #ff8a3d 0%, #ff5a1f 45%, #ff3d6e 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--color-accent);
   }
   .bg-grain {
-    background-image: radial-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px);
+    background-image: radial-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px);
     background-size: 22px 22px;
   }
   .mask-fade-x {
     mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
   }
-}
-
-/* angle animated by the hero's rotating glow ring */
-@property --a {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes hero-spin {
-  to {
-    --a: 360deg;
+  /*
+   * Product photography sits on a soft grey "studio" surface. Most photos are shot on white,
+   * so multiply blends their white background into the surface; dark photos are unaffected.
+   */
+  .photo-stage {
+    background-color: var(--color-sand);
+  }
+  .photo-stage img {
+    mix-blend-mode: multiply;
   }
 }
 

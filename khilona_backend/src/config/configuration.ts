@@ -12,6 +12,8 @@ export interface AppConfig {
   corsOrigins: string[];
   timezone: string;
   orderNumberPrefix: string;
+  /** Orders can only be placed by signed-in customers (no guest checkout). */
+  ordersRequireLogin: boolean;
   jwt: {
     secret: string;
     expiresIn: string;
@@ -110,6 +112,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .filter(Boolean),
     timezone: env.APP_TIMEZONE || 'Asia/Kolkata',
     orderNumberPrefix: (env.ORDER_NUMBER_PREFIX || 'WMT').toUpperCase(),
+    ordersRequireLogin: bool(env.ORDERS_REQUIRE_LOGIN, true),
     jwt: {
       secret: jwtSecret,
       expiresIn: jwtExpiresIn,

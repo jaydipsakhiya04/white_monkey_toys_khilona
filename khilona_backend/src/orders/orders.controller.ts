@@ -7,6 +7,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -39,7 +40,7 @@ const PUBLIC_ORDER_EXAMPLE = {
     customerName: 'Ananya Mehta',
     customerPhone: '9876543210',
     address: 'Flat 302, Sunrise Residency, 14 MG Road',
-    city: 'Ahmedabad',
+    city: 'Surat',
     state: 'Gujarat',
     pincode: '380009',
     items: [
@@ -86,8 +87,10 @@ export class OrdersController {
   @OptionalCustomerAuth()
   @ApiOperation({
     summary: 'Place an order (pay on delivery, no online payment)',
-    description: 'Works for guests. With a customer access token the order is linked to that account (My orders).',
+    description:
+      'Requires a customer access token (the order is linked to that account, My orders). Guest checkout is only possible when ORDERS_REQUIRE_LOGIN=false.',
   })
+  @ApiUnauthorizedResponse({ description: 'Not signed in (when ORDERS_REQUIRE_LOGIN is on)' })
   @ApiCreatedResponse({ schema: { example: PUBLIC_ORDER_EXAMPLE } })
   @ApiUnprocessableEntityResponse({ description: 'Validation failed' })
   @ApiConflictResponse({ description: 'Items unavailable / insufficient stock' })

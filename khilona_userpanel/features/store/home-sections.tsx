@@ -1,166 +1,133 @@
 import Link from "next/link";
-import { ArrowRight, Banknote, BadgeCheck, Gift, PackageSearch, Sparkles, Star, Truck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Banknote, Headset, ShieldCheck, Sparkles } from "lucide-react";
+import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand";
+import { ButtonAnchor, buttonClasses } from "@/components/ui/button";
+import { GatedAnchor } from "@/features/auth/login-gate";
 import { Container } from "@/components/ui/container";
 import { SmartImage } from "@/components/ui/smart-image";
-import type { CategorySummary, PublicStore } from "@/types/api";
+import { WHOLESALE_INSTAGRAM } from "@/lib/brand";
+import type { CategorySummary, ProductCard, PublicStore } from "@/types/api";
+import { cn } from "@/utils/cn";
 import { pluralize } from "@/utils/format";
+import { storeWhatsappUrl } from "./store-utils";
 
-/** Scrolling strip of store promises right under the hero. */
-export function PromiseMarquee() {
-  const items = [
-    { Icon: Banknote, label: "Pay on delivery" },
-    { Icon: Truck, label: "Fast local delivery" },
-    { Icon: BadgeCheck, label: "Genuine, quality-checked toys" },
-    { Icon: PackageSearch, label: "Live order tracking" },
-    { Icon: Star, label: "Verified customer reviews" },
-    { Icon: Gift, label: "Gift-ready packing" },
-  ];
-  const row = (hidden?: boolean) => (
-    <ul className="flex shrink-0 items-center gap-10 pr-10" aria-hidden={hidden || undefined}>
-      {items.map(({ Icon, label }) => (
-        <li key={label} className="flex items-center gap-2.5 whitespace-nowrap text-sm font-semibold text-midnight">
-          <Icon className="size-[1.125rem]" aria-hidden="true" />
-          {label}
-          <span className="ml-8 size-1.5 rounded-full bg-midnight/40" aria-hidden="true" />
-        </li>
-      ))}
-    </ul>
-  );
+export type PromoBanner = {
+  category: CategorySummary;
+  products: ProductCard[];
+  eyebrow: string;
+  title: string;
+  body: string;
+  cta: string;
+  dark?: boolean;
+};
+
+/** Two editorial banners that deep-link into real categories, illustrated with that category's own products. */
+export function PromoBanners({ banners }: { banners: PromoBanner[] }) {
+  if (banners.length === 0) return null;
   return (
-    <div className="mask-fade-x overflow-hidden bg-accent py-3.5" aria-label="Store promises">
-      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
-        {row()}
-        {row(true)}
-      </div>
-    </div>
-  );
-}
-
-function flatten(categories: CategorySummary[]): CategorySummary[] {
-  return categories.flatMap((c) => [c, ...flatten(c.children ?? [])]);
-}
-
-/**
- * Two large editorial banners that deep-link into real categories. Categories are picked by
- * keyword (RC / remote, then games), falling back to the biggest categories, so the banners keep
- * working when the catalogue changes.
- */
-export function PromoBanners({ categories }: { categories: CategorySummary[] }) {
-  const all = flatten(categories).filter((c) => c.productCount > 0);
-  if (all.length < 2) return null;
-  const pick = (re: RegExp, exclude?: string) => all.find((c) => re.test(`${c.name} ${c.slug}`) && c.id !== exclude);
-  const bySize = [...all].sort((a, b) => b.productCount - a.productCount);
-  const first = pick(/\b(rc|remote|drone|car)/i) ?? bySize[0];
-  const second = pick(/\b(board|card|game)/i, first.id) ?? bySize.find((c) => c.id !== first.id)!;
-
-  const banners = [
-    {
-      category: first,
-      eyebrow: "Race-ready",
-      title: "Speed, stunts & full control",
-      body: "Hobby-grade RC cars, drones and more — charged up and ready for the driveway.",
-      dark: true,
-    },
-    {
-      category: second,
-      eyebrow: "Game night",
-      title: "Bring everyone to the table",
-      body: "Strategy, party and classic games the whole family will want to play again.",
-      dark: false,
-    },
-  ];
-
-  return (
-    <section aria-label="Featured collections" className="py-10 sm:py-14">
-      <Container className="grid gap-4 md:grid-cols-2 md:gap-5">
-        {banners.map(({ category, eyebrow, title, body, dark }, i) => (
-          <Link
-            key={category.id}
-            href={`/category/${category.slug}`}
-            data-reveal
-            style={{ "--reveal-delay": `${i * 120}ms` } as React.CSSProperties}
-            className={`group relative isolate flex min-h-[22rem] flex-col justify-between overflow-hidden rounded-[2rem] p-7 sm:min-h-[26rem] sm:p-10 ${
-              dark ? "bg-midnight text-white" : "bg-[#ffe7d6] text-ink"
-            }`}
-          >
-            <div className="relative z-10 max-w-[17rem] sm:max-w-xs">
-              <p className={`eyebrow ${dark ? "!text-accent" : ""}`}>{eyebrow}</p>
-              <h2 className="mt-3 text-[1.75rem] font-bold leading-[1.05] sm:text-[2.25rem]">{title}</h2>
-              <p className={`mt-3 text-[0.9375rem] leading-relaxed ${dark ? "text-white/70" : "text-ink/70"}`}>{body}</p>
-            </div>
-            <span
-              className={`relative z-10 inline-flex w-fit items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-transform group-hover:-translate-y-0.5 ${
-                dark ? "bg-accent text-midnight" : "bg-ink text-white"
-              }`}
+    <section aria-label="Collections" className="py-6 sm:py-10">
+      <Container className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+        {banners.map(({ category, products, eyebrow, title, body, cta, dark }, i) => {
+          const [lead, support] = products.filter((p) => p.thumbnailUrl);
+          return (
+            <Link
+              key={category.id}
+              href={`/category/${category.slug}`}
+              data-reveal
+              style={{ "--reveal-delay": `${i * 120}ms` } as React.CSSProperties}
+              className={cn(
+                "group relative grid min-h-[20rem] overflow-hidden rounded-[2rem] sm:grid-cols-[1fr_1.05fr] sm:min-h-[24rem]",
+                dark ? "bg-ink text-white" : "bg-sand text-ink",
+              )}
             >
-              Shop {category.name}
-              <span className="font-normal opacity-70">· {pluralize(category.productCount, "toy")}</span>
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-            </span>
-            {category.imageUrl && (
-              <div className="absolute -bottom-6 -right-6 -z-0 aspect-square w-[62%] max-w-[22rem] overflow-hidden rounded-[1.75rem] shadow-lift transition-transform duration-700 ease-out group-hover:-translate-y-2 group-hover:rotate-[-2deg] sm:-bottom-8 sm:-right-8">
-                <SmartImage src={category.imageUrl} alt="" fill sizes="(min-width: 768px) 22rem, 60vw" className="object-cover" />
+              <div className="relative z-10 flex flex-col justify-between gap-8 p-7 sm:p-9 lg:p-10">
+                <div>
+                  <p className={cn("eyebrow", dark && "!text-white/60")}>{eyebrow}</p>
+                  <h2 className="mt-4 text-[1.75rem] font-bold leading-[1.05] sm:text-[2.125rem]">{title}</h2>
+                  <p className={cn("mt-3 max-w-xs text-[0.9375rem] leading-relaxed", dark ? "text-white/65" : "text-muted")}>{body}</p>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full px-5 py-3 text-sm font-semibold transition-transform group-hover:-translate-y-0.5",
+                    dark ? "bg-white text-ink" : "bg-ink text-white",
+                  )}
+                >
+                  {cta}
+                  <span className="hidden font-normal opacity-60 xl:inline">· {pluralize(category.productCount, "item")}</span>
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
               </div>
-            )}
-            {dark && (
-              <span aria-hidden="true" className="absolute -left-24 -top-24 -z-10 size-72 rounded-full bg-accent/20 blur-3xl" />
-            )}
-          </Link>
-        ))}
+              {lead && (
+                <div className="relative min-h-[15rem] p-4 pt-0 sm:p-5 sm:pl-0">
+                  <div className={cn("photo-stage relative h-full overflow-hidden rounded-[1.5rem]", !dark && "!bg-white")}>
+                    <SmartImage
+                      src={lead.thumbnailUrl}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 26vw, (min-width: 640px) 48vw, 100vw"
+                      className="object-contain p-6 transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+                    />
+                    {support && (
+                      <span className="photo-stage absolute bottom-3 right-3 size-24 overflow-hidden rounded-2xl border-4 border-white shadow-soft sm:size-28">
+                        <SmartImage src={support.thumbnailUrl} alt="" fill sizes="112px" className="object-contain p-1.5" />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Link>
+          );
+        })}
       </Container>
     </section>
   );
 }
 
-/** "Why White Monkey Toys" — only claims the platform actually backs up. */
+/** "Why choose White Monkey?" — only claims the store actually backs up. */
 export function WhySection({ storeName }: { storeName: string }) {
   const points = [
     {
       icon: Sparkles,
-      title: "Thoughtfully chosen",
-      body: "A curated range of RC toys, games and building sets — picked for play value, not shelf filler.",
-      tint: "bg-[#fff1e9] text-accent-deep",
+      title: "Carefully Selected Products",
+      body: "RC vehicles, drones, figures and collectibles picked for quality, detail and play value.",
     },
     {
       icon: Banknote,
-      title: "Pay on delivery",
-      body: "No online payment needed. Place your order, we confirm it, and you pay when it arrives.",
-      tint: "bg-[#e8f6ef] text-success-700",
+      title: "Convenient Cash on Delivery",
+      body: "No online payment needed. Pay in cash or UPI when your order reaches you.",
     },
     {
-      icon: PackageSearch,
-      title: "Track every order",
-      body: "Follow each step from confirmation to your doorstep — with or without an account.",
-      tint: "bg-[#ecebff] text-[#4338ca]",
+      icon: ShieldCheck,
+      title: "Easy & Secure Shopping",
+      body: "A free account keeps every order in one place — no card details needed, and you can track every step.",
     },
     {
-      icon: BadgeCheck,
-      title: "Honest, verified reviews",
-      body: "Only customers who received a product can review it, so every rating is a real purchase.",
-      tint: "bg-[#fff6dc] text-[#8a5a00]",
+      icon: Headset,
+      title: "Friendly Customer Support",
+      body: "Questions before or after you order? Call or WhatsApp us — a real person will help.",
     },
   ];
   return (
-    <section aria-labelledby="why-title" className="py-16 sm:py-24">
+    <section aria-labelledby="why-title" className="border-y border-line bg-sand/60 py-16 sm:py-24">
       <Container>
-        <div className="max-w-2xl" data-reveal>
-          <p className="eyebrow">Why {storeName}</p>
-          <h2 id="why-title" className="mt-3 text-[1.75rem] font-bold leading-[1.05] text-ink sm:text-4xl lg:text-[2.75rem]">
-            Simple to shop. Made for families.
+        <div className="mx-auto max-w-2xl text-center" data-reveal>
+          <p className="eyebrow justify-center">Why {storeName}</p>
+          <h2 id="why-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] text-ink sm:text-[2.5rem]">
+            Why choose White Monkey?
           </h2>
         </div>
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        <ul className="mt-12 grid gap-px overflow-hidden rounded-[1.75rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           {points.map((p, i) => (
             <li
               key={p.title}
               data-reveal
               style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties}
-              className="group rounded-[1.75rem] border border-line bg-surface p-6 transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-lift sm:p-7"
+              className="group bg-white p-7 transition-colors hover:bg-sand/40 sm:p-8"
             >
-              <span className={`grid size-12 place-items-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg] ${p.tint}`}>
-                <p.icon className="size-[1.375rem]" aria-hidden="true" strokeWidth={1.9} />
+              <span className="grid size-11 place-items-center rounded-full border border-line-strong text-ink transition-colors group-hover:border-ink">
+                <p.icon className="size-5" aria-hidden="true" strokeWidth={1.5} />
               </span>
-              <h3 className="mt-6 font-display text-lg font-semibold text-ink">{p.title}</h3>
+              <h3 className="mt-6 font-display text-[1.0625rem] font-semibold tracking-[-0.01em] text-ink">{p.title}</h3>
               <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">{p.body}</p>
             </li>
           ))}
@@ -173,51 +140,119 @@ export function WhySection({ storeName }: { storeName: string }) {
 /** How ordering works (pay on delivery). */
 export function HowOrderingWorks({ store }: { store: PublicStore | null }) {
   const steps = [
-    { title: "Choose your toys", body: "Browse by category or search, then add favourites to your cart." },
-    { title: "Place your order", body: "Share your delivery address — sign in for faster checkout, or continue as a guest." },
+    { title: "Choose your favourites", body: "Browse by category or search, then add what you love to your bag." },
+    { title: "Place your order", body: "Log in with your free account and share your delivery address — it only takes a minute." },
     { title: "We confirm & deliver", body: "Our team confirms your order and delivers it. You pay in cash or UPI on delivery." },
   ];
   return (
-    <section aria-labelledby="how-title" className="relative isolate overflow-hidden bg-midnight py-16 text-white sm:py-24">
-      <div aria-hidden="true" className="bg-grain absolute inset-0 -z-10 opacity-60" />
-      <div aria-hidden="true" className="absolute -right-40 top-1/2 -z-10 size-[30rem] -translate-y-1/2 rounded-full bg-accent/15 blur-[120px]" />
+    <section aria-labelledby="how-title" className="bg-ink py-16 text-white sm:py-24">
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
         <div data-reveal>
-          <p className="eyebrow !text-accent">Ordering</p>
-          <h2 id="how-title" className="mt-3 text-[1.75rem] font-bold leading-[1.05] sm:text-4xl lg:text-[2.75rem]">
-            How it works
+          <p className="eyebrow !text-white/55">Ordering</p>
+          <h2 id="how-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] sm:text-[2.5rem]">
+            Simple from cart to doorstep
           </h2>
-          <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-white/65">
+          <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-white/60">
             {store?.isOpen === false && store.closedMessage
               ? store.closedMessage
-              : "No card details, no online payment. Your order is confirmed by a real person before it ships."}
+              : "No card details, no online payment. Every order is confirmed by a real person before it ships."}
           </p>
         </div>
-        <ol className="relative grid gap-4 sm:grid-cols-3">
-          <span aria-hidden="true" className="absolute left-6 right-6 top-[2.65rem] hidden h-px bg-gradient-to-r from-accent/70 via-white/20 to-white/5 sm:block" />
+        <ol className="grid gap-4 sm:grid-cols-3">
           {steps.map((s, i) => (
             <li
               key={s.title}
               data-reveal
               style={{ "--reveal-delay": `${i * 120}ms` } as React.CSSProperties}
-              className="relative rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition-colors hover:border-white/25 hover:bg-white/[0.07]"
+              className="rounded-[1.5rem] border border-white/10 p-6 transition-colors hover:border-white/25"
             >
-              <span
-                className={`relative grid size-11 place-items-center rounded-full text-sm font-bold ${
-                  i === 0 ? "bg-accent text-midnight" : "bg-white text-midnight"
-                }`}
-                aria-hidden="true"
-              >
+              <span className="font-display text-sm font-semibold tabular-nums text-white/45" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-6 font-display text-lg font-semibold">
+              <h3 className="mt-8 font-display text-lg font-semibold">
                 <span className="sr-only">Step {i + 1}: </span>
                 {s.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/65">{s.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/60">{s.body}</p>
             </li>
           ))}
         </ol>
+      </Container>
+    </section>
+  );
+}
+
+/** A real Instagram profile link (the seed placeholder "https://www.instagram.com/" doesn't count). */
+function instagramProfile(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return u.pathname.replace(/\/+$/, "") ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/** "Little Things. Big Smiles." — a photo wall of real products plus the store's real social links. */
+export function SocialSection({ store, products }: { store: PublicStore | null; products: ProductCard[] }) {
+  const tiles = products.filter((p) => p.thumbnailUrl).slice(0, 6);
+  if (tiles.length < 3) return null;
+  const instagram = instagramProfile(store?.instagram);
+  const wa = storeWhatsappUrl(store, "Hi! I'd like to know more about your toys.");
+  return (
+    <section aria-labelledby="social-title" className="py-16 sm:py-24">
+      <Container>
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end" data-reveal>
+          <div className="max-w-xl">
+            <p className="eyebrow">Follow the fun</p>
+            <h2 id="social-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] text-ink sm:text-[2.5rem]">
+              Little Things. Big Smiles.
+            </h2>
+            <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted sm:text-base">
+              New arrivals, restocks and collector favourites — straight from our shelves.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {instagram ? (
+              <ButtonAnchor href={instagram} target="_blank" rel="noopener noreferrer" variant="outline">
+                <InstagramIcon className="size-[1.125rem]" />
+                Follow on Instagram
+              </ButtonAnchor>
+            ) : (
+              <ButtonAnchor href={WHOLESALE_INSTAGRAM.url} target="_blank" rel="noopener noreferrer" variant="outline">
+                <InstagramIcon className="size-[1.125rem]" />
+                {WHOLESALE_INSTAGRAM.handle}
+              </ButtonAnchor>
+            )}
+            {wa && (
+              <GatedAnchor href={wa} action="chat with us on WhatsApp" target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "primary" })}>
+                <WhatsAppIcon className="size-[1.125rem]" />
+                WhatsApp us
+              </GatedAnchor>
+            )}
+          </div>
+        </div>
+        <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          {tiles.map((p, i) => (
+            <li key={p.id} data-reveal style={{ "--reveal-delay": `${i * 60}ms` } as React.CSSProperties}>
+              <Link href={`/product/${p.slug}`} className="photo-stage group relative block aspect-square overflow-hidden rounded-[1.25rem]">
+                <SmartImage
+                  src={p.thumbnailUrl}
+                  alt={p.name}
+                  fill
+                  sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
+                  className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                />
+                <span className="absolute inset-0 flex items-end bg-gradient-to-t from-black/55 via-black/0 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <span className="flex w-full items-center justify-between gap-2 text-xs font-semibold text-white">
+                    <span className="line-clamp-2">{p.name}</span>
+                    <ArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Container>
     </section>
   );

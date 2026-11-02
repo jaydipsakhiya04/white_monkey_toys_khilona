@@ -21,10 +21,13 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       robots: { index: false, follow: true },
     };
   }
-  const title = params.featured ? "Featured products" : "Shop all products";
+  const city = store?.city;
+  const title = params.featured ? "Featured toys" : city ? `Shop all toys in ${city}` : "Shop all toys";
   return {
     title,
-    description: `Browse all toys, games and gifts at ${storeName}. Order online and pay on delivery.`,
+    description: city
+      ? `Browse every toy at ${storeName}, the toy shop in ${city}: RC cars, drones, action figures and collectibles. Free delivery across ${city} and cash on delivery.`
+      : `Browse all toys at ${storeName}. Order online and pay on delivery.`,
     alternates: { canonical: params.page > 1 ? `/products?page=${params.page}` : "/products" },
     openGraph: { url: "/products", title },
   };
@@ -45,7 +48,7 @@ export default async function ProductsPage({ searchParams }: Props) {
         description={
           params.search ? (
             <p>
-              Showing products for <span className="font-semibold text-white">“{params.search}”</span>
+              Showing products for <span className="font-semibold text-ink">“{params.search}”</span>
             </p>
           ) : (
             <p>RC cars and drones, board and card games, puzzles, building sets and more — all pay on delivery.</p>

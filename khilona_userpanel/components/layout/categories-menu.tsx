@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ChevronDown, LayoutGrid } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { SmartImage } from "@/components/ui/smart-image";
 import type { CategorySummary } from "@/types/api";
 import { cn } from "@/utils/cn";
+import { pluralize } from "@/utils/format";
 
 /** Desktop "Categories" disclosure menu (keyboard + Esc + click-outside). */
 export function CategoriesMenu({ categories }: { categories: CategorySummary[] }) {
@@ -53,33 +55,44 @@ export function CategoriesMenu({ categories }: { categories: CategorySummary[] }
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "inline-flex h-11 items-center gap-2 rounded-full px-3.5 text-[0.9375rem] font-semibold text-ink transition-colors hover:bg-sand",
+          "inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold text-ink transition-colors hover:bg-sand",
           open && "bg-sand",
         )}
       >
-        <LayoutGrid className="size-[1.125rem]" aria-hidden="true" />
+        <LayoutGrid className="size-4" aria-hidden="true" />
         Categories
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>
       <div
         id={panelId}
         hidden={!open}
-        className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(44rem,calc(100vw-4rem))] animate-pop-in rounded-2xl border border-line bg-surface p-5 shadow-lift"
+        className="absolute left-0 top-[calc(100%+0.75rem)] z-50 w-[min(46rem,calc(100vw-4rem))] animate-pop-in rounded-2xl border border-line bg-surface p-4 shadow-lift"
       >
         {categories.length === 0 ? (
           <p className="text-sm text-muted">Categories are not available right now.</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-1 lg:grid-cols-3">
             {categories.map((c) => (
               <li key={c.id} className="min-w-0">
-                <Link
-                  href={`/category/${c.slug}`}
-                  className="block rounded-md font-display text-base font-semibold text-ink underline-offset-4 hover:underline"
-                >
-                  {c.name}
+                <Link href={`/category/${c.slug}`} className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-sand">
+                  <span className="photo-stage relative size-14 shrink-0 overflow-hidden rounded-lg">
+                    {c.imageUrl && (
+                      <SmartImage
+                        src={c.imageUrl}
+                        alt=""
+                        fill
+                        sizes="56px"
+                        className="object-contain p-1 transition-transform duration-300 group-hover:scale-105"
+                      />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-ink">{c.name}</span>
+                    <span className="block text-xs text-muted">{pluralize(c.productCount, "product")}</span>
+                  </span>
                 </Link>
                 {c.children.length > 0 && (
-                  <ul className="mt-1.5 space-y-1">
+                  <ul className="mb-1 ml-[4.75rem] space-y-1">
                     {c.children.map((ch) => (
                       <li key={ch.id}>
                         <Link href={`/category/${ch.slug}`} className="block rounded-md text-sm text-muted hover:text-ink">

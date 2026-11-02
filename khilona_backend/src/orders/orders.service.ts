@@ -5,6 +5,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { FieldError } from '../common/filters/all-exceptions.filter';
@@ -68,6 +69,7 @@ export class OrdersService {
    * 3. allocates a collision-safe order number and stores immutable item snapshots.
    */
   async create(dto: CreateOrderDto, meta: RequestMeta, account?: AuthenticatedCustomer) {
+    if (this.config.ordersRequireLogin && !account) throw new UnauthorizedException('Please log in to place an order');
     const store = await this.store.get();
     if (!store.isOpen) {
       throw new ForbiddenException(store.closedMessage || 'The store is not accepting orders right now. Please try again later.');
