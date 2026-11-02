@@ -88,7 +88,7 @@ async function main() {
   }
   if (withSeed) {
     console.log('[dev] Applying migrations and seeding demo data...');
-    const result = spawnSync('npx prisma generate && npm run prisma:deploy && npm run seed', {
+    const result = spawnSync('npx prisma generate && npm run prisma:deploy && npm run seed && npm run catalogue:import', {
       cwd: resolve(root, 'khilona_backend'),
       shell: true,
       stdio: 'inherit',
