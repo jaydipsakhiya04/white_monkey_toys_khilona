@@ -41,7 +41,7 @@ function Avatar({ name, className }: { name: string | undefined; className?: str
   return (
     <span
       className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FFB088] to-brand text-xs font-semibold text-white ring-2 ring-white/10',
+        'flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-700 text-xs font-semibold text-white ring-2 ring-white/10',
         className,
       )}
       aria-hidden
@@ -56,7 +56,7 @@ function CountBadge({ count, className }: { count: number | undefined; className
   return (
     <span
       className={cn(
-        'inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-semibold text-white tabular shadow-[0_0_0_3px_rgb(240_90_34/0.18)]',
+        'inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white tabular shadow-[0_0_0_3px_rgb(232_93_42/0.2)]',
         className,
       )}
     >
@@ -90,13 +90,13 @@ function SidebarLink({
       className={cn(
         'group relative flex h-9 items-center gap-3 rounded-[10px] px-2.5 text-[13.5px] font-medium transition-all duration-150',
         active
-          ? 'bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]'
+          ? 'bg-white/[0.08] text-white'
           : 'text-white/55 hover:bg-white/[0.05] hover:text-white/90',
       )}
     >
-      {active && <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand" aria-hidden />}
+      {active && <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" aria-hidden />}
       <Icon
-        className={cn('size-[18px] shrink-0 transition-colors', active ? 'text-[#FF8A55]' : 'text-white/45 group-hover:text-white/80')}
+        className={cn('size-[18px] shrink-0 transition-colors', active ? 'text-white' : 'text-white/45 group-hover:text-white/80')}
         aria-hidden
       />
       <span className={cn('flex-1 truncate', expanded ? 'inline' : 'sr-only lg:not-sr-only lg:inline')}>{item.label}</span>
@@ -108,7 +108,7 @@ function SidebarLink({
             <span className="hidden lg:inline">
               <CountBadge count={count} />
             </span>
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand lg:hidden" aria-hidden />
+            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent lg:hidden" aria-hidden />
           </>
         )
       ) : null}
@@ -170,12 +170,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           expanded ? 'w-64 shadow-pop lg:shadow-none' : 'w-[72px]',
         )}
       >
-        {/* glow */}
-        <div
-          className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-brand/20 blur-3xl"
-          aria-hidden
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent" aria-hidden />
 
         <div className="relative flex h-16 items-center justify-between gap-2 px-4">
           <Link href="/" className={cn('rounded-md', expanded ? 'block' : 'hidden lg:block')} aria-label="White Monkey Toys Admin home">
@@ -186,7 +180,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={cn('mx-auto rounded-md', expanded ? 'hidden' : 'block lg:hidden')}
             aria-label="White Monkey Toys Admin home"
           >
-            <BrandLogo size={30} />
+            <BrandLogo inverted monogram />
           </Link>
           {expanded && (
             <span className="lg:hidden">
@@ -242,9 +236,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               href={STOREFRONT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-3 transition-colors hover:border-white/20"
+              className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-white/25 hover:bg-white/[0.06]"
             >
-              <span className="flex size-8 items-center justify-center rounded-lg bg-brand/20 text-[#FF8A55]">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-white">
                 <ExternalLink className="size-4" aria-hidden />
               </span>
               <span className="min-w-0">
@@ -301,7 +295,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell aria-hidden />
               {pending ? (
-                <span className="absolute -right-1 -top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white ring-2 ring-page tabular">
+                <span className="absolute -right-1 -top-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white ring-2 ring-page tabular">
                   {pending > 99 ? '99+' : pending}
                 </span>
               ) : null}
@@ -346,7 +340,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell aria-hidden />
               {pending ? (
-                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-brand ring-2 ring-page" aria-hidden />
+                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-page" aria-hidden />
               ) : null}
             </Link>
             <Link href="/profile" aria-label="Your profile" className="rounded-full">
@@ -385,12 +379,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <span
                     className={cn(
                       'relative flex h-7 w-11 items-center justify-center rounded-full transition-colors',
-                      active && 'bg-brand/90 shadow-brand',
+                      active && 'bg-white text-ink',
                     )}
                   >
                     <Icon className="size-[18px]" aria-hidden />
                     {item.badge === 'pendingOrders' && pending ? (
-                      <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand tabular">
+                      <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white tabular">
                         {pending > 99 ? '99+' : pending}
                       </span>
                     ) : null}
@@ -415,7 +409,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span
                 className={cn(
                   'flex h-7 w-11 items-center justify-center rounded-full',
-                  MORE_NAV.some((i) => isActivePath(pathname, i.href)) && 'bg-brand/90',
+                  MORE_NAV.some((i) => isActivePath(pathname, i.href)) && 'bg-white text-ink',
                 )}
               >
                 <MoreHorizontal className="size-[18px]" aria-hidden />
@@ -446,10 +440,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors',
-                    active ? 'bg-brand-tint text-brand-hover' : 'text-ink hover:bg-stone-100',
+                    active ? 'bg-ink text-white' : 'text-ink hover:bg-stone-100',
                   )}
                 >
-                  <Icon className={cn('size-5', active ? 'text-brand' : 'text-muted')} aria-hidden />
+                  <Icon className={cn('size-5', active ? 'text-white' : 'text-muted')} aria-hidden />
                   {item.label}
                 </Link>
               </li>

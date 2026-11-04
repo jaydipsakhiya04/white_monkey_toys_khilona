@@ -7,7 +7,7 @@ export default function NotFound() {
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-page px-6 text-center">
       <BrandMark />
       <div className="animate-enter">
-        <p className="bg-gradient-to-b from-[#FF8A55] to-brand bg-clip-text font-display text-7xl font-extrabold tracking-[-0.04em] text-transparent tabular">
+        <p className="font-display text-7xl font-extrabold tracking-[-0.05em] text-ink tabular">
           404
         </p>
         <h1 className="mt-2 font-display text-2xl font-bold tracking-[-0.02em]">Page not found</h1>

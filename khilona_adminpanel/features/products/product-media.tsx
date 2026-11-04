@@ -49,12 +49,12 @@ function SortableImage({
       style={style}
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-xl border bg-surface',
-        index === 0 ? 'border-brand/50 ring-1 ring-brand/30' : 'border-line',
+        index === 0 ? 'border-ink ring-1 ring-ink/20' : 'border-line',
         isDragging && 'z-10 shadow-pop',
       )}
     >
       <div className="relative aspect-square bg-subtle">
-        <img src={url} alt="" width={240} height={240} loading="lazy" className="size-full object-cover" draggable={false} />
+        <img src={url} alt="" width={240} height={240} loading="lazy" className="size-full object-contain p-2 mix-blend-multiply" draggable={false} />
         {index === 0 && (
           <span className="absolute left-2 top-2 rounded-md bg-ink/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
             Cover

@@ -124,7 +124,7 @@ export function Thumb({
       style={{ width: size, height: size }}
     >
       {src ? (
-        <img src={src} alt={alt} width={size} height={size} loading="lazy" decoding="async" className="size-full object-cover" />
+        <img src={src} alt={alt} width={size} height={size} loading="lazy" decoding="async" className="size-full object-contain p-0.5 mix-blend-multiply" />
       ) : (
         <div className="flex size-full items-center justify-center text-[10px] font-medium uppercase text-stone-400" aria-hidden>
           {alt.slice(0, 2)}

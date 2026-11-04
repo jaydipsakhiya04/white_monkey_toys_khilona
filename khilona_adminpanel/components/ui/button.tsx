@@ -13,14 +13,14 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-b from-[#F7692F] to-brand text-white shadow-brand ring-1 ring-inset ring-white/15 ' +
-    'hover:from-brand hover:to-brand-hover',
+    'bg-ink text-white shadow-xs ' +
+    'hover:bg-ink-soft hover:shadow-brand',
   secondary:
     'bg-surface text-ink border border-line shadow-xs hover:bg-stone-50 hover:border-line-strong',
   ghost: 'text-ink-soft hover:bg-stone-100 hover:text-ink',
   subtle: 'bg-stone-100 text-ink hover:bg-stone-200',
   danger: 'bg-danger text-white shadow-xs ring-1 ring-inset ring-white/10 hover:bg-danger-hover',
-  link: 'text-brand hover:text-brand-hover underline-offset-4 hover:underline px-0 active:scale-100',
+  link: 'text-ink hover:text-ink-soft underline underline-offset-4 decoration-line-strong hover:decoration-ink px-0 active:scale-100',
 };
 
 const sizes: Record<ButtonSize, string> = {

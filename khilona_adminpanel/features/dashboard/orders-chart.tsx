@@ -93,9 +93,9 @@ export function OrdersChart({ data }: { data: Point[] }) {
                         v === 0
                           ? 'bg-stone-200'
                           : isToday
-                            ? 'bg-gradient-to-t from-brand to-[#FF8A55] shadow-[0_-4px_16px_-4px_rgb(240_90_34/0.5)]'
-                            : 'bg-gradient-to-t from-[#FFB088] to-[#FFD3BD] group-hover:from-[#FF8A55] group-hover:to-[#FFB088]',
-                        active === i && v > 0 && 'from-brand to-[#FF8A55]',
+                            ? 'bg-ink'
+                            : 'bg-stone-300 group-hover:bg-stone-500',
+                        active === i && v > 0 && 'bg-ink',
                       )}
                       style={{ height: v === 0 ? 2 : `${Math.max(h, 2)}%`, animationDelay: `${i * 25}ms` }}
                     />

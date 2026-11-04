@@ -60,10 +60,10 @@ function ContactButton({
         : 'text-ink hover:border-line-strong';
   const iconCls =
     tone === 'green'
-      ? 'bg-gradient-to-br from-[#34D399] to-[#059669] text-white shadow-[0_6px_14px_-6px_rgb(5_150_105/0.6)]'
+      ? 'bg-[#16a34a] text-white'
       : tone === 'brand'
-        ? 'bg-gradient-to-br from-[#FF8A55] to-brand text-white shadow-brand'
-        : 'bg-gradient-to-br from-[#93C5FD] to-[#3B82F6] text-white shadow-[0_6px_14px_-6px_rgb(59_130_246/0.6)]';
+        ? 'bg-ink text-white'
+        : 'bg-stone-700 text-white';
   if (!href)
     return (
       <span className="flex min-h-16 flex-1 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line px-2 text-center text-stone-400">
@@ -129,7 +129,7 @@ function OrderProgress({ order }: { order: AdminOrderDetail }) {
       <ol aria-label="Order progress" className="relative grid grid-cols-6">
         <span className="absolute left-[8.33%] right-[8.33%] top-[15px] h-[3px] rounded-full bg-stone-100" aria-hidden />
         <span
-          className="absolute left-[8.33%] top-[15px] h-[3px] rounded-full bg-gradient-to-r from-[#FF8A55] to-brand transition-[width] duration-700"
+          className="absolute left-[8.33%] top-[15px] h-[3px] rounded-full bg-ink transition-[width] duration-700"
           style={{ width: `calc(${pct}% * 0.8334)` }}
           aria-hidden
         />

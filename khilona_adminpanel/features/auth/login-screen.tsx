@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, Eye, EyeOff, Lock, Mail, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, Store } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Lock, Mail, PackageCheck, ShieldCheck, ShoppingBag, Store } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -20,6 +21,28 @@ const schema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 type Values = z.infer<typeof schema>;
+
+/** The storefront's hero scene (transparent cut-outs in /public/hero), so staff and customers see one brand. */
+const SCENE = [
+  { src: '/hero/scene-helicopter.webp', w: 800, h: 622, style: { left: '4%', top: '4%', width: '46%' } },
+  { src: '/hero/scene-jimny.webp', w: 722, h: 464, style: { left: '1%', top: '45%', width: '42%' } },
+  { src: '/hero/scene-excavator.webp', w: 912, h: 921, style: { right: '2%', top: '15%', width: '55%' } },
+  { src: '/hero/scene-supra.webp', w: 502, h: 239, style: { left: '30%', bottom: '5%', width: '42%' } },
+];
+
+function Scene() {
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[26rem]" aria-hidden>
+      <div className="absolute left-1/2 top-1/2 aspect-square w-[84%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_40px_80px_-40px_rgb(17_17_17/0.3)]" />
+      <div className="absolute left-1/2 top-1/2 aspect-square w-full -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/[0.06]" />
+      {SCENE.map((item, i) => (
+        <div key={item.src} className="absolute animate-enter" style={{ ...item.style, animationDelay: `${150 + i * 80}ms` }}>
+          <Image src={item.src} alt="" width={item.w} height={item.h} priority={i < 2} sizes="16rem" className="h-auto w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function LoginScreen() {
   const { status, login, retry } = useAuth();
@@ -55,71 +78,68 @@ export function LoginScreen() {
   });
 
   return (
-    <div className="grid min-h-dvh bg-page lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-night p-12 text-white lg:flex">
-        <div className="pointer-events-none absolute inset-0 bg-dots" aria-hidden />
-        <div className="pointer-events-none absolute -left-40 -top-40 size-[520px] rounded-full bg-brand/30 blur-[120px]" aria-hidden />
-        <div className="pointer-events-none absolute -bottom-48 right-[-10%] size-[440px] rounded-full bg-[#7C5CFF]/20 blur-[120px]" aria-hidden />
+    <div className="grid min-h-dvh bg-surface lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden border-r border-line bg-subtle p-12 text-ink lg:flex">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgb(17_17_17/0.05)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,#000_30%,transparent_75%)]"
+          aria-hidden
+        />
 
         <div className="relative animate-enter">
-          <BrandMark tone="dark" />
+          <BrandMark />
         </div>
 
-        <div className="relative max-w-lg stagger">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/70">
-            <Sparkles className="size-3.5 text-[#FF8A55]" aria-hidden />
-            Store management console
-          </p>
-          <h2 className="mt-5 font-display text-[44px] font-bold leading-[1.05] tracking-[-0.035em]">
-            Run the toy shop
-            <br />
-            <span className="bg-gradient-to-r from-[#FFB088] via-[#FF7A3D] to-brand bg-clip-text text-transparent">
-              from one calm place.
-            </span>
-          </h2>
-          <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/60">
-            Confirm orders, call customers, keep stock honest and update the storefront — built for the White Monkey Toys team.
-          </p>
+        <div className="relative grid items-center gap-8 xl:grid-cols-[1.1fr_1fr]">
+          <div className="max-w-md stagger">
+            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
+              <span className="size-1.5 rounded-full bg-accent" aria-hidden />
+              Store management
+            </p>
+            <h2 className="mt-5 font-display text-[42px] font-extrabold leading-[1.02] tracking-[-0.045em]">
+              Run the toy shop from one <span className="text-accent">calm place.</span>
+            </h2>
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted">
+              Confirm orders, call customers, keep stock honest and update the storefront — built for the White Monkey Toys team.
+            </p>
+          </div>
+          <div className="hidden xl:block">
+            <Scene />
+          </div>
+        </div>
 
-          <div className="mt-10 grid max-w-md grid-cols-3 gap-3">
+        <div className="relative">
+          <div className="grid max-w-2xl grid-cols-3 gap-3">
             {[
               { icon: ShoppingBag, title: 'Orders', text: 'Call, WhatsApp & update in a tap' },
               { icon: PackageCheck, title: 'Catalogue', text: 'Products, variants & photos' },
               { icon: Store, title: 'Storefront', text: 'Hours, contact & policies' },
             ].map(({ icon: Icon, title, text }) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-4 backdrop-blur-sm"
-              >
-                <span className="flex size-9 items-center justify-center rounded-xl bg-brand/20 text-[#FF8A55]">
-                  <Icon className="size-[18px]" aria-hidden />
+              <div key={title} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
+                <span className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink">
+                  <Icon className="size-[17px]" strokeWidth={1.6} aria-hidden />
                 </span>
                 <p className="mt-3 text-sm font-semibold">{title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/50">{text}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">{text}</p>
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="relative flex items-center justify-between text-xs text-white/40">
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="size-3.5" aria-hidden />
-            Authorised staff only
-          </span>
-          <span>© {new Date().getFullYear()} White Monkey Toys</span>
+          <div className="mt-8 flex items-center justify-between text-xs text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="size-3.5" aria-hidden />
+              Authorised staff only
+            </span>
+            <span>© {new Date().getFullYear()} White Monkey Toys</span>
+          </div>
         </div>
       </aside>
 
       <main className="relative flex items-center justify-center px-4 py-10 sm:px-6">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-brand/[0.06] to-transparent lg:hidden"
-          aria-hidden
-        />
         <div className="relative w-full max-w-[400px] animate-enter">
           <div className="mb-10 lg:hidden">
             <BrandMark />
           </div>
-          <h1 className="font-display text-[30px] font-bold tracking-[-0.03em]">Sign in</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Admin console</p>
+          <h1 className="mt-3 font-display text-[32px] font-extrabold tracking-[-0.04em]">Sign in</h1>
           <p className="mt-2 text-[15px] text-muted">Welcome back — use your admin email and password.</p>
 
           {formError && (
@@ -172,11 +192,11 @@ export function LoginScreen() {
                 {...register('password')}
               />
             </Field>
-            <Button type="submit" size="lg" loading={isSubmitting} className="mt-1 h-12 w-full rounded-xl">
+            <Button type="submit" size="lg" loading={isSubmitting} className="mt-1 h-12 w-full rounded-full">
               {isSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
-          <div className="mt-8 flex items-start gap-3 rounded-xl border border-line bg-surface p-3.5 text-xs leading-relaxed text-muted shadow-card">
+          <div className="mt-8 flex items-start gap-3 rounded-xl bg-subtle p-3.5 text-xs leading-relaxed text-muted">
             <Lock className="mt-px size-4 shrink-0 text-stone-400" aria-hidden />
             <p>Forgot your password? Ask a super admin to reset it from Settings → Admin users.</p>
           </div>

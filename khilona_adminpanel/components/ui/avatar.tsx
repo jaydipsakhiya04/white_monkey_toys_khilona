@@ -1,13 +1,13 @@
 import { cn } from '@/utils/cn';
 
+// quiet neutral tones (plus one accent tint) so customers stay distinguishable without a rainbow
 const TINTS = [
-  'bg-orange-100 text-orange-700',
-  'bg-violet-100 text-violet-700',
-  'bg-teal-100 text-teal-700',
-  'bg-sky-100 text-sky-700',
-  'bg-pink-100 text-pink-700',
-  'bg-amber-100 text-amber-800',
-  'bg-emerald-100 text-emerald-700',
+  'bg-stone-100 text-stone-700',
+  'bg-stone-200 text-stone-800',
+  'bg-ink text-white',
+  'bg-accent-tint text-accent-deep',
+  'bg-stone-700 text-white',
+  'bg-white text-ink ring-1 ring-inset ring-line-strong',
 ];
 
 export function initialsOf(name: string | null | undefined): string {

@@ -379,12 +379,12 @@ function StoreForm({ store }: { store: Store }) {
               ) : (
                 <div className="flex size-full items-center justify-center text-xs text-stone-400">No cover image</div>
               )}
-              <div className="absolute -bottom-7 left-4 size-14 overflow-hidden rounded-2xl border-[3px] border-surface bg-surface shadow-raised">
+              <div className="absolute -bottom-7 left-4 h-14 w-36 overflow-hidden rounded-2xl border-[3px] border-surface bg-surface shadow-raised">
                 {v.logoUrl ? (
-                  <img src={v.logoUrl} alt="" className="size-full object-cover" width={56} height={56} />
+                  <img src={v.logoUrl} alt="" className="size-full object-contain p-1.5" width={56} height={56} />
                 ) : (
-                  <div className="flex size-full items-center justify-center bg-brand text-lg font-bold text-white">
-                    {(v.name || 'K').slice(0, 1)}
+                  <div className="flex size-full items-center justify-center bg-ink text-lg font-bold text-white">
+                    {(v.name || 'W').slice(0, 1)}
                   </div>
                 )}
               </div>

@@ -21,8 +21,10 @@ export class DashboardService {
     const chartStartIso = addDaysIso(todayIso, -13);
     const chartStart = startOfDayInZone(chartStartIso, tz);
     const liveProduct = { deletedAt: null };
+    // restock alerts only concern products customers can buy (hidden/archived ones are excluded)
+    const sellable = { ...liveProduct, isActive: true };
     const lowStockWhere = {
-      ...liveProduct,
+      ...sellable,
       stock: { gt: 0, lte: this.prisma.product.fields.lowStockThreshold },
     };
 
@@ -48,14 +50,14 @@ export class DashboardService {
       this.prisma.order.aggregate({ where: { status: { notIn: ['DELIVERED', 'CANCELLED'] } }, _sum: { total: true } }),
       this.prisma.product.count({ where: liveProduct }),
       this.prisma.product.count({ where: { ...liveProduct, isActive: true } }),
-      this.prisma.product.count({ where: { ...liveProduct, stock: { lte: 0 } } }),
+      this.prisma.product.count({ where: { ...sellable, stock: { lte: 0 } } }),
       this.prisma.product.count({ where: lowStockWhere }),
       this.prisma.product.count({ where: { ...liveProduct, isFeatured: true } }),
       this.prisma.category.count(),
       this.prisma.category.count({ where: { isActive: true } }),
       this.prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 6, select: orderListSelect }),
       this.prisma.product.findMany({
-        where: { ...liveProduct, stock: { lte: this.prisma.product.fields.lowStockThreshold } },
+        where: { ...sellable, stock: { lte: this.prisma.product.fields.lowStockThreshold } },
         orderBy: [{ stock: 'asc' }, { name: 'asc' }],
         take: 6,
         select: { id: true, name: true, sku: true, stock: true, thumbnailUrl: true, lowStockThreshold: true },

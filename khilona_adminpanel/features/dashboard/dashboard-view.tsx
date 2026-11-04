@@ -90,11 +90,12 @@ function Trend({ value }: { value: number | null }) {
   );
 }
 
+/** Monochrome KPI icons; `amber` (pending orders) is the one that uses the orange accent, since it needs attention. */
 const KPI_TONES = {
-  brand: 'from-[#FF8A55] to-brand text-white shadow-brand',
-  violet: 'from-[#9B87FF] to-[#6D4AFF] text-white shadow-[0_6px_16px_-6px_rgb(109_74_255/0.6)]',
-  amber: 'from-[#FFC857] to-[#F59E0B] text-white shadow-[0_6px_16px_-6px_rgb(245_158_11/0.6)]',
-  teal: 'from-[#4FD1C5] to-[#0E8A8C] text-white shadow-[0_6px_16px_-6px_rgb(14_138_140/0.6)]',
+  brand: 'bg-ink text-white',
+  violet: 'border border-line-strong bg-surface text-ink',
+  amber: 'bg-accent-tint text-accent-deep',
+  teal: 'border border-line-strong bg-surface text-ink',
 } as const;
 
 function Kpi({
@@ -119,10 +120,10 @@ function Kpi({
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <span className={cn('flex size-10 items-center justify-center rounded-xl bg-gradient-to-br', KPI_TONES[tone])}>
-          <Icon className="size-[18px]" aria-hidden />
+        <span className={cn('flex size-10 items-center justify-center rounded-full', KPI_TONES[tone])}>
+          <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden />
         </span>
-        {spark && <Sparkline values={spark} className={tone === 'violet' ? 'text-[#6D4AFF]' : tone === 'teal' ? 'text-info' : 'text-brand'} />}
+        {spark && <Sparkline values={spark} className="text-ink" />}
       </div>
       <p className="mt-4 text-[13px] font-medium text-muted">{label}</p>
       <div className="mt-1 flex items-baseline gap-2">
@@ -138,7 +139,7 @@ function Kpi({
     <Link href={href} className={cn(cls, 'hover:-translate-y-0.5 hover:border-line-strong hover:shadow-raised')}>
       {body}
       <ArrowUpRight
-        className="absolute bottom-4 right-4 size-4 text-stone-300 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand"
+        className="absolute bottom-4 right-4 size-4 text-stone-300 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink"
         aria-hidden
       />
     </Link>
@@ -256,9 +257,7 @@ export function DashboardView() {
     <>
       {/* ---------- Hero ---------- */}
       <section className="relative mb-6 overflow-hidden rounded-[20px] bg-night p-5 text-white shadow-raised sm:p-7">
-        <div className="pointer-events-none absolute inset-0 bg-dots opacity-70" aria-hidden />
-        <div className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full bg-brand/35 blur-[100px]" aria-hidden />
-        <div className="pointer-events-none absolute -bottom-40 left-1/3 size-80 rounded-full bg-[#7C5CFF]/25 blur-[100px]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-dots [mask-image:linear-gradient(90deg,transparent,#000)]" aria-hidden />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/45">{todayLabel()}</p>
@@ -281,7 +280,7 @@ export function DashboardView() {
               <Clock className="size-4" aria-hidden />
               Pending orders
               {pending > 0 && (
-                <span className="rounded-full bg-brand px-1.5 text-[11px] font-semibold text-white tabular">{pending}</span>
+                <span className="rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white tabular">{pending}</span>
               )}
             </Link>
             <Link
@@ -291,7 +290,7 @@ export function DashboardView() {
               <FolderPlus className="size-4" aria-hidden />
               New category
             </Link>
-            <Link href="/products/new" className={buttonClasses({ size: 'md' })}>
+            <Link href="/products/new" className={buttonClasses({ variant: 'secondary', size: 'md' })}>
               <PackagePlus />
               New product
             </Link>
@@ -400,7 +399,7 @@ export function DashboardView() {
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-stone-200" aria-hidden>
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#FF8A55] to-brand"
+                        className="h-full rounded-full bg-ink"
                         style={{ width: `${(data.products.active / data.products.total) * 100}%` }}
                       />
                     </div>

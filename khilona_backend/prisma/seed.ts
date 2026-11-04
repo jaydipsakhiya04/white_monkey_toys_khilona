@@ -32,7 +32,7 @@ const storage: StorageProvider =
     : new LocalStorageProvider(config.storage.localDir, config.storage.publicUrl);
 
 export const DEV_ADMINS = [
-  { name: 'Khilona Owner', email: 'admin@khilona.in', password: 'Admin@12345', role: AdminRole.SUPER_ADMIN, phone: '9876543210' },
+  { name: 'Owner', email: 'admin@khilona.in', password: 'Admin@12345', role: AdminRole.SUPER_ADMIN, phone: '9876543210' },
   { name: 'Store Staff', email: 'staff@khilona.in', password: 'Staff@12345', role: AdminRole.ADMIN, phone: '9876501234' },
 ];
 

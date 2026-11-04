@@ -89,7 +89,14 @@ export function ImageUploader({
         )}
       >
         {value ? (
-          <img src={value} alt="" width={256} height={256} className="size-full object-cover" loading="lazy" />
+          <img
+            src={value}
+            alt=""
+            width={256}
+            height={256}
+            className={cn('size-full', aspect === 'square' ? 'object-contain p-1.5 mix-blend-multiply' : 'object-cover')}
+            loading="lazy"
+          />
         ) : (
           <button
             type="button"
