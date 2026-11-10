@@ -189,7 +189,7 @@ proxy_read_timeout 60s;
 PROXY
 # gzip for text responses
 cat > /etc/nginx/conf.d/khilona-gzip.conf <<'GZIP'
-gzip on;
+# "gzip on" is already set in the stock nginx.conf
 gzip_vary on;
 gzip_proxied any;
 gzip_min_length 1024;
@@ -214,7 +214,7 @@ env PATH="$PATH:/usr/bin" pm2 startup systemd -u "$APP_USER" --hp "$BASE/home" >
 systemctl enable "pm2-$APP_USER" >/dev/null 2>&1 || true
 
 log "HTTPS (Let's Encrypt)"
-PUBLIC_IP=$(curl -fsS --max-time 10 https://api.ipify.org || curl -fsS --max-time 10 https://ifconfig.me || echo "")
+PUBLIC_IP=$(curl -4 -fsS --max-time 10 https://api.ipify.org || curl -4 -fsS --max-time 10 https://ifconfig.me || hostname -I | awk '{print $1}')
 missing=()
 for host in "$DOMAIN" "www.$DOMAIN" "admin.$DOMAIN" "api.$DOMAIN"; do
   ip=$(getent ahostsv4 "$host" | awk 'NR==1 {print $1}')
