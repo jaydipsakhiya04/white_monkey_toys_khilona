@@ -33,3 +33,6 @@ Thumbs.db
 
 # Git bundles used for one-off transfers
 *.bundle
+
+# local Claude Code settings
+.claude/

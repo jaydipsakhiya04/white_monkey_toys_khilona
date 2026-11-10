@@ -208,7 +208,9 @@ The UI end-to-end suites expect the API to be running with seed data (`npm run d
 
 ## Production deployment
 
-Each app deploys independently.
+**Single Linux server (recommended):** see [deploy/README.md](deploy/README.md) — one script sets up the server (PostgreSQL, Nginx, HTTPS, PM2), and `deploy/push.sh` ships each new version from your PC.
+
+Or deploy each app independently:
 
 1. **Database** — managed PostgreSQL 16 (Neon, RDS, Supabase, Cloud SQL…). Enable the `pg_trgm` extension (the first migration does `CREATE EXTENSION IF NOT EXISTS pg_trgm`).
 2. **API** — `khilona_backend/Dockerfile` (runs `prisma migrate deploy` on start) on Render, Railway, Fly.io, ECS, a VPS… Set a strong `JWT_SECRET`, `NODE_ENV=production`, `COOKIE_SECURE=true`, `TRUST_PROXY=true` behind a load balancer, `CORS_ORIGIN` to the real storefront/admin origins, and prefer `STORAGE_PROVIDER=s3` (or mount a persistent volume for `uploads/`).

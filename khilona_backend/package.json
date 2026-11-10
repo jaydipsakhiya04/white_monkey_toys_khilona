@@ -19,7 +19,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "jest",
     "test:e2e": "jest --config test/jest-e2e.json --runInBand",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "data:export": "tsx prisma/transfer-export.ts",
+    "data:import": "tsx prisma/transfer-import.ts",
+    "admin:create": "tsx prisma/create-admin.ts"
   },
   "license": "UNLICENSED",
   "description": "Khilona REST API (NestJS + Prisma + PostgreSQL)",
