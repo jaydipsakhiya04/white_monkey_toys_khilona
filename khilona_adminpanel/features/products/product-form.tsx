@@ -24,7 +24,7 @@ import { storefrontProductUrl } from '@/lib/env';
 import { applyApiFieldErrors } from '@/lib/form-errors';
 import { qk } from '@/lib/query-keys';
 import { productService } from '@/services';
-import type { AdminProductDetail } from '@/types/api';
+import { AGE_GROUPS, type AdminProductDetail, type AgeGroup } from '@/types/api';
 import { cn } from '@/utils/cn';
 import { discountPercent, formatDateTime } from '@/utils/format';
 import { slugify } from '@/utils/slugify';
@@ -65,7 +65,6 @@ const SECTIONS = [
   ['media', 'Media'],
   ['pricing', 'Pricing'],
   ['inventory', 'Inventory'],
-  ['variants', 'Variants'],
   ['specs', 'Specifications'],
   ['seo', 'SEO'],
 ] as const;
@@ -85,6 +84,7 @@ const KNOWN_FIELDS = [
   'options',
   'variants',
   'specifications',
+  'ageGroups',
   'seoTitle',
   'seoDescription',
   'isActive',
@@ -349,9 +349,12 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
             )}
           </Section>
 
-          <Section id="variants" title="Options & variants" description="For products sold in different colours, sizes or age groups.">
-            <ProductVariants control={control} register={register} setValue={setValue} getValues={getValues} errors={errors} />
-          </Section>
+          {/* colour / size options are not offered; kept only so a product that still has them can be cleaned up */}
+          {hasVariants && (
+            <Section id="variants" title="Options & variants" description="Colour / size options are switched off for the store. Remove them to sell this as a single product.">
+              <ProductVariants control={control} register={register} setValue={setValue} getValues={getValues} errors={errors} />
+            </Section>
+          )}
 
           <Section
             id="specs"
@@ -409,6 +412,17 @@ function ProductForm({ product }: { product?: AdminProductDetail }) {
         </div>
 
         <aside className="flex flex-col gap-4 xl:sticky xl:top-24 xl:self-start">
+          <Card>
+            <CardHeader title="Age rating" description="Shown on the product and used for “Shop by age”." />
+            <div className="p-4 sm:p-5">
+              <Controller
+                control={control}
+                name="ageGroups"
+                render={({ field }) => <AgeGroupPicker value={field.value} onChange={field.onChange} />}
+              />
+            </div>
+          </Card>
+
           <Card>
             <CardHeader title="Visibility" />
             <div className="flex flex-col gap-3 p-4 sm:p-5">
@@ -531,4 +545,70 @@ function FormSkeleton() {
       </div>
     </div>
   );
+}
+
+/** Multi-select of age groups; the label preview matches what customers see (e.g. "5-12 Years"). */
+function AgeGroupPicker({ value, onChange }: { value: AgeGroup[]; onChange: (v: AgeGroup[]) => void }) {
+  const toggle = (g: AgeGroup) => onChange(value.includes(g) ? value.filter((x) => x !== g) : [...value, g]);
+  const label = ageRatingPreview(value);
+  return (
+    <div>
+      <div role="group" aria-label="Age groups" className="grid grid-cols-2 gap-1.5">
+        {AGE_GROUPS.map((g) => {
+          const on = value.includes(g.value);
+          return (
+            <button
+              key={g.value}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(g.value)}
+              className={cn(
+                'flex h-9 items-center justify-center rounded-lg border text-[13px] font-medium transition-all active:scale-[0.98]',
+                on ? 'border-ink bg-ink text-white' : 'border-line bg-surface text-ink-soft hover:border-line-strong hover:bg-stone-50',
+              )}
+            >
+              {g.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-[13px] text-muted">
+        {label ? (
+          <>
+            Customers see: <span className="rounded-full border border-line bg-stone-50 px-2 py-0.5 font-semibold text-ink">{label}</span>
+          </>
+        ) : (
+          'Not rated — pick every age group this toy suits.'
+        )}
+      </p>
+      {value.length > 0 && (
+        <button type="button" onClick={() => onChange([])} className="mt-2 text-xs font-medium text-muted hover:text-ink">
+          Clear
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Mirrors the API's age rating label. */
+function ageRatingPreview(groups: AgeGroup[]): string | null {
+  const RANGES: Record<AgeGroup, [number, number | null]> = {
+    MONTHS_0_18: [0, 18],
+    MONTHS_18_36: [18, 36],
+    YEARS_3_5: [36, 60],
+    YEARS_5_7: [60, 84],
+    YEARS_7_9: [84, 108],
+    YEARS_9_12: [108, 144],
+    YEARS_12_14: [144, 168],
+    YEARS_14_PLUS: [168, null],
+  };
+  const sorted = AGE_GROUPS.filter((g) => groups.includes(g.value));
+  if (!sorted.length) return null;
+  if (sorted.length === 1) return sorted[0].label;
+  const min = RANGES[sorted[0].value][0];
+  const max = RANGES[sorted[sorted.length - 1].value][1];
+  if (max !== null && max <= 36) return `${min}-${max} Months`;
+  const from = min < 36 ? `${min} months` : `${min / 12}`;
+  if (max === null) return min < 36 ? `${from}+` : `${from}+ Years`;
+  return min < 36 ? `${from} – ${max / 12} years` : `${from}-${max / 12} Years`;
 }

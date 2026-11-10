@@ -1,4 +1,5 @@
 import type { ProductQuery, ProductSort } from "@/types/api";
+import { isAgeSlug } from "./age";
 
 export const PAGE_SIZE = 24;
 
@@ -35,6 +36,8 @@ export type ListingParams = {
   maxPrice?: number;
   inStock: boolean;
   featured: boolean;
+  /** age group slugs: ["5-7-years", "7-9-years"] */
+  ages: string[];
   /** "Color:Red,Age:3+" */
   options: string[];
 };
@@ -55,6 +58,7 @@ export function parseListingParams(sp: RawSearchParams): ListingParams {
     maxPrice: num(first(sp.maxPrice)),
     inStock: first(sp.inStock) === "true",
     featured: first(sp.featured) === "true",
+    ages: [...new Set((first(sp.age) ?? "").split(",").map((s) => s.trim()).filter(isAgeSlug))],
     options: opts,
   };
 }
@@ -70,6 +74,7 @@ export function toProductQuery(p: ListingParams, category?: string): ProductQuer
     maxPrice: p.maxPrice,
     inStock: p.inStock || undefined,
     featured: p.featured || undefined,
+    age: p.ages.length ? p.ages.join(",") : undefined,
     options: p.options.length ? p.options.join(",") : undefined,
   };
 }
@@ -79,6 +84,7 @@ export function countActiveFilters(p: ListingParams): number {
     (p.minPrice !== undefined || p.maxPrice !== undefined ? 1 : 0) +
     (p.inStock ? 1 : 0) +
     (p.featured ? 1 : 0) +
+    p.ages.length +
     p.options.length
   );
 }

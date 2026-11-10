@@ -19,10 +19,21 @@ const NAV = [
   { href: "/account/documents", label: "Documents", icon: FileText },
 ];
 
-const StoreContext = createContext<{ storeName: string; phoneUrl: string | null; whatsappUrl: string | null }>({
+export type StoreContact = {
+  phone: string | null;
+  /** both store mobiles, each for calls and WhatsApp */
+  numbers?: { display: string; telUrl: string; whatsappUrl: string }[];
+  email: string | null;
+  addressLines: string[];
+  hours: string | null;
+  mapUrl: string | null;
+};
+
+const StoreContext = createContext<{ storeName: string; phoneUrl: string | null; whatsappUrl: string | null; contact: StoreContact }>({
   storeName: "White Monkey Toys",
   phoneUrl: null,
   whatsappUrl: null,
+  contact: { phone: null, email: null, addressLines: [], hours: null, mapUrl: null },
 });
 export const useStoreInfo = () => useContext(StoreContext);
 
@@ -35,11 +46,13 @@ export function AccountShell({
   storeName,
   phoneUrl,
   whatsappUrl,
+  contact,
 }: {
   children: ReactNode;
   storeName: string;
   phoneUrl: string | null;
   whatsappUrl: string | null;
+  contact: StoreContact;
 }) {
   const { status, customer } = useAuth();
   const pathname = usePathname();
@@ -68,7 +81,7 @@ export function AccountShell({
   }
 
   return (
-    <StoreContext.Provider value={{ storeName, phoneUrl, whatsappUrl }}>
+    <StoreContext.Provider value={{ storeName, phoneUrl, whatsappUrl, contact }}>
       <Container className="py-6 sm:py-10">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
           <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">

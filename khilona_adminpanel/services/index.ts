@@ -1,6 +1,8 @@
 import { api, apiRequest, uploadWithProgress } from '@/lib/api-client';
 import type {
+  AdminBanner,
   AdminCategory,
+  AdminExchange,
   AdminCreateInput,
   AdminOrderDetail,
   AdminOrderListItem,
@@ -10,11 +12,15 @@ import type {
   AdminReviewList,
   AdminUpdateInput,
   AuthResponse,
+  BannerInput,
   BulkProductAction,
   CategoryInput,
   CategoryListParams,
   CategoryOption,
   Dashboard,
+  ExchangeListParams,
+  ExchangeStatus,
+  ExchangeStatusCounts,
   OrderListParams,
   OrderStatus,
   OrderStatusCounts,
@@ -87,6 +93,22 @@ export const orderService = {
     api.patch<AdminOrderDetail>(`/admin/orders/${id}/status`, note ? { status, note } : { status }),
   update: (id: string, body: { adminNote?: string | null; paymentStatus?: PaymentStatus }) =>
     api.patch<AdminOrderDetail>(`/admin/orders/${id}`, body),
+};
+
+export const bannerService = {
+  list: () => api.get<AdminBanner[]>('/admin/banners'),
+  create: (body: BannerInput) => api.post<AdminBanner>('/admin/banners', body),
+  update: (id: string, body: Partial<BannerInput>) => api.patch<AdminBanner>(`/admin/banners/${id}`, body),
+  remove: (id: string) => api.delete<{ id: string }>(`/admin/banners/${id}`),
+  reorder: (ids: string[]) => api.put<AdminBanner[]>('/admin/banners/order', { ids }),
+};
+
+export const exchangeService = {
+  list: (params: ExchangeListParams) => api.get<Paginated<AdminExchange>>('/admin/exchanges', params),
+  statusCounts: () => api.get<ExchangeStatusCounts>('/admin/exchanges/status-counts'),
+  get: (id: string) => api.get<AdminExchange>(`/admin/exchanges/${encodeURIComponent(id)}`),
+  update: (id: string, body: { status?: ExchangeStatus; adminNote?: string | null }) =>
+    api.patch<AdminExchange>(`/admin/exchanges/${encodeURIComponent(id)}`, body),
 };
 
 export const adminService = {

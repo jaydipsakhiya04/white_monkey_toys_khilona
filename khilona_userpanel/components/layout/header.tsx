@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Boxes, Building2, Phone, Sparkles, Truck, type LucideIcon } from "lucide-react";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
 import { WhatsAppIcon } from "@/components/icons/brand";
@@ -6,6 +7,8 @@ import { GatedAnchor } from "@/features/auth/login-gate";
 import { CartButton } from "@/features/cart/cart-button";
 import { brandName } from "@/lib/brand";
 import type { CategorySummary, PublicStore } from "@/types/api";
+import { storeContactNumbers } from "@/features/store/store-utils";
+import { cn } from "@/utils/cn";
 import { whatsappLink } from "@/utils/phone";
 import { AccountMenu } from "./account-menu";
 import { CategoriesMenu } from "./categories-menu";
@@ -13,25 +16,63 @@ import { SearchForm } from "./header-search";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 
-/** Slim store announcement. "A | B | C" (or "·") renders as separate items; phones show the first one. */
-export function AnnouncementBar({ text }: { text: string | null | undefined }) {
-  const items = (text ?? "")
-    .split(/\s*[|·•]\s*/)
+/** Icon for an announcement item, picked from its wording. */
+function announcementIcon(text: string): LucideIcon {
+  if (/deliver|ship|dispatch|courier/i.test(text)) return Truck;
+  if (/wholesale|retail|supply|distribut/i.test(text)) return Building2;
+  if (/bulk|order|quantit/i.test(text)) return Boxes;
+  return Sparkles;
+}
+
+/**
+ * Top bar: the store announcement ("A | B | C" → separate items with icons) and both store mobiles
+ * (tap to call, WhatsApp icon to chat). Phones show the first item and the main number.
+ */
+export function AnnouncementBar({ store }: { store: PublicStore | null }) {
+  const items = (store?.announcement ?? "")
+    .split(/\s*[|•]\s*/)
     .map((s) => s.trim())
     .filter(Boolean);
-  if (items.length === 0) return null;
+  const numbers = storeContactNumbers(store);
+  if (items.length === 0 && numbers.length === 0) return null;
   return (
     <div className="bg-ink text-white">
-      <Container className="flex min-h-9 items-center justify-center py-1.5">
-        <p className="sr-only">{items.join(", ")}</p>
-        <ul aria-hidden="true" className="flex items-center gap-5 text-center text-xs font-medium tracking-[0.04em] text-white/85 max-sm:[&>li:nth-child(n+2)]:hidden">
-          {items.map((item, i) => (
-            <li key={item} className="flex items-center gap-5">
-              {i > 0 && <span className="h-3 w-px bg-white/25" />}
-              {item}
-            </li>
-          ))}
+      <Container className="flex min-h-10 items-center justify-between gap-4 py-1.5 text-xs">
+        <ul className="flex min-w-0 items-center gap-5 font-medium tracking-[0.02em] text-white/85">
+          {items.map((item, i) => {
+            const Icon = announcementIcon(item);
+            return (
+              <li key={item} className={cn("min-w-0 items-center gap-1.5", i === 0 ? "flex" : i === 1 ? "hidden md:flex" : "hidden lg:flex")}>
+                <Icon className="size-3.5 shrink-0 text-accent" aria-hidden="true" />
+                <span className="truncate">{item}</span>
+              </li>
+            );
+          })}
         </ul>
+        {numbers.length > 0 && (
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-white/50 xl:inline">Call / WhatsApp</span>
+            {numbers.map((n, i) => (
+              <span key={n.telUrl} className={cn("items-center gap-1.5", i === 0 ? "inline-flex" : "hidden sm:inline-flex")}>
+                {i > 0 && <span className="mr-1.5 h-3 w-px bg-white/25" aria-hidden="true" />}
+                <a href={n.telUrl} className="inline-flex items-center gap-1 font-semibold tabular-nums text-white hover:underline hover:underline-offset-4">
+                  <Phone className="size-3 text-white/60" aria-hidden="true" />
+                  <span className="sr-only">Call </span>
+                  {n.display}
+                </a>
+                <a
+                  href={n.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`WhatsApp ${n.display}`}
+                  className="grid size-6 place-items-center rounded-full text-[#25D366] transition-colors hover:bg-white/10"
+                >
+                  <WhatsAppIcon className="size-3.5" />
+                </a>
+              </span>
+            ))}
+          </div>
+        )}
       </Container>
     </div>
   );

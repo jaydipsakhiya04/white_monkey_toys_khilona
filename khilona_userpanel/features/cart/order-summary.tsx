@@ -1,3 +1,6 @@
+"use client";
+
+import { PricesOnRequestNote, usePricing } from "@/features/store/pricing";
 import type { CartValidation } from "@/types/api";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
@@ -9,6 +12,8 @@ type Summary = CartValidation["summary"];
  * `subtotal` (MRP total vs. already-discounted total) by checking the arithmetic.
  */
 export function OrderSummaryRows({ summary, className }: { summary: Summary; className?: string }) {
+  const { showPrices } = usePricing();
+  if (!showPrices) return <PricesOnRequestNote className={className} />;
   const { subtotal, discount, shippingFee, total, itemsCount } = summary;
   const mrpBased = discount > 0 && Math.abs(subtotal - discount + shippingFee - total) < 0.01;
   return (
@@ -28,7 +33,7 @@ export function OrderSummaryRows({ summary, className }: { summary: Summary; cla
       <div className="flex justify-between gap-4">
         <dt className="text-muted">Delivery</dt>
         <dd className={cn("font-medium tabular-nums", shippingFee === 0 ? "text-success-700" : "text-ink")}>
-          {shippingFee === 0 ? "Free" : formatPrice(shippingFee)}
+          {shippingFee === 0 ? "As per actual" : formatPrice(shippingFee)}
         </dd>
       </div>
       <div className="flex items-baseline justify-between gap-4 border-t border-line pt-3">

@@ -3,11 +3,13 @@ import { request } from "@/lib/api/request";
 import { PUBLIC_API_URL } from "@/lib/env";
 import type {
   CustomerAuthResponse,
+  CustomerExchange,
   CustomerOrder,
   CustomerOrderListItem,
   CustomerOrderSummary,
   CustomerProfile,
   DocumentKind,
+  ExchangeInput,
   MyReview,
   OwnReview,
   Paginated,
@@ -38,8 +40,9 @@ export const accountService = {
   orders: (page = 1, status?: OrderFilter, limit = 10) =>
     authedApi.get<Paginated<CustomerOrderListItem>>("/customer/orders", { page, limit, status }),
   order: (orderNumber: string) => authedApi.get<CustomerOrder>(`/customer/orders/${encodeURIComponent(orderNumber)}`),
-  cancel: (orderNumber: string, reason?: string) =>
-    authedApi.post<CustomerOrder>(`/customer/orders/${encodeURIComponent(orderNumber)}/cancel`, reason ? { reason } : {}),
+  requestExchange: (orderNumber: string, body: ExchangeInput) =>
+    authedApi.post<CustomerOrder>(`/customer/orders/${encodeURIComponent(orderNumber)}/exchanges`, body),
+  exchanges: () => authedApi.get<CustomerExchange[]>("/customer/exchanges"),
   claim: (orderNumber: string) => authedApi.post<CustomerOrder>("/customer/orders/claim", { orderNumber }),
   document: (orderNumber: string, kind: DocumentKind) => authedBlob(`/customer/orders/${encodeURIComponent(orderNumber)}/${kind}`),
   guestDocument: (orderNumber: string, phone: string, kind: DocumentKind) =>

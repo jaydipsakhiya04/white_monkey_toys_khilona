@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { AlertCircle, Banknote, Check, PackageCheck, ShieldCheck, ShoppingBag, Truck, Zap } from "lucide-react";
+import { AlertCircle, Baby, Building2, Check, PackageCheck, ShieldCheck, ShoppingBag, Truck, Zap } from "lucide-react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { RatingStars } from "@/components/ui/rating-stars";
@@ -13,6 +13,8 @@ import { GatedAnchor } from "@/features/auth/login-gate";
 import { useAddToCart } from "@/features/cart/use-add-to-cart";
 import { absoluteUrl } from "@/lib/env";
 import type { ProductDetail } from "@/types/api";
+import { ageSlugsFor } from "@/utils/age";
+import { usePricing } from "@/features/store/pricing";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
 import { whatsappLink } from "@/utils/phone";
@@ -28,6 +30,7 @@ import {
 } from "./variants";
 
 export function ProductExperience({ product, whatsapp }: { product: ProductDetail; whatsapp: string | null }) {
+  const { showPrices } = usePricing();
   const router = useRouter();
   const addToCart = useAddToCart();
   const groups = useMemo(() => sortedGroups(product), [product]);
@@ -148,10 +151,28 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               <span className="underline underline-offset-4">{product.rating.count} {product.rating.count === 1 ? "review" : "reviews"}</span>
             </a>
           )}
-          {sku && (
-            <p className="mt-2 text-sm text-muted">
-              SKU: <span className="font-medium text-ink">{sku}</span>
-            </p>
+          {(product.ageRating || sku) && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
+              {product.ageRating && (
+                <Link
+                  href={`/products?age=${ageSlugsFor(product.ageGroups).join(",")}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-line bg-sand py-1 pl-1 pr-3 text-[0.8125rem] font-semibold text-ink transition-colors hover:border-ink/30"
+                >
+                  <span className="grid size-6 place-items-center rounded-full bg-ink text-white">
+                    <Baby className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span className="font-normal text-muted">Age </span>
+                    {product.ageRating}
+                  </span>
+                </Link>
+              )}
+              {sku && (
+                <p>
+                  SKU: <span className="font-medium text-ink">{sku}</span>
+                </p>
+              )}
+            </div>
           )}
 
           <div className="mt-5" aria-live="polite">
@@ -162,11 +183,12 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
               discountPercent={priceInfo.discountPercent}
               minPrice={showRange ? product.minPrice : undefined}
               maxPrice={showRange ? product.maxPrice : undefined}
+              askFor={{ name: product.name, sku }}
             />
             {!showRange && priceInfo.effectivePrice < priceInfo.price && (
               <p className="mt-1 text-sm font-semibold text-success-700">You save {formatPrice(priceInfo.price - priceInfo.effectivePrice)}</p>
             )}
-            <p className="mt-1 text-xs text-muted">Inclusive of all taxes</p>
+            <p className="mt-1 text-xs text-muted">{showPrices ? "Inclusive of all taxes" : "Wholesale / retailer price shared on WhatsApp"}</p>
             {stockLabel && (
               <p
                 className={cn(
@@ -271,7 +293,7 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
                 Buy now
               </Button>
             </div>
-            {waUrl && (
+            {waUrl && showPrices && (
               <GatedAnchor
                 href={waUrl}
                 action="ask about this product"
@@ -288,16 +310,16 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
           <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-line bg-surface">
             <div className="flex items-start gap-3 bg-sand p-4 text-sm text-ink">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-ink text-white">
-                <Banknote className="size-[1.125rem]" strokeWidth={1.75} aria-hidden="true" />
+                <Building2 className="size-[1.125rem]" strokeWidth={1.75} aria-hidden="true" />
               </span>
               <p>
-                <span className="font-semibold">Cash / pay on delivery.</span>{" "}
-                <span className="text-muted">No online payment needed — our team will call to confirm your order.</span>
+                <span className="font-semibold">For retailers &amp; wholesalers.</span>{" "}
+                <span className="text-muted">No online payment — our team confirms price, payment and delivery with you on call or WhatsApp.</span>
               </p>
             </div>
             <ul className="grid grid-cols-3 divide-x divide-line text-center text-xs font-medium text-ink">
               {[
-                { Icon: Truck, label: "Local delivery" },
+                { Icon: Truck, label: "PAN India delivery" },
                 { Icon: ShieldCheck, label: "Quality checked" },
                 { Icon: PackageCheck, label: "Order tracking" },
               ].map(({ Icon, label }) => (
@@ -316,9 +338,13 @@ export function ProductExperience({ product, whatsapp }: { product: ProductDetai
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-muted">{variant ? variant.title : product.name}</p>
-            <p className="font-display text-lg font-bold leading-tight text-ink tabular-nums">
-              {showRange ? `From ${formatPrice(product.minPrice)}` : formatPrice(priceInfo.effectivePrice)}
-            </p>
+            {showPrices ? (
+              <p className="font-display text-lg font-bold leading-tight text-ink tabular-nums">
+                {showRange ? `From ${formatPrice(product.minPrice)}` : formatPrice(priceInfo.effectivePrice)}
+              </p>
+            ) : (
+              <p className="text-sm font-semibold leading-tight text-ink">Price on request</p>
+            )}
           </div>
           <Button onClick={() => doAdd()} disabled={complete && !inStock} className="shrink-0 px-4">
             <ShoppingBag className="size-[1.125rem]" aria-hidden="true" />

@@ -6,11 +6,14 @@ type Query = Parameters<typeof buildQuery>[0];
 
 export const REVALIDATE_SECONDS = 60;
 
+/** Every cached API read carries this tag; /api/revalidate clears it after admin edits. */
+export const CATALOG_CACHE_TAG = "catalog";
+
 /** Server-side GET with ISR-style data caching (`next.revalidate`). */
 export function serverGet<T>(path: string, query?: Query, revalidate: number = REVALIDATE_SECONDS) {
   return request<T>(`${getServerApiUrl()}${path}${buildQuery(query)}`, {
     method: "GET",
-    next: { revalidate },
+    next: { revalidate, tags: [CATALOG_CACHE_TAG] },
   });
 }
 

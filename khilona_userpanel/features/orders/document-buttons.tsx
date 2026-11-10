@@ -1,5 +1,6 @@
 "use client";
 
+import { usePricing } from "@/features/store/pricing";
 import { Download, FileText, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -63,7 +64,9 @@ export function OrderDocuments({
   className?: string;
 }) {
   const { busy, download } = useDocumentDownload(fetcher, filename);
+  const { showPrices } = usePricing();
   const kinds = (["invoice", "receipt"] as const).filter((k) => available[k]);
+  if (!showPrices) return null;
   if (kinds.length === 0) return null;
   return (
     <section aria-labelledby="docs-title" className={className}>

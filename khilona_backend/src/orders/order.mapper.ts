@@ -7,6 +7,7 @@ export const orderDetailInclude = {
   items: { orderBy: { createdAt: 'asc' } },
   history: { orderBy: { createdAt: 'asc' } },
   customer: { select: { id: true, registeredAt: true } },
+  exchanges: { orderBy: { createdAt: 'asc' } },
 } satisfies Prisma.OrderInclude;
 
 export type OrderDetailRow = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
@@ -77,7 +78,25 @@ export function toPublicOrder(order: OrderDetailRow) {
     total: toNumber(order.total),
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
+    cancelledAt: order.cancelledAt,
+    cancelReason: order.cancelReason,
+    cancelledBy: order.cancelledBy,
     history: order.history.map((h) => ({ status: h.toStatus, createdAt: h.createdAt })),
+  };
+}
+
+export function toExchangeSummary(e: OrderDetailRow['exchanges'][number]) {
+  return {
+    id: e.id,
+    requestNumber: e.requestNumber,
+    orderItemId: e.orderItemId,
+    reason: e.reason,
+    details: e.details,
+    quantity: e.quantity,
+    status: e.status,
+    adminNote: e.adminNote,
+    resolvedAt: e.resolvedAt,
+    createdAt: e.createdAt,
   };
 }
 
@@ -133,6 +152,12 @@ export function toAdminOrderDetail(order: OrderDetailRow, storeName: string, cus
     linkedToAccount: order.accountLinkedAt !== null,
     /** The customer record behind this order has a registered account. */
     customerHasAccount: !!order.customer?.registeredAt,
+    exchanges: order.exchanges.map((e) => ({
+      ...toExchangeSummary(e),
+      contactPhone: e.contactPhone,
+      handledByName: e.handledByName,
+      productName: order.items.find((i) => i.id === e.orderItemId)?.productName ?? null,
+    })),
   };
 }
 
@@ -195,14 +220,38 @@ export interface ItemReviewState {
  * Detailed order for its owner. Review eligibility is computed by the API (never the client):
  * see ReviewsService.reviewStateForOrder.
  */
-export function toCustomerOrderDetail(order: OrderDetailRow, reviewState: (productId: string | null) => ItemReviewState) {
+export interface OrderExchangeState {
+  /** Last day (inclusive) an exchange can be requested; null when the order is not delivered. */
+  exchangeDeadline: Date | null;
+  exchangeWindowDays: number;
+  canExchange: (itemId: string) => boolean;
+}
+
+export function toCustomerOrderDetail(
+  order: OrderDetailRow,
+  reviewState: (productId: string | null) => ItemReviewState,
+  exchangeState?: OrderExchangeState,
+) {
   const base = toPublicOrder(order);
   return {
     ...base,
     deliveredAt: order.deliveredAt,
     cancelledAt: order.cancelledAt,
-    items: order.items.map((item) => ({ ...publicItem(item), productId: item.productId, ...reviewState(item.productId) })),
-    canCancel: order.status === 'PENDING',
+    exchangeDeadline: exchangeState?.exchangeDeadline ?? null,
+    exchangeWindowDays: exchangeState?.exchangeWindowDays ?? null,
+    items: order.items.map((item) => {
+      const exchange = order.exchanges.find((e) => e.orderItemId === item.id);
+      return {
+        ...publicItem(item),
+        id: item.id,
+        productId: item.productId,
+        ...reviewState(item.productId),
+        exchange: exchange ? toExchangeSummary(exchange) : null,
+        canExchange: !exchange && !!exchangeState?.canExchange(item.id),
+      };
+    }),
+    /** Only the store cancels orders (Admin → Orders). */
+    canCancel: false,
     documents: { invoice: order.status !== 'CANCELLED', receipt: true },
   };
 }

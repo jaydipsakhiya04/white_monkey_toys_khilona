@@ -6,8 +6,19 @@ import { ConfirmDialog } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/input';
 import type { OrderStatus } from '@/types/api';
+import { cn } from '@/utils/cn';
 import { ORDER_STATUS_LABEL } from '@/utils/status';
 import { useUpdateOrderStatus } from './hooks';
+
+/** Quick picks for the (required) cancellation reason; the customer sees it on their order. */
+export const STORE_CANCEL_REASONS = [
+  'Customer asked to cancel',
+  'Item out of stock',
+  'Customer not reachable',
+  'Delivery address not serviceable',
+  'Duplicate order',
+  'Suspected fake order',
+];
 
 export type PendingStatusChange = { orderId: string; orderNumber: string; from: OrderStatus; to: OrderStatus };
 
@@ -25,16 +36,21 @@ export function StatusChangeDialog({
 }) {
   const mutation = useUpdateOrderStatus();
   const [note, setNote] = useState(initialNote);
+  const [touched, setTouched] = useState(false);
   const open = !!change;
   const isCancel = change?.to === 'CANCELLED';
+  const reasonMissing = isCancel && note.trim().length < 3;
 
   const confirm = () => {
     if (!change) return;
+    setTouched(true);
+    if (reasonMissing) return;
     mutation.mutate(
       { id: change.orderId, status: change.to, note: note.trim() || undefined },
       {
         onSuccess: () => {
           setNote('');
+          setTouched(false);
           onDone?.();
           onClose();
         },
@@ -74,11 +90,37 @@ export function StatusChangeDialog({
               Remember to mark the payment as <strong>Paid</strong> once cash is collected.
             </div>
           )}
-          <Field label="Note (optional)" hint={`Saved in the order timeline with the move to “${ORDER_STATUS_LABEL[change.to]}”.`}>
+          {isCancel && (
+            <div className="flex flex-wrap gap-1.5" aria-label="Common reasons">
+              {STORE_CANCEL_REASONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setNote(r)}
+                  className={cn(
+                    'rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors',
+                    note === r ? 'border-danger/60 bg-danger-tint text-red-800' : 'border-line bg-surface text-ink-soft hover:border-line-strong',
+                  )}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+          <Field
+            label={isCancel ? 'Cancellation reason (required)' : 'Note (optional)'}
+            error={touched && reasonMissing ? 'Enter why this order is being cancelled' : undefined}
+            hint={
+              isCancel
+                ? 'Shown to the customer on their order and saved in the timeline.'
+                : `Saved in the order timeline with the move to “${ORDER_STATUS_LABEL[change.to]}”.`
+            }
+          >
             <Textarea
               rows={3}
               value={note}
               maxLength={500}
+              invalid={touched && reasonMissing}
               onChange={(e) => setNote(e.target.value)}
               placeholder={isCancel ? 'e.g. Customer asked to cancel on call' : 'e.g. Handed over to customer'}
             />

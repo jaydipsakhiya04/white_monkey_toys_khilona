@@ -7,7 +7,7 @@ import { BRAND_NAMES, GLOBAL_KEYWORDS, LOCAL_KEYWORDS, SURAT_AREAS } from "@/lib
 import type { PublicStore } from "@/types/api";
 import { cn } from "@/utils/cn";
 import { OpenNowBadge } from "./open-badge";
-import { storeAddressLines, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "./store-utils";
+import { storeAddressLines, storeContactNumbers, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "./store-utils";
 
 /** "919662725685" → "+91 96627 25685" (other formats are shown as plain digits). */
 function displayWhatsapp(raw: string): string {
@@ -24,6 +24,7 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
   const phoneUrl = storePhoneUrl(store);
   const wa = storeWhatsappUrl(store, `Hi ${store.name}, I have a question.`);
   const map = storeMapUrl(store);
+  const numbers = storeContactNumbers(store);
 
   return (
     <div className={cn("grid gap-6 rounded-3xl border border-line bg-surface p-5 sm:p-8 lg:grid-cols-[1.1fr_1fr] lg:gap-10", className)}>
@@ -73,16 +74,23 @@ export function StoreInfoCard({ store, className, headingLevel = "h2" }: { store
             </dd>
           </div>
         )}
-        {store.phone && (
+        {numbers.length > 0 && (
           <div className="flex gap-3">
             <dt>
               <Phone className="mt-0.5 size-5 text-ink" aria-hidden="true" />
-              <span className="sr-only">Phone</span>
+              <span className="sr-only">Call or WhatsApp</span>
             </dt>
-            <dd>
-              <a href={phoneUrl ?? undefined} className="font-semibold text-ink hover:underline underline-offset-4">
-                {store.phone}
-              </a>
+            <dd className="space-y-1.5">
+              {numbers.map((n) => (
+                <span key={n.telUrl} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <a href={n.telUrl} className="font-semibold tabular-nums text-ink underline-offset-4 hover:underline">
+                    {n.display}
+                  </a>
+                  <a href={n.whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-[#128C4A] hover:underline">
+                    <WhatsAppIcon className="size-3.5" /> WhatsApp
+                  </a>
+                </span>
+              ))}
             </dd>
           </div>
         )}
@@ -131,6 +139,7 @@ export function storeJsonLd(store: PublicStore): Record<string, unknown> {
     ...(store.logoUrl ? { logo: store.logoUrl } : {}),
     ...(store.coverImageUrl || store.logoUrl ? { image: store.coverImageUrl ?? store.logoUrl } : {}),
     ...(store.phone ? { telephone: store.phone } : {}),
+    ...(store.secondaryPhone ? { contactPoint: [{ "@type": "ContactPoint", telephone: store.secondaryPhone, contactType: "sales" }] } : {}),
     ...(store.email ? { email: store.email } : {}),
     ...(store.address
       ? {
@@ -171,20 +180,16 @@ export function storeJsonLd(store: PublicStore): Record<string, unknown> {
           ],
         }
       : {}),
-    // the store sells to families (retail, home delivery) and to shops (wholesale)
+    // the store supplies retailers and wholesalers only (B2B), with PAN India delivery
     makesOffer: [
       {
         "@type": "Offer",
+        url: absoluteUrl("/wholesale"),
         itemOffered: {
           "@type": "Service",
-          name: "Retail toy shopping with home delivery",
-          description: store.city ? `Toys delivered free across ${store.city}, cash on delivery.` : "Toys delivered to your door, cash on delivery.",
+          name: "Wholesale toys for retailers and wholesalers",
+          description: "Retailer and wholesale supply of RC cars, construction RC, drones and action figures, delivered PAN India.",
         },
-      },
-      {
-        "@type": "Offer",
-        url: absoluteUrl("/wholesale"),
-        itemOffered: { "@type": "Service", name: "Wholesale toys for retailers and resellers", description: "Bulk and retailer pricing on RC cars, drones, action figures and collectibles." },
       },
     ],
     ...(sameAs.length ? { sameAs } : {}),

@@ -208,6 +208,7 @@ Query params (all optional):
 | `minPrice` / `maxPrice` | `100` / `1000` | on effective price |
 | `inStock` | `true` | only stock > 0 |
 | `featured` | `true` | only featured |
+| `age` | `5-7-years,7-9-years` | age groups (slug or enum value), comma separated, matches any — see *Age rating* |
 | `options` | `Color:Red,Color:Blue,Age:3+` | same name = OR, different names = AND |
 | `sort` | `featured` (default) \| `popular` \| `newest` \| `price_asc` \| `price_desc` \| `name_asc` \| `name_desc` | `popular` = most reviewed / best rated |
 | `page`, `limit` | `1`, `20` | limit max 60 |
@@ -219,9 +220,21 @@ type ProductFacets = {
   priceRange: { min: number; max: number };
   options: { name: string; values: string[] }[];   // option names/values present on matching products
   categories: (CategoryRef & { count: number })[]; // categories that have matching products
+  ages: { value: AgeGroup; slug: string; label: string; count: number }[]; // age groups with matching products
   total: number;
 };
 ```
+
+### `GET /products/age-groups` → `{ value: AgeGroup; slug: string; label: string; count: number }[]`
+"Shop by age": all eight age groups in display order with their number of storefront products.
+
+**Age rating.** `AgeGroup = 'MONTHS_0_18' | 'MONTHS_18_36' | 'YEARS_3_5' | 'YEARS_5_7' | 'YEARS_7_9' | 'YEARS_9_12' | 'YEARS_12_14' | 'YEARS_14_PLUS'` (slugs `0-18-months` … `14-plus-years`). Products carry `ageGroups: AgeGroup[]` (set by admins) and a computed `ageRating` label, e.g. `[YEARS_5_7, YEARS_7_9, YEARS_9_12]` → `"5-12 Years"`, `[YEARS_14_PLUS]` → `"14+ Years"` (null when not rated).
+
+### Price visibility
+Store setting `showPrices` (`PUT /admin/store`, default `true`). While it is `false`, every public and customer response has its money fields (`price`, `salePrice`, `effectivePrice`, `discountPercent`, `minPrice`, `maxPrice`, `unitMrp`, `unitPrice`, `lineTotal`, `subtotal`, `discount`, `shippingFee`, `total`, `priceRange`) set to `null`; price filters and price sorts are ignored; invoice / receipt PDFs return `409`. Admin routes always return real prices. `GET /store` exposes `showPrices` and the second mobile (`secondaryPhone`, `secondaryPhoneUrl`, `secondaryWhatsappUrl`).
+
+### `GET /banners` → `{ id, title, subtitle, imageUrl, mobileImageUrl, linkUrl, ctaLabel }[]`
+Home page offer slider: active banners inside their optional `startsAt`/`endsAt` schedule, in display order (max 12).
 
 ### `GET /products/:slug` → `ProductDetail`
 404 if missing, inactive, deleted, or its category inactive.
@@ -382,7 +395,8 @@ An order belongs to an account when it was placed while signed in, or was claime
 | GET | `/customer/orders?status=active\|delivered\|cancelled&page&limit` | newest first |
 | POST | `/customer/orders/claim` | `{ orderNumber }` — adds an earlier guest order placed with the account's mobile; `404` otherwise |
 | GET | `/customer/orders/:orderNumber` | `CustomerOrder` (below) |
-| POST | `/customer/orders/:orderNumber/cancel` | `{ reason? }`; only while `PENDING` (`409` after the store confirms); stock restored |
+| POST | `/customer/orders/:orderNumber/exchanges` | `{ orderItemId, reason: 'WRONG_ITEM' \| 'DAMAGED_ITEM', details (10–1000), quantity? }` → `CustomerOrder`. Exchange only (no refunds). `409` when the order is not delivered, the store's exchange window (`exchangeWindowDays` after delivery) has passed, or that item was already exchanged — each purchased item can be exchanged **once** |
+| GET | `/customer/exchanges` | your exchange requests, newest first |
 | GET | `/customer/orders/:orderNumber/invoice` | `application/pdf`, `Content-Disposition: attachment; filename="white-monkey-toys-invoice-<orderNumber>.pdf"`; `409` for cancelled orders |
 | GET | `/customer/orders/:orderNumber/receipt` | `application/pdf` |
 | GET | `/customer/reviews` | your reviews (paginated) |
@@ -396,8 +410,13 @@ type CustomerOrder = PublicOrder & {
     productId: string | null;
     review: { id: string; rating: number; comment: string | null; status: 'PENDING'|'APPROVED'|'HIDDEN'; createdAt: string; updatedAt: string } | null;
     canReview: boolean;             // decided by the API (delivered + owned + not yet reviewed)
+    id: string;                     // order item id (for exchanges)
+    exchange: { id: string; requestNumber: string; reason: 'WRONG_ITEM'|'DAMAGED_ITEM'; details: string; quantity: number; status: 'REQUESTED'|'APPROVED'|'REJECTED'|'COMPLETED'; adminNote: string | null; resolvedAt: string | null; createdAt: string } | null;
+    canExchange: boolean;           // delivered, inside the exchange window, not yet exchanged
   })[];
-  canCancel: boolean;               // status === PENDING
+  exchangeDeadline: string | null;  // last moment an exchange can be requested
+  exchangeWindowDays: number | null;
+  canCancel: false;                 // only the store cancels orders (admin)
   documents: { invoice: boolean; receipt: boolean };
 };
 ```
@@ -545,7 +564,7 @@ type AdminOrderDetail = PublicOrder & {
 | GET | `/admin/orders` | `status, search (order no / name / phone), from, to (YYYY-MM-DD, store timezone, inclusive), sort=newest\|oldest\|total_desc\|total_asc, page, limit` → `Paginated<AdminOrderListItem>` |
 | GET | `/admin/orders/status-counts` | `Record<OrderStatus \| 'ALL', number>` |
 | GET | `/admin/orders/:id` | `AdminOrderDetail` (`:id` may be the id or the order number) |
-| PATCH | `/admin/orders/:id/status` | `{ status: OrderStatus, note?: string }` → `AdminOrderDetail`. 409 on invalid transition. |
+| PATCH | `/admin/orders/:id/status` | `{ status: OrderStatus, note?: string }` → `AdminOrderDetail`. 409 on invalid transition. **Cancelling requires `note`** (the reason, shown to the customer; `422` otherwise). |
 | PATCH | `/admin/orders/:id` | `{ adminNote?: string \| null, paymentStatus?: PaymentStatus }` → `AdminOrderDetail` |
 
 Status transitions:
@@ -558,6 +577,31 @@ OUT_FOR_DELIVERY → DELIVERED, CANCELLED
 DELIVERED, CANCELLED → (final)
 ```
 Stock policy: stock is **decremented when the order is placed**; it is **restored once when an order is CANCELLED**.
+
+Every cancelled order records `cancelReason` and `cancelledBy` (`'CUSTOMER'` | `'STORE'`), returned on `PublicOrder`, `CustomerOrder` and `AdminOrderDetail`. `AdminOrderDetail.exchanges` lists the order's exchange requests.
+
+### Exchanges
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/admin/exchanges` | `status=REQUESTED\|APPROVED\|REJECTED\|COMPLETED, search (request no / order no / name / phone / product), sort=newest\|oldest, page, limit` → `Paginated<AdminExchange>` (with item, order, customer contact links and `allowedTransitions`) |
+| GET | `/admin/exchanges/status-counts` | `Record<ExchangeStatus \| 'ALL', number>` |
+| GET | `/admin/exchanges/:id` | id or request number (`EX-YYYYMMDD-NNNN`) |
+| PATCH | `/admin/exchanges/:id` | `{ status?, adminNote? }`. `REQUESTED → APPROVED / REJECTED`, `APPROVED → COMPLETED / REJECTED`; rejecting requires a note (`422`); `409` on invalid transition |
+
+Store setting `exchangeWindowDays` (0–90, default 7) in `PUT /admin/store` sets how long after delivery customers can request an exchange.
+
+### Banners (home page slider)
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/admin/banners` | all banners with `state: 'LIVE' \| 'SCHEDULED' \| 'EXPIRED' \| 'HIDDEN'` |
+| POST | `/admin/banners` | `{ imageUrl, mobileImageUrl?, title?, subtitle?, linkUrl? ("/path" or https URL), ctaLabel?, isActive?, startsAt?, endsAt? }` → 201 |
+| PATCH | `/admin/banners/:id` | any subset of the above |
+| PUT | `/admin/banners/order` | `{ ids: string[] }` — display order |
+| DELETE | `/admin/banners/:id` | |
+
+Uploads accept `folder=banners`. Products accept `ageGroups: AgeGroup[]` on create/update.
+
+After admin changes to store, banners, products or categories, the API asks the storefront to refresh its cached pages (`POST {STOREFRONT_URL}/api/revalidate` with the shared `STOREFRONT_REVALIDATE_SECRET` / `REVALIDATE_SECRET`).
 
 ### Admin users (SUPER_ADMIN only)
 | Method | Path | Body |

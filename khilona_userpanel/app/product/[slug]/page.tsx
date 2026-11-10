@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RotateCcw, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import { Breadcrumbs, type Crumb } from "@/components/ui/breadcrumbs";
 import { Container } from "@/components/ui/container";
 import { JsonLd } from "@/components/ui/json-ld";
@@ -23,15 +23,14 @@ function policySummary(text: string | null | undefined): string | null {
   return first || null;
 }
 
-/** Shipping & returns summaries from the store's own policies (nothing is shown when a policy is empty). */
-function DeliveryAndReturns({ store }: { store: PublicStore | null }) {
+/** Delivery summary from the store's shipping policy (nothing is shown when it is empty). */
+function DeliveryInfo({ store }: { store: PublicStore | null }) {
   const items = [
-    { Icon: Truck, title: "Shipping information", text: policySummary(store?.shippingPolicy), href: "/policies/shipping", link: "Shipping policy" },
-    { Icon: RotateCcw, title: "Returns", text: policySummary(store?.returnPolicy), href: "/policies/returns", link: "Return policy" },
+    { Icon: Truck, title: "PAN India delivery", text: policySummary(store?.shippingPolicy), href: "/policies/shipping", link: "Shipping policy" },
   ].filter((i) => i.text);
   if (items.length === 0) return null;
   return (
-    <section aria-label="Delivery and returns" className="mt-10 grid gap-4 sm:grid-cols-2">
+    <section aria-label="Delivery" className="mt-10 grid gap-4">
       {items.map(({ Icon, title, text, href, link }) => (
         <div key={title} className="rounded-[1.5rem] border border-line bg-surface p-6">
           <span className="grid size-10 place-items-center rounded-full border border-line-strong text-ink">
@@ -60,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = product.seoTitle || product.name;
   const description =
     toPlainText(product.seoDescription || product.shortDescription || product.description) ||
-    `Buy ${product.name} online. Pay on delivery.`;
+    `${product.name}: wholesale and retailer supply with PAN India delivery. Ask for price on WhatsApp.`;
   const images = (product.images.length ? product.images.map((i) => i.url) : product.thumbnailUrl ? [product.thumbnailUrl] : []).slice(0, 4);
   const url = `/product/${product.slug}`;
   return {
@@ -77,8 +76,9 @@ function productJsonLd(product: ProductDetail, store: PublicStore | null, review
   const images = product.images.length ? product.images.map((i) => i.url) : product.thumbnailUrl ? [product.thumbnailUrl] : [];
   const availability = (inStock: boolean) => (inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock");
   const seller = { "@type": "Organization", name: brandName(store) };
-  const offers =
-    product.variants.length > 0
+  const offers = !store?.showPrices
+    ? { "@type": "Offer", availability: availability(product.inStock), itemCondition: "https://schema.org/NewCondition", url, seller }
+    : product.variants.length > 0
       ? {
           "@type": "AggregateOffer",
           priceCurrency: "INR",
@@ -180,7 +180,7 @@ export default async function ProductPage({ params }: Props) {
           </div>
         )}
 
-        <DeliveryAndReturns store={store} />
+        <DeliveryInfo store={store} />
 
         <ProductReviews slug={product.slug} initial={reviews} />
 

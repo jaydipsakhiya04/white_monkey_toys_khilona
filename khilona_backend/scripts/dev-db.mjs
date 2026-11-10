@@ -17,7 +17,15 @@ const password = process.env.EMBEDDED_PG_PASSWORD ?? 'postgres';
 const databaseDir = resolve(process.cwd(), '.pgdata');
 const databases = ['khilona', 'khilona_test'];
 
-const pg = new EmbeddedPostgres({ databaseDir, user, password, port, persistent: true });
+// UTF-8 (not the Windows code page) so ₹, Hindi and Gujarati text can be stored
+const pg = new EmbeddedPostgres({
+  databaseDir,
+  user,
+  password,
+  port,
+  persistent: true,
+  initdbFlags: ['--encoding=UTF8', '--locale=C'],
+});
 
 async function main() {
   if (!existsSync(resolve(databaseDir, 'PG_VERSION'))) {

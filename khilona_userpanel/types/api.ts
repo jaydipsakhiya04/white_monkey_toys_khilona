@@ -46,6 +46,8 @@ export type Store = {
   coverImageUrl: string | null;
   phone: string | null;
   whatsapp: string | null;
+  /** Second mobile, for calls and WhatsApp. */
+  secondaryPhone?: string | null;
   email: string | null;
   address: string | null;
   city: string | null;
@@ -71,6 +73,10 @@ export type Store = {
   termsAndConditions: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  /** Days after delivery during which an exchange can be requested. */
+  exchangeWindowDays?: number;
+  /** When false, prices are hidden everywhere ("Ask for price" on WhatsApp). */
+  showPrices?: boolean;
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -80,9 +86,33 @@ export type PublicStore = Store & {
   isOpenNow: boolean;
   whatsappUrl: string | null;
   phoneUrl: string | null;
+  secondaryPhoneUrl?: string | null;
+  secondaryWhatsappUrl?: string | null;
 };
 
 export type CategoryRef = { id: string; name: string; slug: string };
+
+export type AgeGroup =
+  | "MONTHS_0_18"
+  | "MONTHS_18_36"
+  | "YEARS_3_5"
+  | "YEARS_5_7"
+  | "YEARS_7_9"
+  | "YEARS_9_12"
+  | "YEARS_12_14"
+  | "YEARS_14_PLUS";
+
+export type AgeGroupCount = { value: AgeGroup; slug: string; label: string; count: number };
+
+export type Banner = {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  linkUrl: string | null;
+  ctaLabel: string | null;
+};
 
 export type CategorySummary = {
   id: string;
@@ -121,6 +151,10 @@ export type ProductCard = {
   stockStatus: StockStatus;
   isFeatured: boolean;
   hasVariants: boolean;
+  /** Age rating: the age groups the product suits (may be missing on older cached payloads). */
+  ageGroups?: AgeGroup[];
+  /** e.g. "5-12 Years" (null when not rated) */
+  ageRating?: string | null;
   category: CategoryRef;
   /** Published verified-purchase reviews (average 0 when none). */
   rating: ProductRating;
@@ -173,6 +207,8 @@ export type ProductQuery = {
   maxPrice?: number;
   inStock?: boolean;
   featured?: boolean;
+  /** age group slugs, comma separated: "5-7-years,7-9-years" */
+  age?: string;
   options?: string; // "Color:Red,Age:3+"
   sort?: ProductSort;
   page?: number;
@@ -183,6 +219,7 @@ export type ProductFacets = {
   priceRange: { min: number; max: number };
   options: { name: string; values: string[] }[];
   categories: (CategoryRef & { count: number })[];
+  ages?: AgeGroupCount[];
   total: number;
 };
 
@@ -270,6 +307,10 @@ export type PublicOrder = {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   history: { status: OrderStatus; createdAt: string }[];
+  cancelledAt?: string | null;
+  /** Why the order was cancelled (always set for cancelled orders placed after reasons became required). */
+  cancelReason?: string | null;
+  cancelledBy?: "CUSTOMER" | "STORE" | null;
   /** Only on order placement: the order was linked to the signed-in account. */
   linkedToAccount?: boolean;
 };
@@ -351,15 +392,46 @@ export type CustomerOrderSummary = {
   recentOrders: CustomerOrderListItem[];
 };
 
+export type ExchangeReason = "WRONG_ITEM" | "DAMAGED_ITEM";
+export type ExchangeStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "COMPLETED";
+
+export type ExchangeSummary = {
+  id: string;
+  requestNumber: string;
+  orderItemId: string;
+  reason: ExchangeReason;
+  details: string;
+  quantity: number;
+  status: ExchangeStatus;
+  adminNote: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+};
+
+export type CustomerExchange = Omit<ExchangeSummary, "orderItemId"> & {
+  orderNumber: string;
+  productName: string;
+  imageUrl: string | null;
+  variantTitle: string | null;
+};
+
+export type ExchangeInput = { orderItemId: string; reason: ExchangeReason; details: string; quantity?: number };
+
 export type CustomerOrderItem = PublicOrder["items"][number] & {
+  id: string;
   productId: string | null;
   review: OwnReview | null;
   canReview: boolean;
+  exchange: ExchangeSummary | null;
+  canExchange: boolean;
 };
 
 export type CustomerOrder = Omit<PublicOrder, "items"> & {
   deliveredAt: string | null;
   cancelledAt: string | null;
+  /** Last moment an exchange can be requested (delivered orders only). */
+  exchangeDeadline: string | null;
+  exchangeWindowDays: number | null;
   items: CustomerOrderItem[];
   canCancel: boolean;
   documents: { invoice: boolean; receipt: boolean };

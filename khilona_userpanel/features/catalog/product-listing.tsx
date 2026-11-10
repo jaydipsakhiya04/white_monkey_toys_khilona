@@ -39,7 +39,7 @@ export async function ProductListing({
 }) {
   const [productsRes, facetsRes] = await Promise.all([
     safe(getProducts(toProductQuery(params, category))),
-    safe(getFacets({ category, search: params.search })),
+    safe(getFacets({ category, search: params.search, featured: params.featured || undefined })),
   ]);
   const facets = facetsRes.data;
   const result = productsRes.data;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AdminProductDetail, ProductInput } from '@/types/api';
+import { AGE_GROUPS, type AdminProductDetail, type AgeGroup, type ProductInput } from '@/types/api';
 import { emptyToNull } from '@/lib/form-errors';
 import { SLUG_PATTERN } from '@/utils/slugify';
 
@@ -58,6 +58,7 @@ export const productFormSchema = z
     options: z.array(optionSchema),
     variants: z.array(variantSchema),
     specifications: z.array(z.object({ label: z.string().max(80), value: z.string().max(300) })),
+    ageGroups: z.array(z.enum(AGE_GROUPS.map((g) => g.value) as [AgeGroup, ...AgeGroup[]])),
     seoTitle: z.string().max(200, 'SEO title is too long'),
     seoDescription: z.string().max(500, 'SEO description is too long'),
     isActive: z.boolean(),
@@ -130,6 +131,7 @@ export const emptyProductForm: ProductFormValues = {
   options: [],
   variants: [],
   specifications: [],
+  ageGroups: [],
   seoTitle: '',
   seoDescription: '',
   isActive: true,
@@ -169,6 +171,7 @@ export function productToForm(p: AdminProductDetail): ProductFormValues {
         isActive: v.isActive,
       })),
     specifications: p.specifications.map((s) => ({ label: s.label, value: s.value })),
+    ageGroups: [...(p.ageGroups ?? [])],
     seoTitle: p.seoTitle ?? '',
     seoDescription: p.seoDescription ?? '',
     isActive: p.isActive,
@@ -196,6 +199,7 @@ export function formToInput(v: ProductFormValues): ProductInput {
     sortOrder: Number(v.sortOrder),
     seoTitle: emptyToNull(v.seoTitle),
     seoDescription: emptyToNull(v.seoDescription),
+    ageGroups: AGE_GROUPS.map((g) => g.value).filter((g) => v.ageGroups.includes(g)),
     specifications: v.specifications
       .map((s) => ({ label: s.label.trim(), value: s.value.trim() }))
       .filter((s) => s.label && s.value),

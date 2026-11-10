@@ -1,3 +1,6 @@
+"use client";
+
+import { AskPriceButton, usePricing } from "@/features/store/pricing";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
 
@@ -11,9 +14,19 @@ type Props = {
   size?: "sm" | "md" | "lg";
   className?: string;
   showBadge?: boolean;
+  /** While prices are hidden: product to ask about on WhatsApp ("Ask for price"). */
+  askFor?: { name: string; sku?: string | null };
 };
 
-export function Price({ price, effectivePrice, discountPercent = 0, minPrice, maxPrice, size = "md", className, showBadge = true }: Props) {
+export function Price({ price, effectivePrice, discountPercent = 0, minPrice, maxPrice, size = "md", className, showBadge = true, askFor }: Props) {
+  const { showPrices } = usePricing();
+  if (!showPrices) {
+    return askFor ? (
+      <AskPriceButton productName={askFor.name} sku={askFor.sku} size={size === "lg" ? "lg" : "sm"} className={className} />
+    ) : (
+      <p className={cn("text-sm font-semibold text-ink", className)}>Price on request</p>
+    );
+  }
   const hasRange = minPrice !== undefined && maxPrice !== undefined && maxPrice > minPrice;
   const onSale = !hasRange && effectivePrice < price;
   const main = size === "lg" ? "text-[1.75rem] sm:text-3xl" : size === "md" ? "text-lg" : "text-base";

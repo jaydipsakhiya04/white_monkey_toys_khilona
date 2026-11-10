@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { AgeGroup } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsEnum,
   IsIn,
   IsInt,
   IsNumber,
@@ -55,6 +57,10 @@ export class PublicProductQueryDto {
   @ApiPropertyOptional() @IsOptional() @ToBoolean() @IsBoolean()
   featured?: boolean;
 
+  @ApiPropertyOptional({ example: '5-7-years,7-9-years', description: 'Age groups (slug or enum value), comma separated: matches any' })
+  @IsOptional() @EmptyToUndefined() @IsString() @MaxLength(200)
+  age?: string;
+
   @ApiPropertyOptional({ example: 'Color:Red,Color:Blue,Age:3+', description: 'Same name = OR, different names = AND' })
   @IsOptional() @EmptyToUndefined() @IsString() @MaxLength(500)
   options?: string;
@@ -75,6 +81,9 @@ export class PublicProductQueryDto {
 export class FacetsQueryDto {
   @ApiPropertyOptional() @IsOptional() @EmptyToUndefined() @IsString() @MaxLength(100)
   category?: string;
+
+  @ApiPropertyOptional() @IsOptional() @ToBoolean() @IsBoolean()
+  featured?: boolean;
 
   @ApiPropertyOptional() @IsOptional() @EmptyToUndefined() @IsString() @MaxLength(100)
   search?: string;
@@ -232,6 +241,10 @@ export class CreateProductDto {
 
   @ApiPropertyOptional() @IsOptional() @EmptyToNull() @IsString() @MaxLength(170)
   seoDescription?: string | null;
+
+  @ApiPropertyOptional({ enum: AgeGroup, isArray: true, example: ['YEARS_7_9', 'YEARS_9_12'], description: 'Age rating: the age groups this product suits' })
+  @IsOptional() @IsArray() @ArrayMaxSize(8) @IsEnum(AgeGroup, { each: true, message: 'Invalid age group' })
+  ageGroups?: AgeGroup[];
 
   @ApiPropertyOptional({ type: [SpecificationInputDto] })
   @IsOptional() @IsArray() @ArrayMaxSize(40) @ValidateNested({ each: true }) @Type(() => SpecificationInputDto)

@@ -16,7 +16,7 @@ type Ctx = {
 
 const ListingNavContext = createContext<Ctx | null>(null);
 
-const FILTER_KEYS = ["minPrice", "maxPrice", "inStock", "featured", "options"];
+const FILTER_KEYS = ["minPrice", "maxPrice", "inStock", "featured", "age", "options"];
 
 export function ListingNavProvider({ children }: { children: ReactNode }) {
   const router = useRouter();

@@ -27,6 +27,15 @@ export function formatDateTime(iso: string): string {
   }
 }
 
+/** "7 Nov 2026" */
+export function formatDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
 /** "10:00" / "21:30" (24h) → "10:00 AM" / "9:30 PM" */
 export function formatTime24(t: string | null | undefined): string | null {
   if (!t) return null;

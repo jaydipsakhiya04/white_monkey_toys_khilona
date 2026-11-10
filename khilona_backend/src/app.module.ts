@@ -8,12 +8,16 @@ import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { PriceVisibilityInterceptor } from './common/interceptors/price-visibility.interceptor';
+import { StorefrontRevalidateInterceptor } from './common/interceptors/storefront-revalidate.interceptor';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { AppConfigModule } from './config/config.module';
 import { APP_CONFIG, AppConfig } from './config/configuration';
 import { CustomerAuthModule } from './customer-auth/customer-auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DatabaseModule } from './database/database.module';
+import { ExchangesModule } from './exchanges/exchanges.module';
+import { BannersModule } from './banners/banners.module';
 import { HealthController } from './health/health.controller';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
@@ -49,6 +53,8 @@ import { UploadsModule } from './uploads/uploads.module';
     CustomerAuthModule,
     AccountModule,
     ReviewsModule,
+    ExchangesModule,
+    BannersModule,
     UploadsModule,
     DashboardModule,
   ],
@@ -56,6 +62,9 @@ import { UploadsModule } from './uploads/uploads.module';
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: StorefrontRevalidateInterceptor },
+    // inner-most: strips prices from public / customer responses while they are hidden
+    { provide: APP_INTERCEPTOR, useClass: PriceVisibilityInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })

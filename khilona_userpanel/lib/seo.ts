@@ -34,13 +34,13 @@ export const GLOBAL_KEYWORDS = [
   "RC cars online India",
   "hobby grade RC cars",
   "remote control drones",
-  "licensed die-cast cars",
+  "construction RC toys",
   "action figures India",
 ];
 
 export const ALL_KEYWORDS = [...BRAND_NAMES, ...LOCAL_KEYWORDS, ...GLOBAL_KEYWORDS];
 
-/** Free delivery covers the whole city; these neighbourhoods are named for local relevance. */
+/** Surat neighbourhoods named for local relevance (the store delivers PAN India). */
 export const SURAT_AREAS = ["Varachha", "Mota Varachha", "Hirabaug", "Kapodra", "Katargam", "Adajan", "Vesu", "Piplod", "Athwa", "Udhna", "Pal", "City Light"];
 
 /** Wholesale page keywords. */

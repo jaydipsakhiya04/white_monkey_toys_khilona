@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sharp, { type OutputInfo } from 'sharp';
 import { STORAGE_PROVIDER, StorageProvider } from './storage/storage.provider';
 
-export const UPLOAD_FOLDERS = ['products', 'categories', 'store'] as const;
+export const UPLOAD_FOLDERS = ['products', 'categories', 'store', 'banners'] as const;
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
 

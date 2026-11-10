@@ -86,7 +86,7 @@ export class OrdersController {
   @ResponseMessage('Order placed successfully')
   @OptionalCustomerAuth()
   @ApiOperation({
-    summary: 'Place an order (pay on delivery, no online payment)',
+    summary: 'Place an order (no online payment; the team confirms price, payment and delivery)',
     description:
       'Requires a customer access token (the order is linked to that account, My orders). Guest checkout is only possible when ORDERS_REQUIRE_LOGIN=false.',
   })

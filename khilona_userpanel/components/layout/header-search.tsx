@@ -9,6 +9,7 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { api } from "@/lib/api/client";
 import type { Paginated, ProductCard } from "@/types/api";
 import { cn } from "@/utils/cn";
+import { usePricing } from "@/features/store/pricing";
 import { formatPrice } from "@/utils/format";
 
 function useDebounced<T>(value: T, ms: number) {
@@ -44,6 +45,7 @@ export function SearchForm({
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLFormElement>(null);
   const q = useDebounced(value.trim(), 200);
+  const { showPrices } = usePricing();
 
   // keep in sync when navigating between searches
   useEffect(() => {
@@ -69,11 +71,17 @@ export function SearchForm({
     onSubmitted?.();
   }
 
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    if (active >= 0 && items[active]) return go(`/product/${items[active].slug}`);
+  /** Full results page for the typed term (never a single product). */
+  function searchAll() {
     const term = value.trim();
     go(term ? `/products?search=${encodeURIComponent(term)}` : "/products");
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    // Enter on a suggestion highlighted with the arrow keys opens that product
+    if (showPanel && active >= 0 && items[active]) return go(`/product/${items[active].slug}`);
+    searchAll();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -127,7 +135,7 @@ export function SearchForm({
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Search toys, games, gifts…"
+        placeholder="Search RC cars, drones, figures…"
         maxLength={100}
         className={cn(
           "h-11 w-full rounded-full border border-line bg-sand pl-10 pr-10 text-[0.9375rem] text-ink transition-colors placeholder:text-muted/80 hover:border-line-strong focus:border-ink focus:bg-surface focus:outline-none focus:ring-4 focus:ring-black/5 [&::-webkit-search-cancel-button]:hidden",
@@ -150,7 +158,7 @@ export function SearchForm({
 
       {showPanel && (
         <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 animate-pop-in overflow-hidden rounded-2xl border border-line bg-surface shadow-lift">
-          <ul id={listId} role="listbox" aria-label="Suggestions" className="max-h-[60vh] overflow-y-auto p-1.5">
+          <ul id={listId} role="listbox" aria-label="Suggestions" className="max-h-[60vh] overflow-y-auto p-1.5" onMouseLeave={() => setActive(-1)}>
             {items.map((p, i) => (
               <li key={p.id} id={`${listId}-${i}`} role="option" aria-selected={i === active}>
                 <Link
@@ -170,7 +178,7 @@ export function SearchForm({
                     <span className="block truncate text-sm font-medium text-ink">{p.name}</span>
                     <span className="block truncate text-xs text-muted">{p.category.name}</span>
                   </span>
-                  <span className="text-sm font-semibold tabular-nums text-ink">{formatPrice(p.hasVariants ? p.minPrice : p.effectivePrice)}</span>
+                  {showPrices && <span className="text-sm font-semibold tabular-nums text-ink">{formatPrice(p.hasVariants ? p.minPrice : p.effectivePrice)}</span>}
                 </Link>
               </li>
             ))}
@@ -180,7 +188,9 @@ export function SearchForm({
             )}
           </ul>
           <button
-            type="submit"
+            type="button"
+            onClick={searchAll}
+            onMouseEnter={() => setActive(-1)}
             className="flex w-full items-center justify-between border-t border-line px-4 py-3 text-left text-sm font-semibold text-ink hover:bg-sand"
           >
             <span className="truncate">See all results for “{q}”</span>

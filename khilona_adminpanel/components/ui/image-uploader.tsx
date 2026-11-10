@@ -1,7 +1,7 @@
 'use client';
 
 import { ImagePlus, Loader2, RefreshCw, Trash2 } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/api-client';
 import { uploadService } from '@/services';
@@ -29,6 +29,8 @@ type ImageUploaderProps = {
   hint?: string;
   disabled?: boolean;
   id?: string;
+  /** Shown in the preview box when no image is set (e.g. the default image the storefront falls back to). */
+  emptyPreview?: ReactNode;
 };
 
 /** Single image upload with preview, progress, replace and remove. */
@@ -41,6 +43,7 @@ export function ImageUploader({
   hint = 'JPG, PNG, WebP, AVIF or GIF · up to 5 MB',
   disabled,
   id,
+  emptyPreview,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autoId = useId();
@@ -97,6 +100,16 @@ export function ImageUploader({
             className={cn('size-full', aspect === 'square' ? 'object-contain p-1.5 mix-blend-multiply' : 'object-cover')}
             loading="lazy"
           />
+        ) : emptyPreview ? (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled || uploading}
+            className="size-full"
+            aria-label={label}
+          >
+            {emptyPreview}
+          </button>
         ) : (
           <button
             type="button"

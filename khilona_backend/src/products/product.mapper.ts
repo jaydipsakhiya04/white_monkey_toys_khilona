@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { toNumber, toNumberOrNull } from '../common/utils/money';
+import { ageRatingLabel, sortAgeGroups } from './age-groups';
 import { resolvePrice, resolveVariantPrice, stockStatus } from './pricing';
 
 // ─── Prisma selections ───────────────────────────────────────
@@ -18,6 +19,7 @@ export const cardSelect = {
   lowStockThreshold: true,
   isFeatured: true,
   hasVariants: true,
+  ageGroups: true,
   ratingAvg: true,
   ratingCount: true,
   createdAt: true,
@@ -55,6 +57,7 @@ export const adminListSelect = {
   isActive: true,
   isFeatured: true,
   hasVariants: true,
+  ageGroups: true,
   sortOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -107,6 +110,9 @@ export function toProductCard(row: CardRow) {
     stockStatus: stockStatus(row.stock, row.lowStockThreshold),
     isFeatured: row.isFeatured,
     hasVariants: row.hasVariants,
+    ageGroups: sortAgeGroups(row.ageGroups),
+    /** e.g. "5-12 Years" (null when not rated) */
+    ageRating: ageRatingLabel(row.ageGroups),
     category: row.category,
     /** Published verified-purchase reviews (average 0 when none). */
     rating: { average: toNumber(row.ratingAvg), count: row.ratingCount },
@@ -172,6 +178,8 @@ export function toAdminListItem(row: AdminListRow) {
     isFeatured: row.isFeatured,
     hasVariants: row.hasVariants,
     variantsCount: row._count.variants,
+    ageGroups: sortAgeGroups(row.ageGroups),
+    ageRating: ageRatingLabel(row.ageGroups),
     sortOrder: row.sortOrder,
     category: row.category,
     createdAt: row.createdAt,
@@ -195,6 +203,8 @@ export function toAdminDetail(row: DetailRow, ordersCount: number) {
     isFeatured: row.isFeatured,
     hasVariants: row.hasVariants,
     variantsCount: row.variants.length,
+    ageGroups: sortAgeGroups(row.ageGroups),
+    ageRating: ageRatingLabel(row.ageGroups),
     sortOrder: row.sortOrder,
     category: { id: row.category.id, name: row.category.name },
     createdAt: row.createdAt,

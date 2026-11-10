@@ -64,6 +64,13 @@ export class ProductsController {
     return this.products.facets(query);
   }
 
+  @Get('products/age-groups')
+  @ResponseMessage('Age groups fetched successfully')
+  @ApiOperation({ summary: 'Shop by age: every age group with its number of products' })
+  ageGroups() {
+    return this.products.ageGroups();
+  }
+
   @Get('products/:slug')
   @ResponseMessage('Product fetched successfully')
   @ApiOperation({ summary: 'Product details with images, options and variants' })

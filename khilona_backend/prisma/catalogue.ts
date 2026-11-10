@@ -1,7 +1,9 @@
 /**
  * Real WHITE MONKEY TOYS catalogue, built from the product photographs in `data/WHITE MONKEY/`.
  *
- *   npm run catalogue:import
+ *   npm run catalogue:import    # add missing categories / products (safe to re-run)
+ *   npm run catalogue:rebuild   # replace the catalogue: archive every current product, keep only the
+ *                               # five store categories below and list the products again with age ratings
  *
  * - Creates the categories and products below (matched by slug, so it is safe to re-run;
  *   existing products are left untouched so admin edits are never overwritten).
@@ -23,7 +25,7 @@
 import { config as loadEnv } from 'dotenv';
 import { existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { PrismaClient } from '@prisma/client';
+import { AgeGroup, PrismaClient } from '@prisma/client';
 import sharp from 'sharp';
 import { loadConfig } from '../src/config/configuration';
 import { recomputeProductAggregates } from '../src/products/pricing';
@@ -62,7 +64,7 @@ const CATEGORIES: CatalogueCategory[] = [
     name: 'Hobby-Grade RC Cars',
     folder: 'HOBBY GRADE RC CARS',
     cover: 0,
-    description: 'Brushless monster trucks, rally cars, buggies and scale crawlers built for real off-road driving.',
+    description: 'Brushless monsters, rally cars and scale crawlers for real off-road fun.',
     intro: 'A hobby-grade RC built for proper off-road driving — dirt, gravel, grass and driveway jumps.',
   },
   {
@@ -70,7 +72,7 @@ const CATEGORIES: CatalogueCategory[] = [
     name: 'Premium RC Cars',
     folder: 'PREMUIM RC CARS',
     cover: 12,
-    description: 'Licensed supercars, rally replicas and drift cars with full-function remote control.',
+    description: 'Licensed supercars, drift cars and app-control minis.',
     intro: 'A detailed remote-control car that looks as good on the shelf as it does on the move.',
   },
   {
@@ -78,7 +80,7 @@ const CATEGORIES: CatalogueCategory[] = [
     name: 'Construction RC',
     folder: 'CONSTRUCION RC ITEMS',
     cover: 8,
-    description: 'Excavators, dump trucks, mixers, cranes and bulldozers that dig, tip and lift by remote.',
+    description: 'Excavators, tippers, mixers and cranes that really work.',
     intro: 'A working remote-control construction vehicle for big site-building adventures.',
   },
   {
@@ -86,7 +88,7 @@ const CATEGORIES: CatalogueCategory[] = [
     name: 'Drones & RC Aircraft',
     folder: 'DRONES',
     cover: 12,
-    description: 'Camera drones, LED flyers, RC helicopters and warbird planes for beginners and pilots.',
+    description: 'Camera drones, LED flyers, helicopters and RC planes.',
     intro: 'Take play to the sky with this remote-control flyer.',
   },
   {
@@ -94,24 +96,8 @@ const CATEGORIES: CatalogueCategory[] = [
     name: 'Action Figures',
     folder: 'ACTION FIGURES',
     cover: 19,
-    description: 'Marvel and Star Wars heroes — collectible figures with display stands and boxed hero figures.',
+    description: 'Marvel and Star Wars heroes, from play figures to collectibles.',
     intro: 'A detailed, poseable figure for fans and collectors — ready for the display shelf or the next big battle.',
-  },
-  {
-    slug: 'licensed-die-cast-cars',
-    name: 'Licensed Die-cast Cars',
-    folder: 'LICENSE METALS CARS',
-    cover: 1,
-    description: 'Officially licensed metal replicas — Fast & Furious, Porsche, Aston Martin and more.',
-    intro: 'An officially licensed metal replica for collectors and car enthusiasts.',
-  },
-  {
-    slug: 'scale-models-and-dioramas',
-    name: 'Scale Models & Dioramas',
-    folder: 'GADGETS',
-    cover: 10,
-    description: '1:64 scene models, garages and display dioramas to showcase your die-cast collection.',
-    intro: 'A display scene to bring your 1:64 die-cast collection to life.',
   },
 ];
 
@@ -136,8 +122,7 @@ interface CatalogueProduct {
   option?: { name: string; variants: CatalogueVariant[] };
 }
 
-const CLOSING =
-  'Details and specifications are taken from the manufacturer’s packaging shown in the photos. Want to check what’s in the box, the battery or the colour before ordering? Message us on WhatsApp — we’re happy to help.';
+const CLOSING = 'Specifications are taken from the packaging. Questions about the box contents, battery or colour? Message us on WhatsApp.';
 
 const P = (
   category: string,
@@ -154,8 +139,6 @@ const PR = 'premium-rc-cars';
 const CR = 'construction-rc';
 const DR = 'drones-and-rc-aircraft';
 const AF = 'action-figures';
-const LM = 'licensed-die-cast-cars';
-const GD = 'scale-models-and-dioramas';
 
 const PRODUCTS: CatalogueProduct[] = [
   // Hobby-grade RC cars
@@ -374,45 +357,55 @@ const PRODUCTS: CatalogueProduct[] = [
   P(AF, 'marvel-captain-america-action-figure', 'Marvel Captain America Action Figure', [19], 1299, 'A large Captain America figure with his shield, in a window box.', { specs: [['Licence', 'Marvel']] }),
   P(AF, 'marvel-black-panther-action-figure', 'Marvel Black Panther Action Figure', [20], 1299, 'A large, poseable Black Panther figure in a window box.', { specs: [['Licence', 'Marvel']] }),
 
-  // Licensed die-cast cars
-  P(LM, 'fast-furious-brians-toyota-supra-with-figure', 'Fast & Furious Brian’s Toyota Supra with Figure', [2], 2499, 'Brian’s iconic orange Toyota Supra with a Brian O’Conner figure.', { featured: 2, specs: [['Licence', 'Fast & Furious'], ['Material', 'Die-cast metal']] }),
-  P(LM, 'fast-furious-doms-mazda-rx-7', 'Fast & Furious Dom’s Mazda RX-7', [1], 1999, 'Dom’s red Mazda RX-7 from Fast & Furious, in its collector window box.', { specs: [['Licence', 'Fast & Furious'], ['Material', 'Die-cast metal']] }),
-  P(LM, 'fast-furious-seans-ford-mustang', 'Fast & Furious Sean’s Ford Mustang', [0], 1999, 'Sean’s dark green Ford Mustang with white racing stripes.', { specs: [['Licence', 'Fast & Furious'], ['Material', 'Die-cast metal']] }),
-  P(LM, 'fast-furious-2006-dodge-charger', 'Fast & Furious 2006 Dodge Charger', [5], 1999, 'The matte-black 2006 Dodge Charger from Fast X.', { specs: [['Licence', 'Fast & Furious'], ['Material', 'Die-cast metal']] }),
-  P(LM, 'porsche-911-gt1-lm-1998-1-64', 'Porsche 911 GT1 LM 1998 1:64', [3], 1499, 'The 1998 Le Mans Porsche 911 GT1 in its famous #26 livery, by Trends Hobby.', {
-    specs: [['Brand', 'Trends Hobby'], ['Scale', '1:64'], ['Licence', 'Porsche official licensed']],
-  }),
-  P(LM, 'porsche-911-gt3-r-le-mans-2025-1-64', 'Porsche 911 GT3 R 24H Le Mans 2025 #92 1:64', [4], 1499, 'The 2025 Le Mans Porsche 911 GT3 R #92 in light-blue livery, by Trends Hobby.', {
-    specs: [['Brand', 'Trends Hobby'], ['Scale', '1:64'], ['Licence', 'Porsche official licensed']],
-  }),
-  P(LM, 'pop-race-singer-targa-dark-chrome-1-64', 'Pop Race Singer Targa Dark Chrome 1:64', [6], 1299, 'A Singer Targa in dark chrome from Pop Race’s Dark Chrome Series.', { specs: [['Brand', 'Pop Race'], ['Scale', '1:64'], ['Model', 'PRDC-001']] }),
-  P(LM, 'pop-race-skyline-gt-r-r32-dark-chrome-1-64', 'Pop Race Skyline GT-R R32 Dark Chrome 1:64', [9], 1299, 'A Nissan Skyline GT-R R32 in dark chrome from Pop Race’s Dark Chrome Series.', {
-    specs: [['Brand', 'Pop Race'], ['Scale', '1:64'], ['Model', 'PRDC-002']],
-  }),
-  P(LM, 'aston-martin-db12-1-64', 'Aston Martin DB12 1:64', [7, 8], 2499, 'An officially licensed Aston Martin DB12 with an acrylic display case and gift box, by ATS.', {
-    specs: [['Brand', 'ATS'], ['Scale', '1:64'], ['Licence', 'Official licensed product']],
-    option: { name: 'Color', variants: [{ value: 'Red', photo: 7 }, { value: 'Green', photo: 8 }] },
-  }),
-
-  // Scale models & dioramas
-  P(GD, 'starbucks-store-miniature-scene-1-64', 'Starbucks Store Miniature Scene 1:64', [9], 3499, 'A lit Starbucks storefront scene with parking for your 1:64 cars.', { featured: 9, specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'rafale-fighter-jet-model-with-stand', 'Rafale Fighter Jet Model with Stand', [17, 0], 2999, 'A detailed Rafale fighter jet model with display stand and missile set.'),
-  P(GD, 'garage-display-scene-1-64', 'Garage Display Scene 1:64', [1], 1999, 'A lit Haus-Welt garage display scene for 1:64 cars.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Model', '970109']] }),
-  P(GD, 'suzuki-shop-diorama-1-64', 'Suzuki Shop Diorama 1:64', [2, 14], 2499, 'A two-storey Suzuki showroom scene with street-side parking.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'glass-display-case-scene-1-64', 'Glass Display Case Scene 1:64', [3], 2499, 'A clear display case with a rooftop-garden scene for 1:64 cars.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'led-parking-garage-diorama-1-64', 'LED Parking Garage Diorama 1:64', [4, 5], 1799, 'A light-up parking garage assembly model for 1:64 cars.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Lighting', 'LED (light version)']] }),
-  P(GD, 'morimoto-factory-scene-model-1-64', 'Morimoto Factory Scene Model 1:64', [6], 2999, 'A Japanese factory scene with a courtyard car park.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'kubota-restaurant-scene-1-64', 'Kubota Restaurant Scene 1:64', [7], 2999, 'A Japanese street-corner restaurant scene with parking bays.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'mcdonalds-restaurant-scene-1-64', 'McDonald’s Restaurant Scene 1:64', [8], 3499, 'A lit fast-food restaurant scene with a large car park.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Model', '936213']] }),
-  P(GD, 'shell-gas-station-scene-model-1-64', 'Shell Gas Station Scene Model 1:64', [10], 3499, 'A lit Shell fuel station with forecourt and shop.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'kfc-restaurant-parking-scene-1-64', 'KFC Restaurant Parking Scene 1:64', [11], 3499, 'A lit KFC restaurant scene with roadside parking.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'gulf-led-assembly-garage-1-64', 'Gulf LED Assembly Garage 1:64', [12], 2999, 'A Gulf-liveried modification garage with LED lighting.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Lighting', 'LED']] }),
-  P(GD, 'mazda-double-layer-exhibition-hall-1-64', 'Mazda Double-Layer Exhibition Hall 1:64', [13], 3999, 'A modular two-level Mazda showroom for displaying your collection.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Model', '936018']] }),
-  P(GD, 'multi-level-parking-tower-1-64', 'Multi-Level Parking Tower 1:64', [15], 3499, 'A four-level parking tower display for 1:64 cars.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Model', '922004']] }),
-  P(GD, 'rural-bridge-scene-1-64', 'Rural Bridge Scene 1:64', [16], 2999, 'A countryside bridge scene with greenery and figures.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64'], ['Model', '901336']] }),
-  P(GD, 'lakeside-shore-scene-model-1-64', 'Lakeside Shore Scene Model 1:64', [18], 2999, 'A lakeside jetty scene in a clear display case.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
-  P(GD, 'rugged-hill-scene-model-1-64', 'Rugged Hill Scene Model 1:64', [19], 2999, 'A rugged hill terrain scene in a clear display case.', { specs: [['Brand', 'MoreArt'], ['Scale', '1:64']] }),
 ];
+
+// ─── Age ratings ─────────────────────────────────────────────
+
+const AGES = {
+  /** "3-12 Years" */
+  PLAY_FIGURE: ['YEARS_3_5', 'YEARS_5_7', 'YEARS_7_9', 'YEARS_9_12'],
+  /** "5-12 Years" */
+  KID: ['YEARS_5_7', 'YEARS_7_9', 'YEARS_9_12'],
+  /** "7-14 Years" */
+  JUNIOR: ['YEARS_7_9', 'YEARS_9_12', 'YEARS_12_14'],
+  /** "9+ Years" */
+  TEEN: ['YEARS_9_12', 'YEARS_12_14', 'YEARS_14_PLUS'],
+  /** "12+ Years" */
+  COLLECTOR: ['YEARS_12_14', 'YEARS_14_PLUS'],
+  /** "14+ Years" */
+  HOBBY: ['YEARS_14_PLUS'],
+} satisfies Record<string, AgeGroup[]>;
+
+/**
+ * Age rating per product: the age printed on the box wins; otherwise a rule per category based on
+ * how demanding the toy is (brushless / large-scale RC and warbirds are 14+, minis and LED flyers 5+).
+ */
+function ageFor(p: CatalogueProduct): AgeGroup[] {
+  const text = `${p.name} ${(p.specs ?? []).map(([l, v]) => `${l} ${v}`).join(' ')}`;
+  const boxAge = (p.specs ?? []).find(([label]) => /recommended age/i.test(label))?.[1];
+  if (boxAge) {
+    const years = Number.parseInt(boxAge, 10);
+    if (years >= 14) return AGES.HOBBY;
+    if (years >= 6) return AGES.KID;
+  }
+  switch (p.category) {
+    case HB:
+      return /brushless|1:8|1:7|1:10/i.test(text) ? AGES.HOBBY : AGES.TEEN;
+    case PR:
+      return /1:43|drift|fpv/i.test(text) ? AGES.TEEN : AGES.JUNIOR;
+    case CR:
+      return /channel|scania|semi-trailer|low-loader|pump|timber|gift box/i.test(text) ? AGES.TEEN : AGES.KID;
+    case DR:
+      if (/a310|a280|a220|p-51|biplane|brushless/i.test(text)) return AGES.HOBBY;
+      if (/plane|corsair|sky king|warbird|helicopter|4k|k11/i.test(text)) return AGES.TEEN;
+      if (/ufo|glow|orb|dinosaur|sword|spherical|combination|land/i.test(text)) return AGES.KID;
+      return AGES.JUNIOR;
+    case AF:
+      return /collectible|mandalorian|mask/i.test(text) ? AGES.COLLECTOR : AGES.PLAY_FIGURE;
+    default:
+      return AGES.KID;
+  }
+}
 
 /** Categories created by `seed.ts` with illustrated demo products. */
 const LEGACY_CATEGORY_SLUGS = [
@@ -454,7 +447,7 @@ const isPlaceholder = (value: string | null, defaults: string[]) => !value || de
 const STORE_COPY = {
   tagline: 'Toy shop in Varachha, Surat — retail & wholesale',
   description:
-    'White Monkey Toys is a toy shop in Varachha, Surat, for hobby-grade RC cars, drones, construction RC, action figures, licensed die-cast cars and display dioramas. Shop retail online with free delivery across Surat and cash on delivery, or contact us for wholesale and retailer pricing.',
+    'White Monkey Toys is a toy shop in Varachha, Surat, for hobby-grade RC cars, premium RC cars, construction RC, drones and action figures. Shop retail online with free delivery across Surat and cash on delivery, or contact us for wholesale and retailer pricing.',
   seoTitle: 'White Monkey Toys | Toy Shop in Surat (Varachha) – Retail & Wholesale Toys',
   seoDescription:
     'White Monkey Toys — the toy shop in Varachha, Surat for RC cars, drones, action figures and collectibles. Free delivery across Surat, cash on delivery, and wholesale toy prices for retailers.',
@@ -519,6 +512,12 @@ async function importCategories(): Promise<Map<string, { id: string; folder: str
   for (const [sortOrder, cat] of CATEGORIES.entries()) {
     const existing = await prisma.category.findUnique({ where: { slug: cat.slug } });
     if (existing) {
+      if (rebuild) {
+        await prisma.category.update({
+          where: { id: existing.id },
+          data: { name: cat.name, description: cat.description, seoDescription: cat.description, sortOrder, isActive: true, parentId: null },
+        });
+      }
       result.set(cat.slug, { id: existing.id, folder: cat.folder });
       continue;
     }
@@ -538,13 +537,11 @@ async function importProducts(categories: Map<string, { id: string; folder: stri
     if (await prisma.product.findUnique({ where: { slug: p.slug } })) continue;
     const cat = categories.get(p.category)!;
     const meta = CATEGORIES.find((c) => c.slug === p.category)!;
+    // colour / style choices are not offered: every photo of the product becomes a gallery image
+    const photos = [...new Set([...p.photos, ...(p.option?.variants ?? []).map((v) => v.photo)])];
     const images: string[] = [];
-    for (const [i, photo] of p.photos.entries()) images.push(await uploadPhoto(cat.folder, photo, `products/${p.slug}-${i + 1}`));
-    const variantImages = new Map<number, string>();
-    for (const v of p.option?.variants ?? []) {
-      variantImages.set(v.photo, await uploadPhoto(cat.folder, v.photo, `products/${p.slug}-${v.value.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`));
-    }
-    const description = `${meta.intro}\n\n${p.short}\n\n${CLOSING}`;
+    for (const [i, photo] of photos.entries()) images.push(await uploadPhoto(cat.folder, photo, `products/${p.slug}-${i + 1}`));
+    const description = `${p.short} ${meta.intro}\n\n${CLOSING}`;
     const sku = `WM-${p.category.split('-').map((w) => w[0]).join('').toUpperCase()}-${String(index + 1).padStart(3, '0')}`;
 
     await prisma.$transaction(async (tx) => {
@@ -557,48 +554,73 @@ async function importProducts(categories: Map<string, { id: string; folder: stri
           shortDescription: p.short,
           description,
           price: p.price,
-          stock: p.option ? 0 : PLACEHOLDER_STOCK,
+          stock: PLACEHOLDER_STOCK * (p.option?.variants.length ?? 1),
           isFeatured: p.featured !== undefined,
           sortOrder: p.featured ?? 100 + index,
-          hasVariants: !!p.option,
+          hasVariants: false,
           thumbnailUrl: images[0],
           specifications: (p.specs ?? []).map(([label, value]) => ({ label, value })),
+          ageGroups: ageFor(p),
           seoDescription: p.short,
           images: { create: images.map((url, position) => ({ url, alt: `${p.name} — image ${position + 1}`, position })) },
         },
       });
 
-      if (p.option) {
-        const option = await tx.productOption.create({
-          data: {
-            productId: product.id,
-            name: p.option.name,
-            position: 0,
-            values: { create: p.option.variants.map((v, i) => ({ value: v.value, position: i })) },
-          },
-          include: { values: true },
-        });
-        for (const [position, v] of p.option.variants.entries()) {
-          const value = option.values.find((ov) => ov.value === v.value)!;
-          await tx.productVariant.create({
-            data: {
-              productId: product.id,
-              title: v.value,
-              sku: `${sku}-${String(position + 1).padStart(2, '0')}`,
-              stock: PLACEHOLDER_STOCK,
-              imageUrl: variantImages.get(v.photo) ?? null,
-              position,
-              optionValues: { create: [{ optionValueId: value.id }] },
-            },
-          });
-        }
-      }
       await recomputeProductAggregates(tx, product.id);
     });
     created++;
     console.log(`  ✓ ${p.name}`);
   }
   console.log(`  • ${created} new products (${PRODUCTS.length - created} already present)`);
+}
+
+const rebuild = process.argv.includes('--rebuild');
+
+/**
+ * Clears the current catalogue so it can be listed again:
+ * - products that appear in past orders are archived (soft-deleted, slug and SKU released) so order
+ *   history, invoices and reviews keep working; all other products are deleted;
+ * - every category outside CATEGORIES is deleted (archived products are parked in the first store
+ *   category, where they stay invisible).
+ */
+async function clearCatalogue() {
+  const keep = CATEGORIES.map((c) => c.slug);
+  const products = await prisma.product.findMany({ select: { id: true, slug: true, deletedAt: true, _count: { select: { orderItems: true } } } });
+  const ordered = products.filter((p) => p._count.orderItems > 0);
+  const unused = products.filter((p) => p._count.orderItems === 0);
+
+  for (const p of ordered) {
+    await prisma.$transaction([
+      prisma.productVariant.updateMany({ where: { productId: p.id }, data: { sku: null, isActive: false } }),
+      prisma.product.update({
+        where: { id: p.id },
+        data: {
+          deletedAt: p.deletedAt ?? new Date(),
+          isActive: false,
+          isFeatured: false,
+          sku: null,
+          slug: p.slug.startsWith('archived-') ? p.slug : `archived-${p.id}`,
+        },
+      }),
+    ]);
+  }
+  const removed = await prisma.product.deleteMany({ where: { id: { in: unused.map((p) => p.id) } } });
+  console.log(`  ✓ archived ${ordered.length} ordered products, deleted ${removed.count} others`);
+
+  // make sure the store categories exist before parking archived products in one of them
+  const first = CATEGORIES[0];
+  const parking =
+    (await prisma.category.findUnique({ where: { slug: first.slug } })) ??
+    (await prisma.category.create({ data: { name: first.name, slug: first.slug, description: first.description, sortOrder: 0 } }));
+  const others = await prisma.category.findMany({ where: { slug: { notIn: keep } }, select: { id: true } });
+  const otherIds = others.map((c) => c.id);
+  if (otherIds.length) {
+    await prisma.product.updateMany({ where: { categoryId: { in: otherIds } }, data: { categoryId: parking.id } });
+    await prisma.category.updateMany({ where: { slug: { in: keep } }, data: { parentId: null } });
+    await prisma.category.updateMany({ where: { id: { in: otherIds } }, data: { parentId: null } });
+    const deleted = await prisma.category.deleteMany({ where: { id: { in: otherIds } } });
+    console.log(`  ✓ removed ${deleted.count} other categories`);
+  }
 }
 
 async function retireDemoCatalogue() {
@@ -661,10 +683,11 @@ async function updateStore() {
 
 async function main() {
   if (!existsSync(PHOTO_DIR)) throw new Error(`Photo folder not found: ${PHOTO_DIR} (set CATALOGUE_DIR)`);
-  console.log('Importing the WHITE MONKEY TOYS catalogue…');
+  console.log(rebuild ? 'Rebuilding the WHITE MONKEY TOYS catalogue…' : 'Importing the WHITE MONKEY TOYS catalogue…');
+  if (rebuild) await clearCatalogue();
   const categories = await importCategories();
   await importProducts(categories);
-  await retireDemoCatalogue();
+  if (!rebuild) await retireDemoCatalogue();
   await updateStore();
   console.log('\nDone. Review suggested prices and placeholder stock (10 per item) in Admin → Products.');
 }

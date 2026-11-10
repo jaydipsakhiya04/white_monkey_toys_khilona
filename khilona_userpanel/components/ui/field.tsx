@@ -1,7 +1,19 @@
 "use client";
 
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import {
+  forwardRef,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
 import { cn } from "@/utils/cn";
+import { Combobox, optionsFromChildren } from "./combobox";
 
 const control =
   "block w-full rounded-xl border bg-surface px-3.5 text-[0.9375rem] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-ink/30 disabled:bg-sand disabled:text-muted";
@@ -83,7 +95,7 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextareaHTMLAttribu
   },
 );
 
-export const SelectField = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & CommonProps>(function SelectField(
+export const SelectField = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & CommonProps & { searchPlaceholder?: string }>(function SelectField(
   { label, hint, error, optional, wrapperClassName, className, id, children, ...props },
   ref,
 ) {
@@ -98,29 +110,104 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HT
   );
 });
 
-export const NativeSelect = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }>(
-  function NativeSelect({ className, invalid, children, ...props }, ref) {
-    return (
-      <div className="relative">
-        <select
-          ref={ref}
-          className={cn(control, "h-11 appearance-none pr-10 font-medium", stateClasses(invalid), className)}
-          {...props}
-        >
-          {children}
-        </select>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 20 20"
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-          fill="currentColor"
-        >
-          <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" />
-        </svg>
-      </div>
-    );
+type NativeSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  invalid?: boolean;
+  searchPlaceholder?: string;
+  placeholder?: string;
+  /** Leading content inside the trigger, e.g. "Sort by" */
+  prefix?: ReactNode;
+};
+
+/**
+ * Drop-in replacement for <select>: same API (children <option>s, value/defaultValue, onChange,
+ * react-hook-form `register`), rendered as a searchable dropdown. A hidden native <select> keeps
+ * the value, name and ref so forms behave exactly as before.
+ */
+export const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(function NativeSelect(
+  {
+    className,
+    invalid,
+    children,
+    value,
+    defaultValue,
+    onChange,
+    onBlur,
+    id,
+    disabled,
+    placeholder,
+    searchPlaceholder,
+    prefix,
+    "aria-label": ariaLabel,
+    "aria-describedby": describedBy,
+    ...props
   },
-);
+  ref,
+) {
+  const selectRef = useRef<HTMLSelectElement | null>(null);
+  const options = useMemo(() => optionsFromChildren(children), [children]);
+  const controlled = value !== undefined;
+  const [inner, setInner] = useState(() => String(defaultValue ?? options[0]?.value ?? ""));
+
+  // uncontrolled (react-hook-form register): pick up the value the form wrote into the <select>
+  useLayoutEffect(() => {
+    if (!controlled && selectRef.current) setInner(selectRef.current.value);
+  }, [controlled]);
+
+  const current = controlled ? String(value ?? "") : (selectRef.current?.value ?? inner);
+
+  const setRefs = (el: HTMLSelectElement | null) => {
+    selectRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  const change = (next: string) => {
+    const el = selectRef.current;
+    if (el) {
+      // set through the native setter so React sees a real change event
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set?.call(el, next);
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (!controlled) setInner(next);
+  };
+
+  return (
+    <>
+      <select
+        ref={setRefs}
+        value={controlled ? value : undefined}
+        defaultValue={controlled ? undefined : defaultValue}
+        onChange={onChange}
+        onBlur={onBlur}
+        disabled={disabled}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        {...props}
+      >
+        {children}
+      </select>
+      <Combobox
+        id={id}
+        value={current}
+        onValueChange={change}
+        options={options.filter((o) => o.value !== "" || !placeholder)}
+        placeholder={placeholder ?? options.find((o) => o.value === "")?.label}
+        searchPlaceholder={searchPlaceholder}
+        invalid={invalid}
+        disabled={disabled}
+        className={className}
+        prefix={prefix}
+        aria-label={ariaLabel}
+        aria-describedby={describedBy}
+        onBlur={() => {
+          const el = selectRef.current;
+          if (el) el.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+        }}
+      />
+    </>
+  );
+});
 
 export function Checkbox({
   label,

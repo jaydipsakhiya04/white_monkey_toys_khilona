@@ -10,6 +10,8 @@ import { ALL_KEYWORDS } from "@/lib/seo";
 import { SITE_URL } from "@/lib/env";
 import { getCategoryTree, getStore } from "@/services/catalog.server";
 import { toPlainText } from "@/utils/format";
+import { PricingProvider } from "@/features/store/pricing";
+import { storeWhatsappUrl } from "@/features/store/store-utils";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -38,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const store = await getStore();
   const name = brandName(store);
   const city = store?.city || "Surat";
-  const title = store?.seoTitle || `${name} | Toy Shop in ${city} – Retail & Wholesale Toys`;
+  const title = store?.seoTitle || `${name} | Toy Wholesaler in ${city} – Supplying Retailers PAN India`;
   const description =
     toPlainText(store?.seoDescription || store?.description, 300) ||
-    `${name} is a toy shop in ${city} for RC cars, drones, action figures and collectibles — retail and wholesale, with cash on delivery.`;
+    `${name} is a toy wholesaler in ${city} supplying RC cars, drones, construction RC and action figures to retailers and wholesalers across India.`;
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: title, template: `%s | ${name}` },
@@ -89,7 +91,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Skip to content
         </a>
         <Providers>
-          <AnnouncementBar text={store?.announcement} />
+          <PricingProvider value={{ showPrices: store?.showPrices ?? false, storeName: brandName(store), whatsappUrl: storeWhatsappUrl(store) }}>
+          <AnnouncementBar store={store} />
           <Header store={store} categories={categories ?? []} />
           <main id="main" className="flex-1">
             {children}
@@ -97,6 +100,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer store={store} categories={categories ?? []} />
           <BottomTabBar />
           <RevealObserver />
+          </PricingProvider>
         </Providers>
       </body>
     </html>

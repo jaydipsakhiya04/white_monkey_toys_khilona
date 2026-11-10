@@ -6,10 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, Check, Lock, MapPin, Pencil, ShoppingBag, Store as StoreIcon, User } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Building2, Check, Lock, MapPin, Pencil, ShoppingBag, Store as StoreIcon, User } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { TextAreaField, TextField } from "@/components/ui/field";
+import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,6 +22,7 @@ import { ApiError, errorMessage, isApiError } from "@/lib/api/errors";
 import { createOrder } from "@/services/orders";
 import type { CreateOrderInput, PublicOrder } from "@/types/api";
 import { cn } from "@/utils/cn";
+import { usePricing } from "@/features/store/pricing";
 import { formatPrice } from "@/utils/format";
 import { INDIAN_STATES } from "@/utils/indian-states";
 import { normalizeIndianMobile } from "@/utils/phone";
@@ -70,6 +71,7 @@ function toPayload(v: CheckoutValues, items: CartItem[]): CreateOrderInput {
 }
 
 export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean; closedMessage: string | null }) {
+  const { showPrices } = usePricing();
   const router = useRouter();
   const cart = useCartValidation();
   const clearCart = useCartStore((s) => s.clear);
@@ -89,6 +91,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
   const { register, handleSubmit, trigger, setValue, setError, getValues, control, formState, reset } = form;
   const errors = formState.errors;
   const values = useWatch({ control });
+  const stateValue = values.state;
 
   // restore progress from sessionStorage
   useEffect(() => {
@@ -355,21 +358,22 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
                 {...register("address")}
               />
               <TextField label="City" autoComplete="address-level2" error={errors.city?.message} {...register("city")} />
-              <div>
-                <TextField
-                  label="State"
-                  list="indian-states"
-                  autoComplete="address-level1"
-                  hint="Start typing to pick from the list"
-                  error={errors.state?.message}
-                  {...register("state")}
-                />
-                <datalist id="indian-states">
-                  {INDIAN_STATES.map((s) => (
-                    <option key={s} value={s} />
-                  ))}
-                </datalist>
-              </div>
+              <SelectField
+                label="State"
+                value={stateValue ?? ""}
+                searchPlaceholder="Search states…"
+                error={errors.state?.message}
+                {...register("state")}
+              >
+                <option value="">Select your state</option>
+                {/* keep a saved value that is spelled differently from the list */}
+                {stateValue && !(INDIAN_STATES as readonly string[]).includes(stateValue) && <option value={stateValue}>{stateValue}</option>}
+                {INDIAN_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </SelectField>
               <TextField
                 label="Pincode"
                 inputMode="numeric"
@@ -471,7 +475,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
                 data-testid="place-order"
               >
                 <Lock className="size-4" aria-hidden="true" />
-                Place order{cart.summary ? ` · ${formatPrice(cart.summary.total)}` : ""}
+                Place order{showPrices && cart.summary ? ` · ${formatPrice(cart.summary.total)}` : ""}
               </Button>
             )}
           </div>
@@ -503,7 +507,7 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
                     <p className="line-clamp-1 text-xs text-muted">{line?.variant?.title ?? item.snapshot.variantTitle}</p>
                   )}
                 </div>
-                <p className="text-sm font-semibold tabular-nums text-ink">{line ? formatPrice(line.lineTotal) : "…"}</p>
+                {showPrices && <p className="text-sm font-semibold tabular-nums text-ink">{line ? formatPrice(line.lineTotal) : "…"}</p>}
               </li>
             ))}
           </ul>
@@ -517,9 +521,9 @@ export function CheckoutView({ storeOpen, closedMessage }: { storeOpen: boolean;
             )}
           </div>
           <p className="mt-4 flex items-start gap-2 rounded-xl bg-sand p-3 text-sm text-ink">
-            <Banknote className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden="true" />
+            <Building2 className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden="true" />
             <span>
-              <span className="font-semibold">Payment: Cash / pay on delivery.</span> No online payment.
+              <span className="font-semibold">No online payment.</span> Our team confirms prices, PAN India delivery charges and payment with you.
             </span>
           </p>
         </div>
@@ -589,6 +593,7 @@ function ReviewStep({
   hasIssues: boolean;
   onEdit: (step: number) => void;
 }) {
+  const { showPrices } = usePricing();
   const blocking = lines.filter((l) => l.blocking);
   const addressLine = [values.city, values.state].filter(Boolean).join(", ") + (values.pincode ? ` – ${values.pincode}` : "");
   return (
@@ -643,20 +648,20 @@ function ReviewStep({
                 <p className="text-muted">
                   {line?.variant?.title ?? item.snapshot.variantTitle ?? ""}
                   {(line?.variant?.title ?? item.snapshot.variantTitle) ? " · " : ""}Qty {line?.quantity ?? item.quantity}
-                  {line && !bad ? ` × ${formatPrice(line.unitPrice)}` : ""}
+                  {showPrices && line && !bad ? ` × ${formatPrice(line.unitPrice)}` : ""}
                 </p>
               </div>
-              <p className="text-sm font-semibold tabular-nums text-ink">{bad ? "—" : line ? formatPrice(line.lineTotal) : "…"}</p>
+              {showPrices && <p className="text-sm font-semibold tabular-nums text-ink">{bad ? "—" : line ? formatPrice(line.lineTotal) : "…"}</p>}
             </li>
           ))}
         </ul>
       </div>
 
       <p className="flex items-start gap-2 rounded-2xl bg-sand p-4 text-sm text-ink">
-        <Banknote className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+        <Building2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <span>
-          <span className="font-bold">Payment: Cash / Pay on delivery — no online payment.</span> Our team will contact you to confirm your
-          order and delivery.
+          <span className="font-bold">No online payment.</span> Our team will contact you on call or WhatsApp to confirm prices, payment and
+          PAN India delivery.
         </span>
       </p>
     </div>

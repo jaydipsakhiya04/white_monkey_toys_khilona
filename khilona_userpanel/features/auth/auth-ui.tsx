@@ -38,13 +38,13 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
         className="relative isolate hidden animate-rise overflow-hidden rounded-[2rem] bg-midnight p-10 text-white [animation-delay:120ms] lg:flex lg:flex-col lg:justify-between"
       >
         <div className="bg-grain absolute inset-0 -z-10 opacity-60" />
-        <p className="eyebrow !text-white/60">Your toy-shop account</p>
+        <p className="eyebrow !text-white/60">Your business account</p>
         <div>
           <p className="font-display text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.035em]">
-            Every order, <span className="text-gradient-accent">tracked</span> from shop to doorstep.
+            Every order, <span className="text-gradient-accent">tracked</span> from our shop to yours.
           </p>
           <ul className="mt-8 space-y-3.5 text-[0.9375rem] text-white/75">
-            {["Live status for every order", "Invoices & receipts as PDF", "Review the toys you received", "Wholesale & retailer pricing"].map((t) => (
+            {["Live status for every order", "Prices shared on WhatsApp", "PAN India delivery", "Wholesale & retailer supply"].map((t) => (
               <li key={t} className="flex items-center gap-3">
                 <span className="grid size-6 place-items-center rounded-full bg-white text-[0.75rem] font-bold text-ink">✓</span>
                 {t}
@@ -52,7 +52,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
             ))}
           </ul>
         </div>
-        <p className="text-sm text-white/50">Pay on delivery · No card details needed</p>
+        <p className="text-sm text-white/50">For retailers &amp; wholesalers · No online payment</p>
       </aside>
     </div>
   );

@@ -22,6 +22,7 @@ import {
   UpdateProductDto,
 } from './dto/product.dto';
 import { adminListSelect, detailInclude, toAdminDetail, toAdminListItem, variantInclude, variantOptions } from './product.mapper';
+import { sortAgeGroups } from './age-groups';
 import { recomputeProductAggregates, resolvePrice, resolveVariantPrice } from './pricing';
 import { buildSearchWhere } from './products.service';
 
@@ -132,6 +133,7 @@ export class AdminProductsService {
           seoTitle: dto.seoTitle ?? null,
           seoDescription: dto.seoDescription ?? null,
           specifications: (dto.specifications ?? []) as unknown as Prisma.InputJsonValue,
+          ageGroups: sortAgeGroups(dto.ageGroups ?? []),
           hasVariants: !!plan,
           thumbnailUrl: images[0]?.url ?? null,
           images: { create: images.map((img, position) => ({ url: img.url, alt: img.alt ?? null, position })) },
@@ -202,6 +204,7 @@ export class AdminProductsService {
         seoTitle: dto.seoTitle,
         seoDescription: dto.seoDescription,
         specifications: dto.specifications ? (dto.specifications as unknown as Prisma.InputJsonValue) : undefined,
+        ageGroups: dto.ageGroups ? sortAgeGroups(dto.ageGroups) : undefined,
       };
 
       if (dto.images) {

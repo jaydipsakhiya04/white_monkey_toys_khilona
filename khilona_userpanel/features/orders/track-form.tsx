@@ -2,16 +2,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { useAuth } from "@/features/auth/auth-provider";
 import { ApiError, errorMessage } from "@/lib/api/errors";
 import { ORDER_NUMBER_EXAMPLE, ORDER_NUMBER_PATTERN } from "@/lib/brand";
 import { trackOrder } from "@/services/orders";
 import type { PublicOrder } from "@/types/api";
-import { isValidIndianMobile, normalizeIndianMobile } from "@/utils/phone";
+import { formatPhone, isValidIndianMobile, normalizeIndianMobile } from "@/utils/phone";
 
 const schema = z.object({
   orderNumber: z.string().trim().min(1, "Order number is required").regex(ORDER_NUMBER_PATTERN, `Order number looks like ${ORDER_NUMBER_EXAMPLE}`),
@@ -31,10 +33,20 @@ export function TrackForm({
   submitLabel?: string;
   lockOrderNumber?: boolean;
 }) {
-  const { register, handleSubmit, formState } = useForm<Values>({
+  const { register, handleSubmit, formState, getValues, setValue, watch } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { orderNumber: defaultOrderNumber, phone: "" },
   });
+
+  // signed in: use the account's mobile number automatically (still editable for other orders)
+  const { isAuthenticated, customer } = useAuth();
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !isAuthenticated || !customer?.phone) return;
+    prefilled.current = true;
+    if (!getValues("phone")) setValue("phone", customer.phone, { shouldValidate: false });
+  }, [isAuthenticated, customer?.phone, getValues, setValue]);
+  const usingAccountPhone = !!customer?.phone && normalizeIndianMobile(watch("phone") ?? "") === customer.phone;
 
   const m = useMutation<PublicOrder, ApiError, Values>({
     mutationFn: (v) => trackOrder(v.orderNumber.trim().toUpperCase(), normalizeIndianMobile(v.phone)),
@@ -57,6 +69,13 @@ export function TrackForm({
         type="tel"
         inputMode="tel"
         autoComplete="tel-national"
+        hint={
+          usingAccountPhone ? (
+            <span className="inline-flex items-center gap-1">
+              <UserRound className="size-3.5" aria-hidden="true" /> From your account · {formatPhone(customer!.phone)}
+            </span>
+          ) : isAuthenticated ? undefined : "The mobile number used when ordering"
+        }
         error={formState.errors.phone?.message}
         {...register("phone")}
       />

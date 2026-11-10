@@ -14,6 +14,7 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = TEST_DATABASE_URL;
 process.env.JWT_SECRET = 'test-secret-that-is-long-enough-for-hs256-signing';
 process.env.JWT_EXPIRES_IN = '15m';
+process.env.STOREFRONT_REVALIDATE_SECRET = '';
 process.env.THROTTLE_GLOBAL_LIMIT = '100000';
 process.env.THROTTLE_LOGIN_LIMIT = '100000';
 process.env.THROTTLE_ORDER_LIMIT = '100000';

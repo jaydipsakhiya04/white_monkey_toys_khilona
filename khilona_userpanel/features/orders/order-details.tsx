@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { PricesOnRequestNote, usePricing } from "@/features/store/pricing";
 import { Ban, Check, CheckCircle2, CircleDot, Clock3, MapPin, PackageCheck, Truck, User, type LucideIcon } from "lucide-react";
 import { SmartImage } from "@/components/ui/smart-image";
 import type { OrderStatus, PublicOrder } from "@/types/api";
@@ -59,6 +62,7 @@ export function OrderStatusBadge({ status, className }: { status: OrderStatus; c
 }
 
 export function OrderItems({ order, renderExtra }: { order: PublicOrder; renderExtra?: (index: number) => React.ReactNode }) {
+  const { showPrices } = usePricing();
   return (
     <ul className="divide-y divide-line">
       {order.items.map((it, i) => (
@@ -81,12 +85,13 @@ export function OrderItems({ order, renderExtra }: { order: PublicOrder; renderE
                 </p>
               )}
               <p className="mt-0.5 text-muted">
-                Qty {it.quantity} × {formatPrice(it.unitPrice)}
-                {it.unitMrp > it.unitPrice && <span className="ml-1.5 line-through">{formatPrice(it.unitMrp)}</span>}
+                Qty {it.quantity}
+                {showPrices && <> × {formatPrice(it.unitPrice)}</>}
+                {showPrices && it.unitMrp > it.unitPrice && <span className="ml-1.5 line-through">{formatPrice(it.unitMrp)}</span>}
                 {it.sku && <span className="ml-2 hidden text-xs sm:inline">SKU {it.sku}</span>}
               </p>
             </div>
-            <p className="text-sm font-semibold tabular-nums text-ink">{formatPrice(it.lineTotal)}</p>
+            {showPrices && <p className="text-sm font-semibold tabular-nums text-ink">{formatPrice(it.lineTotal)}</p>}
           </div>
           {renderExtra?.(i)}
         </li>
@@ -96,6 +101,8 @@ export function OrderItems({ order, renderExtra }: { order: PublicOrder; renderE
 }
 
 export function OrderTotals({ order }: { order: PublicOrder }) {
+  const { showPrices } = usePricing();
+  if (!showPrices) return <PricesOnRequestNote />;
   return (
     <dl className="space-y-2.5 text-sm">
       <div className="flex justify-between">
@@ -110,15 +117,15 @@ export function OrderTotals({ order }: { order: PublicOrder }) {
       )}
       <div className="flex justify-between">
         <dt className="text-muted">Shipping</dt>
-        <dd className="tabular-nums">{order.shippingFee === 0 ? "Free" : formatPrice(order.shippingFee)}</dd>
+        <dd className="tabular-nums">{order.shippingFee === 0 ? "As per actual" : formatPrice(order.shippingFee)}</dd>
       </div>
       <div className="flex items-baseline justify-between border-t border-line pt-3">
         <dt className="font-display text-base font-semibold text-ink">Total</dt>
         <dd className="font-display text-xl font-semibold tabular-nums text-ink">{formatPrice(order.total)}</dd>
       </div>
       <p className="pt-1 text-xs text-muted">
-        Payment: Pay on delivery (cash / UPI)
-        {order.paymentStatus === "PAID" ? " · Paid" : order.status === "CANCELLED" ? "" : " · Due on delivery"}
+        Payment: as agreed with our team
+        {order.paymentStatus === "PAID" ? " · Paid" : ""}
       </p>
     </dl>
   );

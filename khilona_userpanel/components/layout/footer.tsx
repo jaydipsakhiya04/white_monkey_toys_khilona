@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from "@/components/icons/brand";
 import { GatedAnchor } from "@/features/auth/login-gate";
 import { OpenNowBadge } from "@/features/store/open-badge";
-import { POLICY_TYPES, storeAddressLines, storeHours, storeMapUrl, storePhoneUrl, storeWhatsappUrl } from "@/features/store/store-utils";
+import { POLICY_TYPES, storeAddressLines, storeContactNumbers, storeHours, storeMapUrl } from "@/features/store/store-utils";
 import { brandName, WHOLESALE_INSTAGRAM } from "@/lib/brand";
 import type { CategorySummary, PublicStore } from "@/types/api";
 import { BrandLogo } from "./logo";
@@ -29,8 +29,7 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
   const name = brandName(store);
   const address = storeAddressLines(store);
   const hours = storeHours(store);
-  const phoneUrl = storePhoneUrl(store);
-  const wa = storeWhatsappUrl(store);
+  const numbers = storeContactNumbers(store);
   const map = storeMapUrl(store);
   const socials = [
     { href: socialProfile(store?.instagram), label: "Instagram", Icon: InstagramIcon },
@@ -141,20 +140,28 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
         <div className="lg:col-span-3">
           <FooterHeading>Contact</FooterHeading>
           <ul className="mt-4 space-y-4 text-[0.9375rem]">
-            {store?.phone && phoneUrl && (
+            {numbers.length > 0 && (
               <li className="flex gap-3">
                 <Phone className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" strokeWidth={1.75} aria-hidden="true" />
-                <a href={phoneUrl} className="font-semibold text-white hover:underline hover:underline-offset-4">
-                  {store.phone}
-                </a>
-              </li>
-            )}
-            {wa && (
-              <li className="flex gap-3">
-                <WhatsAppIcon className="mt-0.5 size-[1.125rem] shrink-0 text-white/45" />
-                <GatedAnchor href={wa} action="chat with us on WhatsApp" target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                  WhatsApp us
-                </GatedAnchor>
+                <span className="space-y-2">
+                  <span className="block text-xs uppercase tracking-[0.14em] text-white/45">Call / WhatsApp</span>
+                  {numbers.map((n) => (
+                    <span key={n.telUrl} className="flex items-center gap-2.5">
+                      <a href={n.telUrl} className="font-semibold tabular-nums text-white hover:underline hover:underline-offset-4">
+                        {n.display}
+                      </a>
+                      <a
+                        href={n.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`WhatsApp ${n.display}`}
+                        className="grid size-7 place-items-center rounded-full bg-white/10 text-[#25D366] transition-colors hover:bg-white/20"
+                      >
+                        <WhatsAppIcon className="size-3.5" />
+                      </a>
+                    </span>
+                  ))}
+                </span>
               </li>
             )}
             {address.length > 0 && (
@@ -196,7 +203,7 @@ export function Footer({ store, categories }: { store: PublicStore | null; categ
           <p>
             © {new Date().getFullYear()} {name}. All rights reserved.
           </p>
-          <p>Cash on Delivery · Order Tracking · WhatsApp Support</p>
+          <p>Wholesale &amp; Retailer Supply · PAN India Delivery · WhatsApp Support</p>
         </Container>
       </div>
     </footer>

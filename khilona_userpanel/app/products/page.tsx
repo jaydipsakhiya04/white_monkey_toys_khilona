@@ -22,12 +22,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     };
   }
   const city = store?.city;
-  const title = params.featured ? "Featured toys" : city ? `Shop all toys in ${city}` : "Shop all toys";
+  const title = params.featured ? "Featured toys" : city ? `Wholesale toys from ${city}` : "Wholesale toys";
   return {
     title,
     description: city
-      ? `Browse every toy at ${storeName}, the toy shop in ${city}: RC cars, drones, action figures and collectibles. Free delivery across ${city} and cash on delivery.`
-      : `Browse all toys at ${storeName}. Order online and pay on delivery.`,
+      ? `Browse the full catalogue of ${storeName}, toy wholesaler in ${city}: RC cars, construction RC, drones and action figures for retailers and wholesalers, delivered PAN India.`
+      : `Browse the full wholesale catalogue of ${storeName}, delivered PAN India.`,
     alternates: { canonical: params.page > 1 ? `/products?page=${params.page}` : "/products" },
     openGraph: { url: "/products", title },
   };
@@ -43,7 +43,7 @@ export default async function ProductsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ name: params.search ? "Search" : "All products" }]} />
       <PageBanner
         className="mb-8 sm:mb-10"
-        eyebrow={params.search ? "Search" : params.featured ? "Bestsellers" : "The toy shop"}
+        eyebrow={params.search ? "Search" : params.featured ? "Bestsellers" : "Wholesale catalogue"}
         title={heading}
         description={
           params.search ? (
@@ -51,7 +51,7 @@ export default async function ProductsPage({ searchParams }: Props) {
               Showing products for <span className="font-semibold text-ink">“{params.search}”</span>
             </p>
           ) : (
-            <p>RC cars and drones, board and card games, puzzles, building sets and more — all pay on delivery.</p>
+            <p>RC cars, construction RC, drones and action figures for retailers and wholesalers. Ask for prices on WhatsApp.</p>
           )
         }
       />

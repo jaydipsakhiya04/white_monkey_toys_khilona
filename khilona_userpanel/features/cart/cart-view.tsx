@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, Banknote, Info, ShoppingBag, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Building2, Info, ShoppingBag, Trash2 } from "lucide-react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/overlay";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,6 +13,7 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { useRequireLogin } from "@/features/auth/login-gate";
 import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/utils/cn";
+import { usePricing } from "@/features/store/pricing";
 import { formatPrice } from "@/utils/format";
 import { MAX_LINE_QTY, useCartStore } from "./cart-store";
 import { OrderSummaryRows } from "./order-summary";
@@ -125,8 +126,8 @@ export function CartView() {
           </Button>
           {v.hasIssues && <p className="mt-2 text-center text-xs font-medium text-danger-700">Resolve the highlighted items to continue.</p>}
           <p className="mt-4 flex items-start gap-2 text-xs text-muted">
-            <Banknote className="size-4 shrink-0 text-ink" aria-hidden="true" />
-            Pay with cash on delivery. No online payment needed.
+            <Building2 className="size-4 shrink-0 text-ink" aria-hidden="true" />
+            No online payment. Our team confirms prices, delivery charges (PAN India) and payment with you on WhatsApp.
           </p>
         </div>
       </aside>
@@ -158,6 +159,7 @@ export function CartView() {
 }
 
 function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string; onDismissNote: () => void }) {
+  const { showPrices } = usePricing();
   const { item, line, blocking } = view;
   const setQuantity = useCartStore((s) => s.setQuantity);
   const remove = useCartStore((s) => s.remove);
@@ -237,7 +239,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
               }}
             />
           )}
-          <div className="text-right">
+          {showPrices && <div className="text-right">
             <p className="font-display text-base font-bold tabular-nums text-ink sm:text-lg">
               {blocking ? "—" : formatPrice(line && !blocking ? line.lineTotal : unitPrice * item.quantity)}
             </p>
@@ -247,7 +249,7 @@ function CartRow({ view, note, onDismissNote }: { view: LineView; note?: string;
                 {unitMrp > unitPrice && <span className="ml-1 line-through">{formatPrice(unitMrp)}</span>}
               </p>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </li>

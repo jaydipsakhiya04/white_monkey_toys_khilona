@@ -48,6 +48,8 @@ export type Store = {
   coverImageUrl: string | null;
   phone: string | null;
   whatsapp: string | null;
+  /** Second mobile, used for calls and WhatsApp. */
+  secondaryPhone: string | null;
   email: string | null;
   address: string | null;
   city: string | null;
@@ -74,6 +76,10 @@ export type Store = {
   seoTitle: string | null;
   seoDescription: string | null;
   reviewsRequireApproval: boolean;
+  /** Days after delivery during which customers can request an exchange (0 = off). */
+  exchangeWindowDays: number;
+  /** Show prices on the storefront (off = "Ask for price" on WhatsApp). */
+  showPrices: boolean;
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -120,7 +126,7 @@ export type Dashboard = {
 };
 
 // ---------- Uploads ----------
-export type UploadFolder = 'products' | 'categories' | 'store';
+export type UploadFolder = 'products' | 'categories' | 'store' | 'banners';
 export type UploadResult = { url: string; width: number; height: number; size: number; contentType: string };
 
 // ---------- Categories ----------
@@ -166,6 +172,51 @@ export type CategoryListParams = {
   limit?: number;
 };
 
+// ---------- Age rating ----------
+export const AGE_GROUPS = [
+  { value: 'MONTHS_0_18', label: '0-18 Months', short: '0-18 M' },
+  { value: 'MONTHS_18_36', label: '18-36 Months', short: '18-36 M' },
+  { value: 'YEARS_3_5', label: '3-5 Years', short: '3-5' },
+  { value: 'YEARS_5_7', label: '5-7 Years', short: '5-7' },
+  { value: 'YEARS_7_9', label: '7-9 Years', short: '7-9' },
+  { value: 'YEARS_9_12', label: '9-12 Years', short: '9-12' },
+  { value: 'YEARS_12_14', label: '12-14 Years', short: '12-14' },
+  { value: 'YEARS_14_PLUS', label: '14+ Years', short: '14+' },
+] as const;
+export type AgeGroup = (typeof AGE_GROUPS)[number]['value'];
+
+// ---------- Banners (home page slider) ----------
+export type BannerState = 'LIVE' | 'SCHEDULED' | 'EXPIRED' | 'HIDDEN';
+
+export type AdminBanner = {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  linkUrl: string | null;
+  ctaLabel: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  state: BannerState;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BannerInput = {
+  title?: string | null;
+  subtitle?: string | null;
+  imageUrl: string;
+  mobileImageUrl?: string | null;
+  linkUrl?: string | null;
+  ctaLabel?: string | null;
+  isActive?: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+};
+
 // ---------- Products ----------
 export type AdminProductListItem = {
   id: string;
@@ -182,6 +233,9 @@ export type AdminProductListItem = {
   isFeatured: boolean;
   hasVariants: boolean;
   variantsCount: number;
+  ageGroups?: AgeGroup[];
+  /** e.g. "5-12 Years" */
+  ageRating?: string | null;
   sortOrder: number;
   category: { id: string; name: string };
   createdAt: string;
@@ -229,6 +283,7 @@ export type ProductInput = {
   sortOrder?: number;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  ageGroups?: AgeGroup[];
   specifications?: { label: string; value: string }[];
   images?: { url: string; alt?: string | null }[];
   options?: { name: string; values: string[] }[];
@@ -341,6 +396,9 @@ export type AdminOrderDetail = {
   confirmedAt: string | null;
   deliveredAt: string | null;
   cancelledAt: string | null;
+  cancelReason?: string | null;
+  cancelledBy?: 'CUSTOMER' | 'STORE' | null;
+  exchanges?: AdminOrderExchange[];
   stockRestored: boolean;
   history: OrderHistoryEntry[];
   allowedTransitions: OrderStatus[];
@@ -350,6 +408,56 @@ export type AdminOrderDetail = {
   linkedToAccount?: boolean;
   customerHasAccount?: boolean;
 };
+
+// ---------- Exchanges ----------
+export const EXCHANGE_STATUSES = ['REQUESTED', 'APPROVED', 'REJECTED', 'COMPLETED'] as const;
+export type ExchangeStatus = (typeof EXCHANGE_STATUSES)[number];
+export type ExchangeReason = 'WRONG_ITEM' | 'DAMAGED_ITEM';
+
+export type AdminOrderExchange = {
+  id: string;
+  requestNumber: string;
+  orderItemId: string;
+  productName: string | null;
+  reason: ExchangeReason;
+  details: string;
+  quantity: number;
+  status: ExchangeStatus;
+  adminNote: string | null;
+  handledByName: string | null;
+  contactPhone: string;
+  resolvedAt: string | null;
+  createdAt: string;
+};
+
+export type AdminExchange = {
+  id: string;
+  requestNumber: string;
+  status: ExchangeStatus;
+  reason: ExchangeReason;
+  details: string;
+  quantity: number;
+  adminNote: string | null;
+  handledByName: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  allowedTransitions: ExchangeStatus[];
+  order: { id: string; orderNumber: string; deliveredAt: string | null; city: string };
+  customer: { name: string; phone: string; callUrl: string | null; whatsappUrl: string | null };
+  item: {
+    productName: string;
+    productSlug: string | null;
+    variantTitle: string | null;
+    imageUrl: string | null;
+    sku: string | null;
+    quantity: number;
+    unitPrice: number;
+  };
+};
+
+export type ExchangeListParams = { status?: ExchangeStatus; search?: string; sort?: 'newest' | 'oldest'; page?: number; limit?: number };
+export type ExchangeStatusCounts = Record<ExchangeStatus | 'ALL', number>;
 
 export type OrderSort = 'newest' | 'oldest' | 'total_desc' | 'total_asc';
 

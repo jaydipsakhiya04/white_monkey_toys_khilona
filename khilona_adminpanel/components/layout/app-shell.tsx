@@ -20,7 +20,10 @@ import { Button, buttonClasses } from '@/components/ui/button';
 import { ConfirmDialog, Sheet } from '@/components/ui/dialog';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/features/auth/auth-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useOrderStatusCounts } from '@/features/orders/hooks';
+import { qk } from '@/lib/query-keys';
+import { exchangeService } from '@/services';
 import { STOREFRONT_URL } from '@/lib/env';
 import { cn } from '@/utils/cn';
 import { BrandLogo, BrandMark } from './brand';
@@ -51,7 +54,7 @@ function Avatar({ name, className }: { name: string | undefined; className?: str
   );
 }
 
-function CountBadge({ count, className }: { count: number | undefined; className?: string }) {
+function CountBadge({ count, className, label = 'pending orders' }: { count: number | undefined; className?: string; label?: string }) {
   if (!count) return null;
   return (
     <span
@@ -61,7 +64,7 @@ function CountBadge({ count, className }: { count: number | undefined; className
       )}
     >
       {count > 99 ? '99+' : count}
-      <span className="sr-only"> pending orders</span>
+      <span className="sr-only"> {label}</span>
     </span>
   );
 }
@@ -71,16 +74,18 @@ function SidebarLink({
   active,
   expanded,
   pending,
+  exchanges,
   onNavigate,
 }: {
   item: NavItem;
   active: boolean;
   expanded: boolean;
   pending?: number;
+  exchanges?: number;
   onNavigate?: () => void;
 }) {
   const Icon = item.icon;
-  const count = item.badge === 'pendingOrders' ? pending : undefined;
+  const count = item.badge === 'pendingOrders' ? pending : item.badge === 'openExchanges' ? exchanges : undefined;
   return (
     <Link
       href={item.href}
@@ -102,11 +107,11 @@ function SidebarLink({
       <span className={cn('flex-1 truncate', expanded ? 'inline' : 'sr-only lg:not-sr-only lg:inline')}>{item.label}</span>
       {count ? (
         expanded ? (
-          <CountBadge count={count} />
+          <CountBadge count={count} label={item.badge === 'openExchanges' ? 'new exchange requests' : 'pending orders'} />
         ) : (
           <>
             <span className="hidden lg:inline">
-              <CountBadge count={count} />
+              <CountBadge count={count} label={item.badge === 'openExchanges' ? 'new exchange requests' : 'pending orders'} />
             </span>
             <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent lg:hidden" aria-hidden />
           </>
@@ -121,6 +126,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { admin, logout } = useAuth();
   const { data: counts } = useOrderStatusCounts();
   const pending = counts?.PENDING;
+  const { data: exchangeCounts } = useQuery({ queryKey: qk.exchanges.counts, queryFn: exchangeService.statusCounts, refetchInterval: 120_000 });
+  const openExchanges = exchangeCounts?.REQUESTED;
   const [railExpanded, setRailExpanded] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -222,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <ul className="flex flex-col gap-0.5">
                 {group.items.map((item) => (
                   <li key={item.href}>
-                    <SidebarLink item={item} active={isActivePath(pathname, item.href)} expanded={expanded} pending={pending} />
+                    <SidebarLink item={item} active={isActivePath(pathname, item.href)} expanded={expanded} pending={pending} exchanges={openExchanges} />
                   </li>
                 ))}
               </ul>

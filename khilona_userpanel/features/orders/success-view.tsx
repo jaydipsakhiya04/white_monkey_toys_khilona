@@ -11,6 +11,7 @@ import { useAuth } from "@/features/auth/auth-provider";
 import { useCartStore } from "@/features/cart/cart-store";
 import { readOrderSnapshot, saveOrderSnapshot } from "@/features/checkout/order-storage";
 import type { PublicOrder } from "@/types/api";
+import { usePricing } from "@/features/store/pricing";
 import { formatPrice } from "@/utils/format";
 import { whatsappLink } from "@/utils/phone";
 import { OrderCustomer, OrderItems, OrderTotals, STATUS_LABEL } from "./order-details";
@@ -27,6 +28,7 @@ export function SuccessView({
   phoneUrl: string | null;
   whatsapp: string | null;
 }) {
+  const { showPrices } = usePricing();
   const [order, setOrder] = useState<PublicOrder | null>(null);
   const [checked, setChecked] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -121,8 +123,13 @@ export function SuccessView({
           </button>
         </div>
         <p className="mt-2 text-sm text-muted">
-          Status: <span className="font-semibold text-ink">{STATUS_LABEL[order.status]}</span> · Total{" "}
-          <span className="font-semibold text-ink">{formatPrice(order.total)}</span> · Pay on delivery
+          Status: <span className="font-semibold text-ink">{STATUS_LABEL[order.status]}</span>
+          {showPrices && (
+            <>
+              {" "}· Total <span className="font-semibold text-ink">{formatPrice(order.total)}</span>
+            </>
+          )}{" "}
+          · Our team will confirm price, payment and delivery
         </p>
       </div>
 

@@ -7,6 +7,8 @@ import { toCustomerProfile } from '../customer-auth/customer.mapper';
 import { UpdateCustomerProfileDto } from '../customer-auth/dto/customer-auth.dto';
 import { PrismaService } from '../database/prisma.service';
 import { DocumentKind, DocumentsService } from '../documents/documents.service';
+import { CreateExchangeDto } from '../exchanges/dto/exchange.dto';
+import { ExchangesService } from '../exchanges/exchanges.service';
 import { customerOrderListSelect, toCustomerOrderDetail, toCustomerOrderListItem } from '../orders/order.mapper';
 import { OrdersService } from '../orders/orders.service';
 import { ReviewsService } from '../reviews/reviews.service';
@@ -25,6 +27,7 @@ export class AccountService {
     private readonly reviews: ReviewsService,
     private readonly documents: DocumentsService,
     private readonly store: StoreService,
+    private readonly exchanges: ExchangesService,
   ) {}
 
   /** Orders visible in an account: linked to it (placed while signed in, or claimed). */
@@ -108,12 +111,25 @@ export class AccountService {
 
   async orderDetail(customerId: string, orderNumber: string) {
     const order = await this.orders.findOwned(customerId, orderNumber);
-    return toCustomerOrderDetail(order, await this.reviews.reviewStateForOrder(customerId, order));
+    return this.toDetail(customerId, order);
   }
 
-  async cancelOrder(customer: AuthenticatedCustomer, orderNumber: string, reason?: string) {
-    const order = await this.orders.cancelByCustomer(customer, orderNumber, reason);
-    return toCustomerOrderDetail(order, await this.reviews.reviewStateForOrder(customer.id, order));
+  private async toDetail(customerId: string, order: Awaited<ReturnType<OrdersService['findOwned']>>) {
+    const [reviewState, exchangeState] = await Promise.all([
+      this.reviews.reviewStateForOrder(customerId, order),
+      this.exchanges.stateForOrder(order),
+    ]);
+    return toCustomerOrderDetail(order, reviewState, exchangeState);
+  }
+
+  /** Exchange-only after-sales request for a delivered item (wrong or damaged item). */
+  async requestExchange(customer: AuthenticatedCustomer, orderNumber: string, dto: CreateExchangeDto) {
+    const order = await this.exchanges.create(customer, orderNumber, dto);
+    return this.toDetail(customer.id, order);
+  }
+
+  listExchanges(customerId: string) {
+    return this.exchanges.listForCustomer(customerId);
   }
 
   /**
@@ -146,6 +162,9 @@ export class AccountService {
   }
 
   private async renderDocument(order: Awaited<ReturnType<OrdersService['findOwned']>>, kind: DocumentKind) {
+    if (!(await this.store.pricesVisible())) {
+      throw new ConflictException('Invoices and receipts are shared by our team on WhatsApp. Please contact the store.');
+    }
     if (kind === 'invoice' && order.status === OrderStatus.CANCELLED) {
       throw new ConflictException('An invoice is not available for a cancelled order. You can still download the order receipt.');
     }

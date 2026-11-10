@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Banknote, Headset, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Headset, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { InstagramIcon, WhatsAppIcon } from "@/components/icons/brand";
 import { ButtonAnchor, buttonClasses } from "@/components/ui/button";
 import { GatedAnchor } from "@/features/auth/login-gate";
@@ -43,8 +43,8 @@ export function PromoBanners({ banners }: { banners: PromoBanner[] }) {
               <div className="relative z-10 flex flex-col justify-between gap-8 p-7 sm:p-9 lg:p-10">
                 <div>
                   <p className={cn("eyebrow", dark && "!text-white/60")}>{eyebrow}</p>
-                  <h2 className="mt-4 text-[1.75rem] font-bold leading-[1.05] sm:text-[2.125rem]">{title}</h2>
-                  <p className={cn("mt-3 max-w-xs text-[0.9375rem] leading-relaxed", dark ? "text-white/65" : "text-muted")}>{body}</p>
+                  <h2 className="mt-3 text-[1.375rem] font-bold leading-[1.1] sm:text-[1.75rem]">{title}</h2>
+                  <p className={cn("mt-3 max-w-xs text-sm leading-relaxed", dark ? "text-white/65" : "text-muted")}>{body}</p>
                 </div>
                 <span
                   className={cn(
@@ -88,23 +88,23 @@ export function WhySection({ storeName }: { storeName: string }) {
   const points = [
     {
       icon: Sparkles,
-      title: "Carefully Selected Products",
-      body: "RC vehicles, drones, figures and collectibles picked for quality, detail and play value.",
+      title: "Products That Sell",
+      body: "RC cars, construction RC, drones and action figures picked for quality, detail and steady demand in your shop.",
     },
     {
-      icon: Banknote,
-      title: "Convenient Cash on Delivery",
-      body: "No online payment needed. Pay in cash or UPI when your order reaches you.",
+      icon: Truck,
+      title: "PAN India Delivery",
+      body: "We dispatch retailer and wholesale orders across India. Delivery charges are as per actual and confirmed before dispatch.",
     },
     {
       icon: ShieldCheck,
-      title: "Easy & Secure Shopping",
-      body: "A free account keeps every order in one place — no card details needed, and you can track every step.",
+      title: "Simple Ordering",
+      body: "A free business account keeps every order in one place. No online payment, and you can track every step.",
     },
     {
       icon: Headset,
-      title: "Friendly Customer Support",
-      body: "Questions before or after you order? Call or WhatsApp us — a real person will help.",
+      title: "Dedicated Trade Support",
+      body: "Prices, stock and bulk quantities: call or WhatsApp us on either number and a real person will help.",
     },
   ];
   return (
@@ -112,7 +112,7 @@ export function WhySection({ storeName }: { storeName: string }) {
       <Container>
         <div className="mx-auto max-w-2xl text-center" data-reveal>
           <p className="eyebrow justify-center">Why {storeName}</p>
-          <h2 id="why-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] text-ink sm:text-[2.5rem]">
+          <h2 id="why-title" className="mt-3 text-[1.5rem] font-bold leading-[1.1] text-ink sm:text-[2rem] lg:text-[2.25rem]">
             Why choose White Monkey?
           </h2>
         </div>
@@ -128,7 +128,7 @@ export function WhySection({ storeName }: { storeName: string }) {
                 <p.icon className="size-5" aria-hidden="true" strokeWidth={1.5} />
               </span>
               <h3 className="mt-6 font-display text-[1.0625rem] font-semibold tracking-[-0.01em] text-ink">{p.title}</h3>
-              <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted">{p.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{p.body}</p>
             </li>
           ))}
         </ul>
@@ -137,25 +137,25 @@ export function WhySection({ storeName }: { storeName: string }) {
   );
 }
 
-/** How ordering works (pay on delivery). */
+/** How ordering works for retailers and wholesalers (no online payment). */
 export function HowOrderingWorks({ store }: { store: PublicStore | null }) {
   const steps = [
-    { title: "Choose your favourites", body: "Browse by category or search, then add what you love to your bag." },
-    { title: "Place your order", body: "Log in with your free account and share your delivery address — it only takes a minute." },
-    { title: "We confirm & deliver", body: "Our team confirms your order and delivers it. You pay in cash or UPI on delivery." },
+    { title: "Browse the catalogue", body: "Find RC cars, drones and figures by category, age or search, and add them to your cart." },
+    { title: "Send your order", body: "Log in with your free business account and share your shop's delivery address." },
+    { title: "We confirm & dispatch", body: "Our team confirms prices, payment and delivery charges on WhatsApp, then ships PAN India." },
   ];
   return (
     <section aria-labelledby="how-title" className="bg-ink py-16 text-white sm:py-24">
       <Container className="grid gap-12 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
         <div data-reveal>
           <p className="eyebrow !text-white/55">Ordering</p>
-          <h2 id="how-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] sm:text-[2.5rem]">
-            Simple from cart to doorstep
+          <h2 id="how-title" className="mt-3 text-[1.5rem] font-bold leading-[1.1] sm:text-[2rem] lg:text-[2.25rem]">
+            Simple from cart to your shop
           </h2>
-          <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-white/60">
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/60">
             {store?.isOpen === false && store.closedMessage
               ? store.closedMessage
-              : "No card details, no online payment. Every order is confirmed by a real person before it ships."}
+              : "No online payment. Every order is confirmed by a real person before it ships anywhere in India."}
           </p>
         </div>
         <ol className="grid gap-4 sm:grid-cols-3">
@@ -198,17 +198,17 @@ export function SocialSection({ store, products }: { store: PublicStore | null; 
   const tiles = products.filter((p) => p.thumbnailUrl).slice(0, 6);
   if (tiles.length < 3) return null;
   const instagram = instagramProfile(store?.instagram);
-  const wa = storeWhatsappUrl(store, "Hi! I'd like to know more about your toys.");
+  const wa = storeWhatsappUrl(store, "Hi! Please share your wholesale / retailer price list.");
   return (
     <section aria-labelledby="social-title" className="py-16 sm:py-24">
       <Container>
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end" data-reveal>
           <div className="max-w-xl">
             <p className="eyebrow">Follow the fun</p>
-            <h2 id="social-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] text-ink sm:text-[2.5rem]">
+            <h2 id="social-title" className="mt-3 text-[1.5rem] font-bold leading-[1.1] text-ink sm:text-[2rem] lg:text-[2.25rem]">
               Little Things. Big Smiles.
             </h2>
-            <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted sm:text-base">
+            <p className="mt-3 text-sm leading-relaxed text-muted">
               New arrivals, restocks and collector favourites — straight from our shelves.
             </p>
           </div>

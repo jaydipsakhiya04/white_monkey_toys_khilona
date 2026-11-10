@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const name = brandName(store);
   const city = store?.city || "Surat";
   const title = `Wholesale Toys in ${city} – Retailer & Bulk Prices`;
-  const description = `${name} is a toy wholesaler in ${city}: RC cars, drones, construction RC, action figures, die-cast cars and dioramas at retailer and wholesale prices for shops and resellers.`;
+  const description = `${name} is a toy wholesaler in ${city}: RC cars, drones, construction RC and action figures at retailer and wholesale prices for shops and resellers.`;
   return {
     title,
     description,
@@ -39,7 +39,7 @@ function wholesaleFaq(store: PublicStore | null): FaqItem[] {
     },
     {
       q: "Which toys are available wholesale?",
-      a: "Our full range: hobby-grade and premium RC cars, construction RC vehicles, drones and RC aircraft, action figures, licensed die-cast cars and 1:64 dioramas. Ask about specific models in your enquiry.",
+      a: "Our full range: hobby-grade and premium RC cars, construction RC vehicles, drones and RC aircraft, and action figures. Ask about specific models in your enquiry.",
     },
     {
       q: "How do I get the price list?",
@@ -66,7 +66,7 @@ export default async function WholesalePage() {
 
   const benefits = [
     { Icon: Tags, title: "Retailer & wholesale prices", body: "Two price lists: one for shops and resellers, one for bulk buyers and distributors." },
-    { Icon: Boxes, title: "One supplier, full range", body: "RC cars, drones, construction RC, action figures, die-cast cars and dioramas." },
+    { Icon: Boxes, title: "One supplier, full range", body: "Hobby & premium RC cars, construction RC, drones and action figures." },
     { Icon: MapPin, title: `Pickup or delivery in ${city}`, body: `Collect from our store or get it delivered — free anywhere in ${city}.` },
     { Icon: MessageCircle, title: "Quick WhatsApp quotes", body: "Send your requirement and get prices and availability from a real person." },
   ];
@@ -114,7 +114,7 @@ export default async function WholesalePage() {
                   { value: String(live.length), label: "Categories" },
                   { value: `${products}+`, label: "Products" },
                   { value: "2", label: "Price lists" },
-                  { value: "Free", label: `Delivery in ${city}` },
+                  { value: "PAN India", label: "Delivery" },
                 ].map((s) => (
                   <div key={s.label} className="bg-ink p-5 sm:p-6">
                     <dt className="text-xs text-white/50">{s.label}</dt>

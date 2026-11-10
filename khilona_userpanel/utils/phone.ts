@@ -9,6 +9,12 @@ export function normalizeIndianMobile(input: string): string {
   return digits;
 }
 
+/** "9876543210" → "+91 98765 43210" (other input is returned unchanged). */
+export function formatPhone(input: string): string {
+  const d = normalizeIndianMobile(input);
+  return /^\d{10}$/.test(d) ? `+91 ${d.slice(0, 5)} ${d.slice(5)}` : input;
+}
+
 export function isValidIndianMobile(input: string): boolean {
   return /^[6-9]\d{9}$/.test(normalizeIndianMobile(input));
 }

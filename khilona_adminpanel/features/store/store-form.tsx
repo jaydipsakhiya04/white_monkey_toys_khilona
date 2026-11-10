@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, ErrorState, Skeleton } from '@/components/ui/feedback';
 import { CharCount, Field } from '@/components/ui/field';
+import { DefaultCover } from '@/components/ui/default-cover';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { Input, Textarea } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
@@ -45,6 +46,10 @@ const schema = z
       .string()
       .trim()
       .refine((v) => v === '' || /^\d{11,15}$/.test(v.replace(/[\s+-]/g, '')), 'Digits with country code, e.g. 919876543210'),
+    secondaryPhone: z
+      .string()
+      .trim()
+      .refine((v) => v === '' || /^\+?[\d\s-]{10,16}$/.test(v), 'Enter a valid mobile number'),
     email: z
       .string()
       .trim()
@@ -66,6 +71,11 @@ const schema = z
     workingDays: z.string().max(80, 'Too long'),
     isOpen: z.boolean(),
     reviewsRequireApproval: z.boolean(),
+    showPrices: z.boolean(),
+    exchangeWindowDays: z
+      .string()
+      .trim()
+      .refine((v) => /^d{1,2}$/.test(v) && Number(v) <= 90, 'Whole number of days, 0–90'),
     closedMessage: z.string().max(300, 'Too long'),
   })
   .superRefine((v, ctx) => {
@@ -88,6 +98,7 @@ function toValues(s: Store): Values {
     coverImageUrl: nn(s.coverImageUrl),
     phone: nn(s.phone),
     whatsapp: nn(s.whatsapp),
+    secondaryPhone: nn(s.secondaryPhone),
     email: nn(s.email),
     address: nn(s.address),
     city: nn(s.city),
@@ -103,6 +114,8 @@ function toValues(s: Store): Values {
     workingDays: nn(s.workingDays),
     isOpen: s.isOpen,
     reviewsRequireApproval: s.reviewsRequireApproval ?? false,
+    showPrices: s.showPrices ?? true,
+    exchangeWindowDays: String(s.exchangeWindowDays ?? 7),
     closedMessage: nn(s.closedMessage),
   };
 }
@@ -160,7 +173,7 @@ function StoreForm({ store }: { store: Store }) {
     async (values) => {
       const whatsappDigits = values.whatsapp.replace(/\D/g, '');
       try {
-        const saved = await update.mutateAsync(normalizeStoreInput({ ...values, whatsapp: whatsappDigits }));
+        const saved = await update.mutateAsync(normalizeStoreInput({ ...values, whatsapp: whatsappDigits, exchangeWindowDays: Number(values.exchangeWindowDays) }));
         reset(toValues(saved));
         toast.success('Store settings saved');
       } catch (err) {
@@ -216,7 +229,8 @@ function StoreForm({ store }: { store: Store }) {
                       folder="store"
                       aspect="wide"
                       label="Upload cover"
-                      hint="Wide image, about 1600 × 700 px"
+                      hint="Wide image, about 1600 × 700 px. Without one (or after removing it) the storefront shows the default image"
+                      emptyPreview={<DefaultCover />}
                     />
                   )}
                 />
@@ -225,9 +239,9 @@ function StoreForm({ store }: { store: Store }) {
           </Card>
 
           <Card>
-            <CardHeader title="Contact" description="Shown on the storefront and used for order updates." />
-            <div className="grid gap-4 p-4 sm:grid-cols-3 sm:p-5">
-              <Field label="Phone" error={errors.phone?.message}>
+            <CardHeader title="Contact" description="Shown on the storefront and used for order updates. Both mobiles work for calls and WhatsApp." />
+            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+              <Field label="Main mobile (call)" error={errors.phone?.message}>
                 <Input {...register('phone')} type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" leading={<Phone />} />
               </Field>
               <Field
@@ -236,6 +250,9 @@ function StoreForm({ store }: { store: Store }) {
                 hint="Include the country code without + or spaces, e.g. 919876543210."
               >
                 <Input {...register('whatsapp')} type="tel" inputMode="numeric" placeholder="919876543210" leading={<MessageCircle />} />
+              </Field>
+              <Field label="Second mobile (call & WhatsApp)" error={errors.secondaryPhone?.message} hint="Shown next to the main number everywhere on the storefront.">
+                <Input {...register('secondaryPhone')} type="tel" inputMode="tel" placeholder="96627 25685" leading={<Phone />} />
               </Field>
               <Field label="Email" error={errors.email?.message}>
                 <Input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="hello@whitemonkeytoys.in" leading={<Mail />} />
@@ -297,6 +314,46 @@ function StoreForm({ store }: { store: Store }) {
                   />
                 )}
               />
+            </div>
+          </Card>
+
+          <Card id="prices" className="scroll-mt-24">
+            <CardHeader title="Prices on the storefront" description="Hide prices from competitors. Customers see “Ask for price” and message you on WhatsApp instead." />
+            <div className="p-4 sm:p-5">
+              <Controller
+                control={control}
+                name="showPrices"
+                render={({ field }) => (
+                  <SwitchField
+                    id="show-prices"
+                    label="Show prices on the storefront"
+                    description={
+                      field.value
+                        ? 'Prices, totals and invoices are visible to signed-in and guest visitors.'
+                        : 'Hidden: no prices anywhere on the storefront or in its public API. Orders are still priced correctly here in the admin panel.'
+                    }
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+          </Card>
+
+          <Card id="exchanges" className="scroll-mt-24">
+            <CardHeader
+              title="Exchanges"
+              description="Exchange-only after-sales for wrong or damaged items. Each purchased product can be exchanged once."
+            />
+            <div className="grid gap-4 p-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-start sm:p-5">
+              <Field label="Exchange window" error={errors.exchangeWindowDays?.message}>
+                <Input {...register('exchangeWindowDays')} inputMode="numeric" maxLength={2} trailing={<span className="pr-2 text-xs text-muted">days</span>} />
+              </Field>
+              <p className="rounded-xl border border-line bg-stone-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-soft">
+                {Number(v.exchangeWindowDays) > 0
+                  ? `Customers can request an exchange from their order page for ${v.exchangeWindowDays} day${Number(v.exchangeWindowDays) === 1 ? '' : 's'} after delivery. The store's phone, WhatsApp and address are shown with every request.`
+                  : 'Exchange requests are turned off. Customers will be asked to contact the store instead.'}
+              </p>
             </div>
           </Card>
 
@@ -377,7 +434,7 @@ function StoreForm({ store }: { store: Store }) {
               {v.coverImageUrl ? (
                 <img src={v.coverImageUrl} alt="" className="size-full object-cover" width={680} height={300} />
               ) : (
-                <div className="flex size-full items-center justify-center text-xs text-stone-400">No cover image</div>
+                <DefaultCover />
               )}
               <div className="absolute -bottom-7 left-4 h-14 w-36 overflow-hidden rounded-2xl border-[3px] border-surface bg-surface shadow-raised">
                 {v.logoUrl ? (

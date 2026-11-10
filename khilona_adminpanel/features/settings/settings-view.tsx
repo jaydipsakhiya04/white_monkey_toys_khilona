@@ -56,7 +56,6 @@ const SECTIONS: SectionDef[] = [
     icon: FileText,
     fields: [
       { name: 'shippingPolicy', label: 'Shipping & delivery policy', max: 20000, multiline: true, rows: 6 },
-      { name: 'returnPolicy', label: 'Returns & refunds policy', max: 20000, multiline: true, rows: 6 },
       { name: 'privacyPolicy', label: 'Privacy policy', max: 20000, multiline: true, rows: 6 },
       { name: 'termsAndConditions', label: 'Terms & conditions', max: 20000, multiline: true, rows: 6 },
     ],

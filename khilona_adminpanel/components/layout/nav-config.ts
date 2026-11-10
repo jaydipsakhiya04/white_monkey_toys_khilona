@@ -1,25 +1,27 @@
-import { FolderTree, LayoutDashboard, MessageSquareText, Package, Settings, ShoppingBag, Store, UserRound, type LucideIcon } from 'lucide-react';
+import { FolderTree, GalleryHorizontal, LayoutDashboard, MessageSquareText, Package, RefreshCcw, Settings, ShoppingBag, Store, UserRound, type LucideIcon } from 'lucide-react';
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: 'pendingOrders' };
+export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: 'pendingOrders' | 'openExchanges' };
 export type NavGroup = { label: string; items: NavItem[] };
 
 const DASHBOARD: NavItem = { href: '/', label: 'Dashboard', icon: LayoutDashboard };
 const ORDERS: NavItem = { href: '/orders', label: 'Orders', icon: ShoppingBag, badge: 'pendingOrders' };
 const PRODUCTS: NavItem = { href: '/products', label: 'Products', icon: Package };
 const CATEGORIES: NavItem = { href: '/categories', label: 'Categories', icon: FolderTree };
+const EXCHANGES: NavItem = { href: '/exchanges', label: 'Exchanges', icon: RefreshCcw, badge: 'openExchanges' };
 const REVIEWS: NavItem = { href: '/reviews', label: 'Reviews', icon: MessageSquareText };
+const BANNERS: NavItem = { href: '/banners', label: 'Banners', icon: GalleryHorizontal };
 const STORE: NavItem = { href: '/store', label: 'Store', icon: Store };
 const SETTINGS: NavItem = { href: '/settings', label: 'Settings', icon: Settings };
 const PROFILE: NavItem = { href: '/profile', label: 'Profile', icon: UserRound };
 
 export const NAV_GROUPS: NavGroup[] = [
   { label: 'Overview', items: [DASHBOARD] },
-  { label: 'Sales', items: [ORDERS, REVIEWS] },
-  { label: 'Catalogue', items: [PRODUCTS, CATEGORIES] },
+  { label: 'Sales', items: [ORDERS, EXCHANGES, REVIEWS] },
+  { label: 'Catalogue', items: [PRODUCTS, CATEGORIES, BANNERS] },
   { label: 'Shop', items: [STORE, SETTINGS, PROFILE] },
 ];
 
-export const NAV_ITEMS: NavItem[] = [DASHBOARD, ORDERS, PRODUCTS, CATEGORIES, REVIEWS, STORE, SETTINGS, PROFILE];
+export const NAV_ITEMS: NavItem[] = [DASHBOARD, ORDERS, PRODUCTS, CATEGORIES, EXCHANGES, REVIEWS, BANNERS, STORE, SETTINGS, PROFILE];
 
 export const BOTTOM_NAV = NAV_ITEMS.slice(0, 4);
 export const MORE_NAV = NAV_ITEMS.slice(4);

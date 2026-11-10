@@ -109,7 +109,7 @@ export function OrdersList() {
     <>
       <PageHeader
         title="Orders"
-        description="Confirm, prepare and deliver customer orders. Cash on delivery."
+        description="Confirm, prepare and dispatch orders from retailers and wholesalers. Only the store can cancel an order."
         breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Orders' }]}
       />
 

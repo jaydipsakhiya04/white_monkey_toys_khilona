@@ -16,7 +16,8 @@ import { UpdateCustomerProfileDto } from '../customer-auth/dto/customer-auth.dto
 import { sendPdf } from '../documents/send-pdf';
 import { TrackOrderQueryDto } from '../orders/dto/order.dto';
 import { AccountService } from './account.service';
-import { CancelOrderDto, ClaimOrderDto, CustomerOrderQueryDto } from './dto/account.dto';
+import { CreateExchangeDto } from '../exchanges/dto/exchange.dto';
+import { ClaimOrderDto, CustomerOrderQueryDto } from './dto/account.dto';
 
 const trackLimit = () => loadConfig().throttle.trackLimit;
 
@@ -76,13 +77,27 @@ export class AccountController {
     return this.account.orderDetail(customer.id, orderNumber);
   }
 
-  @Post('orders/:orderNumber/cancel')
+  @Post('orders/:orderNumber/exchanges')
   @HttpCode(200)
-  @ResponseMessage('Order cancelled')
-  @ApiOperation({ summary: 'Cancel your order while it is still pending (stock is restored)' })
-  @ApiConflictResponse({ description: 'Order already confirmed by the store' })
-  cancel(@CurrentCustomer() customer: AuthenticatedCustomer, @Param('orderNumber') orderNumber: string, @Body() dto: CancelOrderDto) {
-    return this.account.cancelOrder(customer, orderNumber, dto.reason);
+  @ResponseMessage('Exchange requested')
+  @ApiOperation({
+    summary: 'Request an exchange for a delivered product (wrong or damaged item)',
+    description: 'Exchange only, for wrong or damaged items. Each purchased product can be exchanged once, within the store exchange window after delivery.',
+  })
+  @ApiConflictResponse({ description: 'Not delivered, window closed, or already requested for this product' })
+  requestExchange(
+    @CurrentCustomer() customer: AuthenticatedCustomer,
+    @Param('orderNumber') orderNumber: string,
+    @Body() dto: CreateExchangeDto,
+  ) {
+    return this.account.requestExchange(customer, orderNumber, dto);
+  }
+
+  @Get('exchanges')
+  @ResponseMessage('Exchange requests fetched')
+  @ApiOperation({ summary: 'Your exchange requests, newest first' })
+  exchanges(@CurrentCustomer() customer: AuthenticatedCustomer) {
+    return this.account.listExchanges(customer.id);
   }
 
   @Get('orders/:orderNumber/invoice')

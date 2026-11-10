@@ -3,9 +3,9 @@ import { formatTime24 } from "@/utils/format";
 import { telLink, whatsappLink } from "@/utils/phone";
 
 export const HERO_FALLBACK = {
-  title: "Little Moments. Big Adventures.",
-  subtitle: "Discover thoughtfully selected toys, creative games, and educational essentials that bring joy to every little adventure.",
-  cta: "Explore Collection",
+  title: "Wholesale Toys. Delivered Across India.",
+  subtitle: "RC cars, construction RC, drones and action figures for toy shops, retailers and wholesalers. Ask for our price list on WhatsApp.",
+  cta: "Browse catalogue",
 };
 
 export function storeHours(store: PublicStore | null): string | null {
@@ -39,6 +39,27 @@ export function storePhoneUrl(store: PublicStore | null): string | null {
   return store.phoneUrl ?? (store.phone ? telLink(store.phone) : null);
 }
 
+export type StoreContactNumber = { display: string; telUrl: string; whatsappUrl: string };
+
+/** Both store mobiles; each works for calls and WhatsApp. */
+export function storeContactNumbers(store: PublicStore | null): StoreContactNumber[] {
+  if (!store) return [];
+  const out: StoreContactNumber[] = [];
+  const add = (raw: string | null | undefined, tel?: string | null, wa?: string | null) => {
+    if (!raw) return;
+    const digits = raw.replace(/\D/g, "").slice(-10);
+    if (digits.length !== 10 || out.some((n) => n.telUrl.endsWith(digits))) return;
+    out.push({
+      display: `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`,
+      telUrl: tel ?? telLink(`+91${digits}`),
+      whatsappUrl: wa ?? whatsappLink(`91${digits}`),
+    });
+  };
+  add(store.phone, store.phoneUrl, store.whatsappUrl ?? (store.whatsapp ? whatsappLink(store.whatsapp) : null));
+  add(store.secondaryPhone, store.secondaryPhoneUrl, store.secondaryWhatsappUrl);
+  return out;
+}
+
 export function storeMapUrl(store: PublicStore | null): string | null {
   if (!store) return null;
   if (store.googleMapLink) return store.googleMapLink;
@@ -48,7 +69,6 @@ export function storeMapUrl(store: PublicStore | null): string | null {
 
 export const POLICY_TYPES = {
   shipping: { title: "Shipping Policy", field: "shippingPolicy" },
-  returns: { title: "Returns & Refunds", field: "returnPolicy" },
   privacy: { title: "Privacy Policy", field: "privacyPolicy" },
   terms: { title: "Terms & Conditions", field: "termsAndConditions" },
 } as const satisfies Record<string, { title: string; field: keyof PublicStore }>;

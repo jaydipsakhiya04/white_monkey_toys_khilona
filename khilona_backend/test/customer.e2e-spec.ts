@@ -219,16 +219,15 @@ describe('Customer accounts (e2e)', () => {
       await http().post('/api/customer/orders/claim').set(bearer(tokenA)).send({ orderNumber: guestForA }).expect(409);
     });
 
-    it('lets the owner cancel only while pending, restoring stock', async () => {
-      const before = (await prisma.product.findUniqueOrThrow({ where: { id: otherProductId } })).stock;
-      const n = (await placeOrder(tokenA, A.phone, [{ productId: otherProductId, quantity: 3 }]).expect(201)).body.data.orderNumber;
-      await http().post(`/api/customer/orders/${n}/cancel`).set(bearer(tokenB)).send({}).expect(404);
-      const res = await http().post(`/api/customer/orders/${n}/cancel`).set(bearer(tokenA)).send({ reason: 'Changed my mind' }).expect(200);
-      expect(res.body.data.status).toBe('CANCELLED');
-      expect((await prisma.product.findUniqueOrThrow({ where: { id: otherProductId } })).stock).toBe(before);
-
+    it('only the store can cancel: customers have no cancel route', async () => {
+      const n = (await placeOrder(tokenA, A.phone, [{ productId: otherProductId, quantity: 1 }]).expect(201)).body.data.orderNumber;
+      await http().post(`/api/customer/orders/${n}/cancel`).set(bearer(tokenA)).send({ reason: 'Changed my mind' }).expect(404);
+      const detail = await http().get(`/api/customer/orders/${n}`).set(bearer(tokenA)).expect(200);
+      expect(detail.body.data).toMatchObject({ status: 'PENDING', canCancel: false });
+      await http().patch(`/api/admin/orders/${n}/status`).set(admin()).send({ status: 'CANCELLED', note: 'Customer asked on call' }).expect(200);
+      const after = await http().get(`/api/customer/orders/${n}`).set(bearer(tokenA)).expect(200);
+      expect(after.body.data).toMatchObject({ status: 'CANCELLED', cancelReason: 'Customer asked on call', cancelledBy: 'STORE' });
       await setStatus(orderA, 'CONFIRMED');
-      await http().post(`/api/customer/orders/${orderA}/cancel`).set(bearer(tokenA)).send({}).expect(409);
     });
 
     // ─── Documents ─────────────────────────────────────────
@@ -323,6 +322,73 @@ describe('Customer accounts (e2e)', () => {
         await http().patch(`/api/admin/reviews/${res.body.data.id}/status`).set(admin()).send({ status: 'APPROVED' }).expect(200);
         expect((await http().get(`/api/products/${productSlug}/reviews`).expect(200)).body.data.summary.count).toBe(1);
         await prisma.store.updateMany({ data: { reviewsRequireApproval: false } });
+      });
+    });
+
+    // ─── Exchanges ─────────────────────────────────────────
+
+    describe('exchanges', () => {
+      const itemOf = async (orderNumber: string, token: string) =>
+        (await http().get(`/api/customer/orders/${orderNumber}`).set(bearer(token)).expect(200)).body.data.items[0] as {
+          id: string;
+          canExchange: boolean;
+          exchange: { status: string; requestNumber: string } | null;
+        };
+      const request = (orderNumber: string, token: string, body: Record<string, unknown>) =>
+        http().post(`/api/customer/orders/${orderNumber}/exchanges`).set(bearer(token)).send(body);
+
+      it('is only possible for delivered orders, by their owner, with a reason and details', async () => {
+        const pending = (await placeOrder(tokenA, A.phone).expect(201)).body.data.orderNumber;
+        const pendingItem = await itemOf(pending, tokenA);
+        expect(pendingItem.canExchange).toBe(false);
+        await request(pending, tokenA, { orderItemId: pendingItem.id, reason: 'DAMAGED_ITEM', details: 'The box arrived crushed.' }).expect(409);
+
+        const item = await itemOf(orderA, tokenA);
+        expect(item).toMatchObject({ canExchange: true, exchange: null });
+        await request(orderA, tokenB, { orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'The box arrived crushed.' }).expect(404);
+        await request(orderA, tokenA, { orderItemId: item.id, reason: 'REFUND', details: 'The box arrived crushed.' }).expect(422);
+        await request(orderA, tokenA, { orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'short' }).expect(422);
+        await request(orderA, tokenA, { orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'The box arrived crushed.', quantity: 5 }).expect(422);
+        await http().post(`/api/customer/orders/${orderA}/exchanges`).send({ orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'No token here.' }).expect(401);
+      });
+
+      it('lets each purchased product be exchanged once', async () => {
+        const item = await itemOf(orderA, tokenA);
+        const res = await request(orderA, tokenA, { orderItemId: item.id, reason: 'WRONG_ITEM', details: 'Received a 1000-piece puzzle instead.' }).expect(200);
+        const updated = res.body.data.items[0];
+        expect(updated).toMatchObject({ canExchange: false, exchange: { status: 'REQUESTED', reason: 'WRONG_ITEM', quantity: 1 } });
+        expect(updated.exchange.requestNumber).toMatch(/^EX-\d{8}-\d{4}$/);
+        await request(orderA, tokenA, { orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'Trying a second exchange.' }).expect(409);
+
+        const mine = await http().get('/api/customer/exchanges').set(bearer(tokenA)).expect(200);
+        expect(mine.body.data).toHaveLength(1);
+        expect((await http().get('/api/customer/exchanges').set(bearer(tokenB)).expect(200)).body.data).toHaveLength(0);
+      });
+
+      it('closes after the store exchange window', async () => {
+        await prisma.order.updateMany({ where: { orderNumber: orderB }, data: { deliveredAt: new Date(Date.now() - 30 * 24 * 3600 * 1000) } });
+        const item = await itemOf(orderB, tokenB);
+        expect(item.canExchange).toBe(false);
+        await request(orderB, tokenB, { orderItemId: item.id, reason: 'DAMAGED_ITEM', details: 'It stopped working.' }).expect(409);
+      });
+
+      it('admins approve and complete requests with validated transitions', async () => {
+        const list = await http().get('/api/admin/exchanges').query({ search: orderA }).set(admin()).expect(200);
+        expect(list.body.data.items).toHaveLength(1);
+        const ex = list.body.data.items[0];
+        expect(ex).toMatchObject({ status: 'REQUESTED', allowedTransitions: ['APPROVED', 'REJECTED'], order: { orderNumber: orderA } });
+        await http().patch(`/api/admin/exchanges/${ex.id}`).set(admin()).send({ status: 'COMPLETED' }).expect(409);
+        await http().patch(`/api/admin/exchanges/${ex.id}`).set(admin()).send({ status: 'REJECTED' }).expect(422);
+        await http().patch(`/api/admin/exchanges/${ex.id}`).set(admin()).send({ status: 'APPROVED', adminNote: 'Pickup tomorrow' }).expect(200);
+        const done = await http().patch(`/api/admin/exchanges/${ex.requestNumber}`).set(admin()).send({ status: 'COMPLETED' }).expect(200);
+        expect(done.body.data).toMatchObject({ status: 'COMPLETED', adminNote: 'Pickup tomorrow', allowedTransitions: [] });
+        const counts = await http().get('/api/admin/exchanges/status-counts').set(admin()).expect(200);
+        expect(counts.body.data).toMatchObject({ ALL: 1, COMPLETED: 1 });
+        const order = await http().get(`/api/admin/orders/${orderA}`).set(admin()).expect(200);
+        expect(order.body.data.exchanges[0]).toMatchObject({ status: 'COMPLETED' });
+        const customerView = await itemOf(orderA, tokenA);
+        expect(customerView.exchange).toMatchObject({ status: 'COMPLETED' });
+        await http().get('/api/admin/exchanges').set(bearer(tokenA)).expect(401);
       });
     });
   });

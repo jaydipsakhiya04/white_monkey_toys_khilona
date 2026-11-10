@@ -26,7 +26,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   // local intent: "Hobby-Grade RC Cars in Surat" (an admin-set SEO title always wins)
   const city = store?.city;
   const title = category.seoTitle || (city ? `${category.name} in ${city}` : category.name);
-  const local = city ? ` Free delivery across ${city}, cash on delivery, retail & wholesale.` : " Pay on delivery.";
+  const local = city ? ` Wholesale supply from ${city} to retailers, with PAN India delivery.` : " Wholesale supply with PAN India delivery.";
   const base =
     toPlainText(category.seoDescription || category.description, 220) ||
     `Shop ${category.name} at ${brandName(store)}. ${pluralize(category.productCount, "product")} available.`;

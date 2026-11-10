@@ -6,14 +6,16 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { AccountCta } from "@/features/auth/account-cta";
 import { CategoryCard } from "@/features/catalog/category-card";
 import { ProductGrid } from "@/features/catalog/product-card";
+import { BannerSlider } from "@/features/store/banner-slider";
 import { Hero } from "@/features/store/hero";
+import { ShopByAge, ShopByPrice } from "@/features/store/shop-by";
 import { HowOrderingWorks, PromoBanners, SocialSection, WhySection, type PromoBanner } from "@/features/store/home-sections";
 import { LocalSection, WholesaleBand } from "@/features/store/local-sections";
 import { StoreInfoCard, storeJsonLd } from "@/features/store/store-info";
 import { brandName } from "@/lib/brand";
 import { absoluteUrl } from "@/lib/env";
 import { safe } from "@/lib/api/server";
-import { getCategoryTree, getProducts, getStore } from "@/services/catalog.server";
+import { getAgeGroups, getBanners, getCategoryTree, getProducts, getStore } from "@/services/catalog.server";
 import type { CategorySummary, ProductCard } from "@/types/api";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -60,11 +62,14 @@ const BANNER_PLANS = [
 ];
 
 export default async function HomePage() {
-  const [store, categories, featuredRes, popularRes] = await Promise.all([
+  const [store, categories, featuredRes, popularRes, newestRes, banners, ageGroups] = await Promise.all([
     getStore(),
     getCategoryTree(),
     safe(getProducts({ featured: true, sort: "featured", limit: 12 })),
     safe(getProducts({ sort: "popular", limit: 24 })),
+    safe(getProducts({ sort: "newest", limit: 16 })),
+    getBanners(),
+    getAgeGroups(),
   ]);
 
   const name = brandName(store);
@@ -84,6 +89,8 @@ export default async function HomePage() {
   const bestsellers = interleaveByCategory(pool, shown).slice(0, 8);
   bestsellers.forEach((p) => shown.add(p.id));
   const socialProducts = interleaveByCategory(pool, shown).slice(0, 6);
+  // "Fresh drops": the newest listings not already shown above
+  const newArrivals = interleaveByCategory(newestRes.data?.items ?? [], shown).slice(0, 8);
 
   // promo banners: one RC-style category and one collectibles-style category, each with its own photos
   const live = flatten(categories ?? []).filter((c) => c.productCount > 0);
@@ -97,7 +104,7 @@ export default async function HomePage() {
   const bannerProducts = await Promise.all(
     bannerCategories.map((c) => (c ? safe(getProducts({ category: c.slug, sort: "featured", limit: 12 })) : Promise.resolve(null))),
   );
-  const banners: PromoBanner[] = BANNER_PLANS.flatMap((plan, i) => {
+  const promos: PromoBanner[] = BANNER_PLANS.flatMap((plan, i) => {
     const category = bannerCategories[i];
     const items = bannerProducts[i]?.data?.items ?? [];
     // prefer photos not already shown above, but never leave a banner without one
@@ -132,6 +139,7 @@ export default async function HomePage() {
       )}
 
       <Hero store={store} />
+      <BannerSlider banners={banners} />
 
       {apiDown ? (
         <Container className="py-12">
@@ -146,11 +154,11 @@ export default async function HomePage() {
                   id="cats-title"
                   eyebrow="Shop by category"
                   title="Explore the collection"
-                  description="From hobby-grade RC to collector die-cast — find your corner of the store."
+                  description="RC cars, construction RC, drones and action figures."
                   href="/categories"
                   linkLabel="All categories"
                 />
-                <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-5 sm:overflow-visible sm:px-0 xl:grid-cols-7">
+                <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-5">
                   {homeCategories.slice(0, 14).map((c, i) => (
                     <li key={c.id} className="w-[42vw] shrink-0 snap-start sm:w-auto">
                       <CategoryCard category={c} index={i} />
@@ -161,6 +169,8 @@ export default async function HomePage() {
             </section>
           )}
 
+          <ShopByAge groups={ageGroups} />
+
           {favourites.length > 0 && (
             <section aria-labelledby="featured-title" className="pb-14 sm:pb-20">
               <Container>
@@ -168,7 +178,7 @@ export default async function HomePage() {
                   id="featured-title"
                   eyebrow="Featured"
                   title="Find Their Next Favourite"
-                  description="Thoughtfully selected toys for every age, interest, and imagination."
+                  description="Hand-picked toys our customers love."
                   href="/products?featured=true"
                 />
                 <ProductGrid products={fit(favourites)} layout="home" className={rowFit(fit(favourites).length)} />
@@ -176,19 +186,30 @@ export default async function HomePage() {
             </section>
           )}
 
-          <PromoBanners banners={banners} />
+          <PromoBanners banners={promos} />
 
           {bestsellers.length > 0 && (
             <section aria-labelledby="popular-title" className="py-14 sm:py-20">
               <Container>
                 <SectionHeader
                   id="popular-title"
-                  eyebrow="Popular picks"
-                  title="Loved by Little Explorers"
-                  description="Favourites from across the store — RC, figures, collectibles and more."
+                  eyebrow="Best sellers"
+                  title="Best Selling Picks"
+                  description="The most-loved toys across the store."
                   href="/products?sort=popular"
                 />
                 <ProductGrid products={fit(bestsellers)} layout="home" className={rowFit(fit(bestsellers).length)} />
+              </Container>
+            </section>
+          )}
+
+          {store?.showPrices && <ShopByPrice />}
+
+          {newArrivals.length > 0 && (
+            <section aria-labelledby="new-title" className="pb-14 sm:pb-20">
+              <Container>
+                <SectionHeader id="new-title" eyebrow="New arrivals" title="Fresh Drops" description="Just landed in store." href="/products?sort=newest" />
+                <ProductGrid products={fit(newArrivals)} layout="home" className={rowFit(fit(newArrivals).length)} />
               </Container>
             </section>
           )}

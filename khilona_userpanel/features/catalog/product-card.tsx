@@ -17,6 +17,23 @@ export function StockHint({ product, className }: { product: Pick<ProductCardTyp
   return <p className={cn("text-xs text-success-700", className)}>In stock</p>;
 }
 
+/** Age rating pill, e.g. "5-12 Years". */
+export function AgeBadge({ label, className, size = "sm" }: { label: string; className?: string; size?: "sm" | "md" }) {
+  return (
+    <span
+      title={`Age rating: ${label}`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border border-line bg-sand font-semibold leading-none text-ink",
+        size === "sm" ? "px-2 py-1 text-[0.625rem]" : "px-3 py-1.5 text-xs",
+        className,
+      )}
+    >
+      <span className="sr-only">Age rating: </span>
+      {label}
+    </span>
+  );
+}
+
 export function ProductCard({ product, priority, headingLevel = "h3" }: { product: ProductCardType; priority?: boolean; headingLevel?: "h2" | "h3" }) {
   const H = headingLevel;
   const href = `/product/${product.slug}`;
@@ -50,7 +67,10 @@ export function ProductCard({ product, priority, headingLevel = "h3" }: { produc
         )}
       </Link>
       <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3.5 sm:px-2">
-        <p className="truncate text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">{product.category.name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">{product.category.name}</p>
+          {product.ageRating && <AgeBadge label={product.ageRating} className="shrink-0" />}
+        </div>
         <H className="mt-1.5 font-sans text-sm font-semibold leading-snug tracking-normal text-ink sm:text-[0.9375rem]">
           <Link href={href} className="line-clamp-2 rounded after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
             {product.name}
@@ -66,6 +86,7 @@ export function ProductCard({ product, priority, headingLevel = "h3" }: { produc
             maxPrice={product.hasVariants ? product.maxPrice : undefined}
             size="md"
             showBadge={false}
+            askFor={{ name: product.name }}
           />
           <div className="mt-1 flex items-center justify-between gap-2">
             <StockHint product={product} />

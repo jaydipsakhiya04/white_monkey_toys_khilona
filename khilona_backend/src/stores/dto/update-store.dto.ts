@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsOptional, IsString, IsUrl, Length, Matches, MaxLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsInt, IsOptional, IsString, IsUrl, Length, Matches, Max, MaxLength, Min } from 'class-validator';
 import { EmptyToNull } from '../../common/decorators/transforms';
 
 const URL_OPTS = { protocols: ['http', 'https'], require_protocol: true, require_tld: false };
@@ -36,6 +36,10 @@ export class UpdateStoreDto {
   @ApiPropertyOptional({ example: '919876543210', description: 'WhatsApp number incl. country code' })
   @IsOptional() @EmptyToNull() @IsString() @Matches(/^[+\d][\d\s-]{6,18}$/, { message: 'Enter a valid WhatsApp number' })
   whatsapp?: string | null;
+
+  @ApiPropertyOptional({ example: '+91 96627 25685', description: 'Second mobile, used for calls and WhatsApp' })
+  @IsOptional() @EmptyToNull() @IsString() @Matches(/^[+\d][\d\s-]{6,18}$/, { message: 'Enter a valid mobile number' })
+  secondaryPhone?: string | null;
 
   @ApiPropertyOptional({ example: 'hello@khilona.in' })
   @IsOptional() @EmptyToNull() @IsEmail({}, { message: 'Enter a valid email address' }) @MaxLength(160)
@@ -122,4 +126,12 @@ export class UpdateStoreDto {
   @ApiPropertyOptional({ description: 'New customer reviews wait for approval before appearing on the storefront' })
   @IsOptional() @IsBoolean()
   reviewsRequireApproval?: boolean;
+
+  @ApiPropertyOptional({ example: 7, description: 'Days after delivery during which customers can request an exchange (0 turns exchanges off)' })
+  @IsOptional() @IsInt({ message: 'Exchange window must be a whole number of days' }) @Min(0) @Max(90, { message: 'At most 90 days' })
+  exchangeWindowDays?: number;
+
+  @ApiPropertyOptional({ description: 'Show prices on the storefront and in the public API (off = "Ask for price")' })
+  @IsOptional() @IsBoolean()
+  showPrices?: boolean;
 }

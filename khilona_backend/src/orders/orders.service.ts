@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
   UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { FieldError } from '../common/filters/all-exceptions.filter';
@@ -218,27 +219,6 @@ export class OrdersService {
     return order;
   }
 
-  /** Customers may cancel their own order only while it is still PENDING (not yet confirmed by the store). */
-  async cancelByCustomer(customer: AuthenticatedCustomer, orderNumber: string, reason?: string) {
-    const order = await this.findOwned(customer.id, orderNumber);
-    if (order.status !== OrderStatus.PENDING) {
-      throw new ConflictException(
-        order.status === OrderStatus.CANCELLED
-          ? 'This order is already cancelled'
-          : 'This order has already been confirmed by the store. Please contact the store to cancel it.',
-      );
-    }
-    await this.transition(order, OrderStatus.CANCELLED, {
-      id: null,
-      name: 'Customer',
-      note: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer',
-    });
-    this.logger.log(`Customer ${customer.id} cancelled ${order.orderNumber}`);
-    const fresh = await this.findOwned(customer.id, order.orderNumber);
-    this.notifications.orderStatusChanged({ ...this.event(fresh), from: order.status, to: OrderStatus.CANCELLED });
-    return fresh;
-  }
-
   // ─── Admin ─────────────────────────────────────────────────
 
   async adminList(query: AdminOrderQueryDto) {
@@ -283,7 +263,20 @@ export class OrdersService {
       );
     }
 
-    await this.transition(order, to, { id: admin.id, name: admin.name, note: dto.note });
+    const note = dto.note?.trim();
+    if (to === OrderStatus.CANCELLED && (!note || note.length < 3)) {
+      throw new UnprocessableEntityException({
+        message: 'A cancellation reason is required',
+        errors: [{ field: 'note', message: 'Enter why this order is being cancelled (shown to the customer)' }],
+      });
+    }
+
+    await this.transition(order, to, {
+      id: admin.id,
+      name: admin.name,
+      note,
+      ...(to === OrderStatus.CANCELLED ? { cancel: { reason: note!, by: 'STORE' as const } } : {}),
+    });
 
     this.logger.log(`${admin.email} changed ${order.orderNumber}: ${from} → ${to}`);
     const fresh = await this.findOrder(order.id);
@@ -310,7 +303,7 @@ export class OrdersService {
   private async transition(
     order: { id: string; status: OrderStatus; confirmedAt: Date | null; stockRestored: boolean; items: OrderDetailRow['items'] },
     to: OrderStatus,
-    actor: { id: string | null; name: string; note?: string },
+    actor: { id: string | null; name: string; note?: string; cancel?: { reason: string; by: 'CUSTOMER' | 'STORE' } },
   ) {
     const from = order.status;
     const now = new Date();
@@ -322,7 +315,9 @@ export class OrdersService {
           status: to,
           ...(to === 'CONFIRMED' && !order.confirmedAt ? { confirmedAt: now } : {}),
           ...(to === 'DELIVERED' ? { deliveredAt: now } : {}),
-          ...(to === 'CANCELLED' ? { cancelledAt: now } : {}),
+          ...(to === 'CANCELLED'
+            ? { cancelledAt: now, cancelReason: actor.cancel?.reason ?? actor.note ?? null, cancelledBy: actor.cancel?.by ?? 'STORE' }
+            : {}),
         },
       });
       if (updated.count === 0) {

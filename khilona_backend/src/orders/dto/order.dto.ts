@@ -169,7 +169,10 @@ export class UpdateOrderStatusDto {
   @IsEnum(OrderStatus, { message: 'Invalid order status' })
   status: OrderStatus;
 
-  @ApiPropertyOptional({ example: 'Confirmed with customer on call' })
+  @ApiPropertyOptional({
+    example: 'Confirmed with customer on call',
+    description: 'Required when cancelling: the cancellation reason (shown to the customer)',
+  })
   @IsOptional() @EmptyToUndefined() @IsString() @MaxLength(500)
   note?: string;
 }

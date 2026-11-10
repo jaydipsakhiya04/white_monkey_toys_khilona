@@ -68,6 +68,8 @@ model Store {
 
   phone         String?
   whatsapp      String?
+  /// Second mobile number, used for both calls and WhatsApp.
+  secondaryPhone String?
   email         String?
   address       String? @db.Text
   city          String?
@@ -105,14 +107,58 @@ model Store {
   /// When true, new customer reviews wait for admin approval before they appear on the storefront.
   reviewsRequireApproval Boolean @default(false)
 
+  /// Days after delivery during which a customer can request an exchange (wrong / damaged item).
+  exchangeWindowDays Int @default(7)
+
+  /// When false, the public API and storefront hide every price ("Ask for price" on WhatsApp instead).
+  showPrices Boolean @default(true)
+
   currency  String   @default("INR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // ─────────────────────────────────────────────────────────────
+// Storefront banners (home page offer slider)
+// ─────────────────────────────────────────────────────────────
+
+model Banner {
+  id             String    @id @default(cuid())
+  title          String?
+  subtitle       String?
+  /// Wide image (1680 × 480 px, 7:2)
+  imageUrl       String
+  /// Optional image for phones (1000 × 800 px, 5:4); falls back to imageUrl
+  mobileImageUrl String?
+  /// Where the slide links to: a storefront path ("/category/construction-rc") or a full URL
+  linkUrl        String?
+  ctaLabel       String?
+  isActive       Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  /// Optional schedule: the slide is only shown between these dates
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+// ─────────────────────────────────────────────────────────────
 // Catalogue
 // ─────────────────────────────────────────────────────────────
+
+/// Age groups used for "Shop by age" and the age rating shown on products.
+enum AgeGroup {
+  MONTHS_0_18
+  MONTHS_18_36
+  YEARS_3_5
+  YEARS_5_7
+  YEARS_7_9
+  YEARS_9_12
+  YEARS_12_14
+  YEARS_14_PLUS
+}
 
 model Category {
   id             String   @id @default(cuid())
@@ -157,6 +203,8 @@ model Product {
   /// Free-form specification rows: [{ "label": "Age", "value": "3+" }]
   specifications   Json?
   hasVariants      Boolean   @default(false)
+  /// Age groups the product suits (its age rating). Empty = not rated.
+  ageGroups        AgeGroup[] @default([])
   isFeatured       Boolean   @default(false)
   isActive         Boolean   @default(true)
   sortOrder        Int       @default(0)
@@ -286,6 +334,7 @@ model Customer {
   refreshTokens  CustomerRefreshToken[]
   passwordResets CustomerPasswordReset[]
   reviews        Review[]
+  exchanges      ExchangeRequest[]
 }
 
 /// Rotating refresh tokens for customer accounts. Only a SHA-256 hash of the token is stored.
@@ -385,8 +434,12 @@ model Order {
   confirmedAt   DateTime?
   deliveredAt   DateTime?
   cancelledAt   DateTime?
+  /// Why the order was cancelled (required for every cancellation).
+  cancelReason  String?   @db.Text
+  /// Who cancelled it: "CUSTOMER" or "STORE".
+  cancelledBy   String?
 
-  source    String   @default("WEB")
+  source   String   @default("WEB")
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
@@ -394,8 +447,9 @@ model Order {
 
   customer Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items    OrderItem[]
-  history  OrderStatusHistory[]
-  reviews  Review[]
+  history   OrderStatusHistory[]
+  reviews   Review[]
+  exchanges ExchangeRequest[]
 
   @@index([status])
   @@index([createdAt])
@@ -427,6 +481,8 @@ model OrderItem {
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  exchange ExchangeRequest?
 
   @@index([orderId])
   @@index([productId])
@@ -479,6 +535,50 @@ model Review {
   @@index([productId, status, createdAt])
   @@index([status, createdAt])
   @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Exchanges (after delivery: wrong or damaged item)
+// ─────────────────────────────────────────────────────────────
+
+enum ExchangeReason {
+  WRONG_ITEM
+  DAMAGED_ITEM
+}
+
+enum ExchangeStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+/// Exchange-only after-sales request for one delivered order item. Each purchased item can be
+/// exchanged once (unique orderItemId); the API enforces delivery status and the exchange window.
+model ExchangeRequest {
+  id            String         @id @default(cuid())
+  requestNumber String         @unique
+  orderId       String
+  orderItemId   String         @unique
+  customerId    String?
+  reason        ExchangeReason
+  details       String         @db.Text
+  quantity      Int
+  contactPhone  String
+  status        ExchangeStatus @default(REQUESTED)
+  adminNote     String?        @db.Text
+  handledByName String?
+  resolvedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  customer  Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([orderId])
+  @@index([customerId])
 }
 
 /// Per-day sequence used to build collision-safe order numbers (KH-YYYYMMDD-NNNN).

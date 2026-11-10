@@ -5,8 +5,10 @@ export interface AppConfig {
   isProduction: boolean;
   port: number;
   appUrl: string;
-  /** Public storefront URL (password-reset links). */
+  /** Public storefront URL (password-reset links, cache refresh). */
   storefrontUrl: string;
+  /** Shared secret for asking the storefront to refresh its cached pages after admin edits. Empty = off. */
+  storefrontRevalidateSecret: string;
   trustProxy: boolean;
   swaggerEnabled: boolean;
   corsOrigins: string[];
@@ -104,6 +106,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port,
     appUrl,
     storefrontUrl: trimSlash(env.STOREFRONT_URL || 'http://localhost:3000'),
+    storefrontRevalidateSecret: env.STOREFRONT_REVALIDATE_SECRET ?? '',
     trustProxy: bool(env.TRUST_PROXY, false),
     swaggerEnabled: bool(env.SWAGGER_ENABLED, !isProduction),
     corsOrigins: (env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001')

@@ -7,6 +7,8 @@ import { Sheet } from "@/components/ui/overlay";
 import type { ProductFacets } from "@/types/api";
 import { formatPrice, pluralize } from "@/utils/format";
 import { SORT_OPTIONS, countActiveFilters, type ListingParams } from "@/utils/listing";
+import { ageLabelFromSlug } from "@/utils/age";
+import { usePricing } from "@/features/store/pricing";
 import { FilterPanel } from "./filter-panel";
 import { useListingNav } from "./listing-nav";
 
@@ -23,6 +25,7 @@ export function ListingToolbar({
   searchLabel: string;
   showCategories?: boolean;
 }) {
+  const { showPrices } = usePricing();
   const { update } = useListingNav();
   const [q, setQ] = useState(current.search ?? "");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -100,7 +103,7 @@ export function ListingToolbar({
               onChange={(e) => update({ sort: e.target.value === "featured" ? null : e.target.value })}
               className="w-full text-sm sm:w-48"
             >
-              {SORT_OPTIONS.map((o) => (
+              {SORT_OPTIONS.filter((o) => showPrices || !o.value.startsWith("price")).map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
@@ -139,10 +142,11 @@ export function ListingToolbar({
 }
 
 function ActiveFilterChips({ current }: { current: ListingParams }) {
+  const { showPrices } = usePricing();
   const { update, clearFilters } = useListingNav();
   const chips: { label: string; onRemove: () => void }[] = [];
 
-  if (current.minPrice !== undefined || current.maxPrice !== undefined) {
+  if (showPrices && (current.minPrice !== undefined || current.maxPrice !== undefined)) {
     const label =
       current.minPrice !== undefined && current.maxPrice !== undefined
         ? `${formatPrice(current.minPrice)} – ${formatPrice(current.maxPrice)}`
@@ -153,6 +157,15 @@ function ActiveFilterChips({ current }: { current: ListingParams }) {
   }
   if (current.inStock) chips.push({ label: "In stock", onRemove: () => update({ inStock: null }) });
   if (current.featured) chips.push({ label: "Featured", onRemove: () => update({ featured: null }) });
+  for (const slug of current.ages) {
+    chips.push({
+      label: `Age ${ageLabelFromSlug(slug)}`,
+      onRemove: () => {
+        const remaining = current.ages.filter((a) => a !== slug);
+        update({ age: remaining.length ? remaining.join(",") : null });
+      },
+    });
+  }
   for (const token of current.options) {
     const [name, ...rest] = token.split(":");
     chips.push({

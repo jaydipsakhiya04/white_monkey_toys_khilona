@@ -263,6 +263,54 @@ describe('Khilona API (e2e)', () => {
       expect(byCategory.body.data.meta.total).toBe(2);
     });
 
+    it('stores age ratings and filters "shop by age"', async () => {
+      await http().put(`/api/admin/products/${simpleId}`).set(auth()).send({ ageGroups: ['NEWBORN'] }).expect(422);
+      const res = await http()
+        .put(`/api/admin/products/${simpleId}`)
+        .set(auth())
+        .send({ ageGroups: ['YEARS_9_12', 'YEARS_5_7', 'YEARS_7_9'] })
+        .expect(200);
+      expect(res.body.data).toMatchObject({ ageGroups: ['YEARS_5_7', 'YEARS_7_9', 'YEARS_9_12'], ageRating: '5-12 Years' });
+
+      const byAge = await http().get('/api/products?age=7-9-years').expect(200);
+      expect(byAge.body.data.items.map((p: { name: string }) => p.name)).toEqual(['Speed Cube']);
+      expect(byAge.body.data.items[0].ageRating).toBe('5-12 Years');
+      expect((await http().get('/api/products?age=14-plus-years').expect(200)).body.data.meta.total).toBe(0);
+
+      const groups = await http().get('/api/products/age-groups').expect(200);
+      expect(groups.body.data).toHaveLength(8);
+      expect(groups.body.data.find((g: { slug: string }) => g.slug === '5-7-years')).toMatchObject({ label: '5-7 Years', count: 1 });
+      const facets = await http().get('/api/products/facets').expect(200);
+      expect(facets.body.data.ages.map((a: { slug: string }) => a.slug)).toEqual(['5-7-years', '7-9-years', '9-12-years']);
+    });
+
+    it('hides every price from public responses while the store hides prices', async () => {
+      await http().put('/api/admin/store').set(auth()).send({ showPrices: false, secondaryPhone: '96627 25685' }).expect(200);
+      const store = await http().get('/api/store').expect(200);
+      expect(store.body.data).toMatchObject({ showPrices: false, secondaryPhone: '96627 25685', secondaryPhoneUrl: 'tel:+919662725685' });
+
+      const list = await http().get('/api/products').query({ search: 'Speed Cube' }).expect(200);
+      expect(list.body.data.items[0]).toMatchObject({ name: 'Speed Cube', price: null, salePrice: null, effectivePrice: null, minPrice: null, maxPrice: null });
+      expect(list.body.data.meta.total).toBe(1); // pagination counts are kept
+      const detail = await http().get('/api/products/speed-cube').expect(200);
+      expect(detail.body.data.price).toBeNull();
+      expect(JSON.stringify(detail.body.data.variants ?? [])).not.toMatch(/"price":d/);
+      // price filters / sorts are ignored so they cannot reveal prices
+      const cheap = await http().get('/api/products').query({ maxPrice: 1 }).expect(200);
+      expect(cheap.body.data.meta.total).toBeGreaterThan(0);
+      const facets = await http().get('/api/products/facets').expect(200);
+      expect(facets.body.data.priceRange).toBeNull();
+      const cart = await http().post('/api/cart/validate').send({ items: [{ productId: simpleId, quantity: 1 }] }).expect(200);
+      expect(cart.body.data.summary).toMatchObject({ itemsCount: 1, total: null, subtotal: null });
+      expect(cart.body.data.items[0].unitPrice).toBeNull();
+
+      // admins still see real prices
+      const admin = await http().get(`/api/admin/products/${simpleId}`).set(auth()).expect(200);
+      expect(typeof admin.body.data.price).toBe('number');
+      await http().put('/api/admin/store').set(auth()).send({ showPrices: true }).expect(200);
+      expect((await http().get('/api/products/speed-cube').expect(200)).body.data.price).toEqual(expect.any(Number));
+    });
+
     it('hides inactive products from the storefront', async () => {
       await http().patch(`/api/admin/products/${simpleId}/status`).set(auth()).send({ isActive: false }).expect(200);
       await http().get('/api/products/speed-cube').expect(404);
@@ -379,8 +427,17 @@ describe('Khilona API (e2e)', () => {
       expect(res.body.data.contact.callUrl).toBe('tel:+919825012345');
     });
 
-    it('restores stock exactly once when cancelled', async () => {
-      await http().patch(`/api/admin/orders/${orderNumber}/status`).set(auth()).send({ status: 'CANCELLED' }).expect(200);
+    it('requires a reason to cancel, then restores stock exactly once', async () => {
+      await http().patch(`/api/admin/orders/${orderNumber}/status`).set(auth()).send({ status: 'CANCELLED' }).expect(422);
+      await http().patch(`/api/admin/orders/${orderNumber}/status`).set(auth()).send({ status: 'CANCELLED', note: ' ' }).expect(422);
+      const res = await http()
+        .patch(`/api/admin/orders/${orderNumber}/status`)
+        .set(auth())
+        .send({ status: 'CANCELLED', note: 'Item out of stock' })
+        .expect(200);
+      expect(res.body.data).toMatchObject({ cancelReason: 'Item out of stock', cancelledBy: 'STORE' });
+      const tracked = await http().get('/api/orders/track').query({ orderNumber, phone: '9825012345' }).expect(200);
+      expect(tracked.body.data).toMatchObject({ status: 'CANCELLED', cancelReason: 'Item out of stock', cancelledBy: 'STORE' });
       expect((await prisma.product.findUniqueOrThrow({ where: { id: simpleId } })).stock).toBe(1);
       expect((await prisma.productVariant.findUniqueOrThrow({ where: { id: redVariantId } })).stock).toBe(3);
       // Final state: no further transitions.
@@ -407,6 +464,41 @@ describe('Khilona API (e2e)', () => {
   });
 
   // ─── Deletion rules ────────────────────────────────────────
+
+  describe('banners', () => {
+    it('lets admins manage the home slider; the storefront only sees live slides', async () => {
+      await http().post('/api/admin/banners').set(auth()).send({ title: 'No image' }).expect(422);
+      await http().post('/api/admin/banners').set(auth()).send({ imageUrl: 'http://localhost:4000/uploads/banners/a.webp', linkUrl: 'javascript:alert(1)' }).expect(422);
+      const live = await http()
+        .post('/api/admin/banners')
+        .set(auth())
+        .send({ title: 'Diwali sale', imageUrl: 'http://localhost:4000/uploads/banners/a.webp', linkUrl: '/products?sort=newest', ctaLabel: 'Shop' })
+        .expect(201);
+      expect(live.body.data).toMatchObject({ state: 'LIVE', sortOrder: 0 });
+      const later = await http()
+        .post('/api/admin/banners')
+        .set(auth())
+        .send({ imageUrl: 'http://localhost:4000/uploads/banners/b.webp', startsAt: new Date(Date.now() + 86_400_000).toISOString() })
+        .expect(201);
+      expect(later.body.data.state).toBe('SCHEDULED');
+      await http()
+        .post('/api/admin/banners')
+        .set(auth())
+        .send({ imageUrl: 'http://localhost:4000/uploads/banners/c.webp', startsAt: '2026-01-02T00:00:00Z', endsAt: '2026-01-01T00:00:00Z' })
+        .expect(422);
+
+      const pub = await http().get('/api/banners').expect(200);
+      expect(pub.body.data).toHaveLength(1);
+      expect(pub.body.data[0]).toMatchObject({ title: 'Diwali sale', linkUrl: '/products?sort=newest' });
+
+      await http().patch(`/api/admin/banners/${live.body.data.id}`).set(auth()).send({ isActive: false }).expect(200);
+      expect((await http().get('/api/banners').expect(200)).body.data).toHaveLength(0);
+      const ordered = await http().put('/api/admin/banners/order').set(auth()).send({ ids: [later.body.data.id, live.body.data.id] }).expect(200);
+      expect(ordered.body.data.map((b: { id: string }) => b.id)).toEqual([later.body.data.id, live.body.data.id]);
+      await http().delete(`/api/admin/banners/${later.body.data.id}`).set(auth()).expect(200);
+      await http().get('/api/admin/banners').expect(401);
+    });
+  });
 
   describe('deletion rules', () => {
     it('archives products referenced by orders and deletes others', async () => {

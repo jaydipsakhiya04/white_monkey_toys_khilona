@@ -2,6 +2,8 @@ import { cache } from "react";
 import { serverGet } from "@/lib/api/server";
 import { ApiError } from "@/lib/api/errors";
 import type {
+  AgeGroupCount,
+  Banner,
   CategoryDetail,
   CategorySummary,
   Paginated,
@@ -54,11 +56,29 @@ export const getProduct = cache(async (slug: string): Promise<ProductDetail | nu
   }
 });
 
+/** Home page offer slider (admin managed); [] when unavailable. */
+export const getBanners = cache(async (): Promise<Banner[]> => {
+  try {
+    return await serverGet<Banner[]>("/banners");
+  } catch {
+    return [];
+  }
+});
+
+/** Shop by age: age groups with their product counts; [] when unavailable. */
+export const getAgeGroups = cache(async (): Promise<AgeGroupCount[]> => {
+  try {
+    return await serverGet<AgeGroupCount[]>("/products/age-groups");
+  } catch {
+    return [];
+  }
+});
+
 export function getProducts(query: ProductQuery) {
   return serverGet<Paginated<ProductCard>>("/products", query);
 }
 
-export function getFacets(query: { category?: string; search?: string }) {
+export function getFacets(query: { category?: string; search?: string; featured?: boolean }) {
   return serverGet<ProductFacets>("/products/facets", query);
 }
 

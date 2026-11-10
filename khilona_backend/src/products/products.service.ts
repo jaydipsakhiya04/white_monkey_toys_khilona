@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CategoriesService } from '../categories/categories.service';
+import { StoreService } from '../stores/store.service';
 import { toNumber } from '../common/utils/money';
 import { buildPage, skipTake } from '../common/utils/pagination';
 import { PrismaService } from '../database/prisma.service';
+import { AGE_GROUPS, ageGroupFromSlug } from './age-groups';
 import { FacetsQueryDto, PublicProductQueryDto, PublicSort } from './dto/product.dto';
 import { cardSelect, detailInclude, toProductCard, toProductDetail } from './product.mapper';
 
@@ -58,11 +60,23 @@ export function parseOptionFilter(raw: string | undefined): Record<string, strin
   return groups;
 }
 
+/** "5-7-years,YEARS_7_9" → ['YEARS_5_7', 'YEARS_7_9'] (unknown values are ignored). */
+export function parseAgeFilter(raw: string | undefined) {
+  return [...new Set((raw ?? '').split(',').map((s) => ageGroupFromSlug(s)).filter((g) => g !== undefined))];
+}
+
+/** Age groups with how many storefront products suit them ("Shop by age"). */
+export async function ageGroupCounts(prisma: PrismaService) {
+  const counts = await Promise.all(AGE_GROUPS.map((g) => prisma.product.count({ where: { AND: [STOREFRONT_PRODUCT, { ageGroups: { has: g.value } }] } })));
+  return AGE_GROUPS.map((g, i) => ({ value: g.value, slug: g.slug, label: g.label, count: counts[i] }));
+}
+
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly categories: CategoriesService,
+    private readonly store: StoreService,
   ) {}
 
   private async baseWhere(categorySlug?: string, search?: string): Promise<Prisma.ProductWhereInput | null> {
@@ -81,9 +95,18 @@ export class ProductsService {
     const base = await this.baseWhere(query.category, query.search);
     if (!base) throw new NotFoundException('Category not found');
 
+    // while prices are hidden, price filters and price sorting are ignored (they would reveal prices)
+    if (!(await this.store.pricesVisible())) {
+      query.minPrice = undefined;
+      query.maxPrice = undefined;
+      if (query.sort === 'price_asc' || query.sort === 'price_desc') query.sort = 'featured';
+    }
+
     const and: Prisma.ProductWhereInput[] = [base];
     if (query.inStock) and.push({ stock: { gt: 0 } });
     if (query.featured) and.push({ isFeatured: true });
+    const ages = parseAgeFilter(query.age);
+    if (ages.length) and.push({ ageGroups: { hasSome: ages } });
     // Price filter on effective price range (overlap with [min, max]).
     if (query.minPrice !== undefined) and.push({ maxPrice: { gte: query.minPrice } });
     if (query.maxPrice !== undefined) and.push({ minPrice: { lte: query.maxPrice } });
@@ -110,10 +133,11 @@ export class ProductsService {
   }
 
   async facets(query: FacetsQueryDto) {
-    const where = await this.baseWhere(query.category, query.search);
-    if (!where) throw new NotFoundException('Category not found');
+    const base = await this.baseWhere(query.category, query.search);
+    if (!base) throw new NotFoundException('Category not found');
+    const where: Prisma.ProductWhereInput = query.featured ? { AND: [base, { isFeatured: true }] } : base;
 
-    const [agg, options, byCategory] = await Promise.all([
+    const [agg, options, byCategory, ageCounts] = await Promise.all([
       this.prisma.product.aggregate({ where, _min: { minPrice: true }, _max: { maxPrice: true }, _count: { _all: true } }),
       this.prisma.productOption.findMany({
         where: { product: { AND: [where, { hasVariants: true }] } },
@@ -128,6 +152,7 @@ export class ProductsService {
         },
       }),
       this.prisma.product.groupBy({ by: ['categoryId'], where, _count: { _all: true } }),
+      Promise.all(AGE_GROUPS.map((g) => this.prisma.product.count({ where: { AND: [where, { ageGroups: { has: g.value } }] } }))),
     ]);
 
     const optionMap = new Map<string, string[]>();
@@ -150,8 +175,13 @@ export class ProductsService {
         .filter(([, values]) => values.length > 0)
         .map(([name, values]) => ({ name, values })),
       categories: categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug, count: countMap.get(c.id) ?? 0 })),
+      ages: AGE_GROUPS.map((g, i) => ({ value: g.value, slug: g.slug, label: g.label, count: ageCounts[i] })).filter((a) => a.count > 0),
       total: agg._count._all,
     };
+  }
+
+  ageGroups() {
+    return ageGroupCounts(this.prisma);
   }
 
   async bySlug(slug: string) {

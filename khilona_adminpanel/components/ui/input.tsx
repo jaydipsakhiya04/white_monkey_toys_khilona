@@ -1,6 +1,19 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
-import { ChevronDown } from 'lucide-react';
+'use client';
+
+import {
+  forwardRef,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import { cn } from '@/utils/cn';
+import { Combobox, optionsFromChildren } from './combobox';
 
 export const controlBase =
   'w-full rounded-[10px] border border-line bg-surface text-sm text-ink placeholder:text-stone-400 shadow-xs ' +
@@ -63,23 +76,100 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   );
 });
 
-type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean; wrapperClassName?: string };
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  invalid?: boolean;
+  wrapperClassName?: string;
+  searchPlaceholder?: string;
+  placeholder?: string;
+};
 
+/**
+ * Drop-in replacement for <select> (same API: <option>/<optgroup> children, value/defaultValue,
+ * onChange, react-hook-form `register`) rendered as a searchable dropdown. A hidden native
+ * <select> keeps the value, name and ref so forms behave exactly as before.
+ */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { invalid, className, wrapperClassName, children, ...props },
+  {
+    invalid,
+    className,
+    wrapperClassName,
+    children,
+    value,
+    defaultValue,
+    onChange,
+    onBlur,
+    id,
+    disabled,
+    placeholder,
+    searchPlaceholder,
+    'aria-label': ariaLabel,
+    'aria-describedby': describedBy,
+    ...props
+  },
   ref,
 ) {
+  const selectRef = useRef<HTMLSelectElement | null>(null);
+  const options = useMemo(() => optionsFromChildren(children), [children]);
+  const controlled = value !== undefined;
+  const [inner, setInner] = useState(() => String(defaultValue ?? options[0]?.value ?? ''));
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+
+  // uncontrolled (react-hook-form register / reset): pick up the value the form wrote
+  useLayoutEffect(() => {
+    if (!controlled && selectRef.current) setInner(selectRef.current.value);
+  }, [controlled]);
+
+  const current = controlled ? String(value ?? '') : (selectRef.current?.value ?? inner);
+
+  const setRefs = (el: HTMLSelectElement | null) => {
+    selectRef.current = el;
+    if (typeof ref === 'function') ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  const change = (next: string) => {
+    const el = selectRef.current;
+    if (el) {
+      // set through the native setter so React sees a real change event
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(el, next);
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (!controlled) setInner(next);
+    rerender();
+  };
+
+  const emptyLabel = options.find((o) => o.value === '')?.label;
+
   return (
-    <div className={cn('relative', wrapperClassName)}>
+    <div className={cn('relative min-w-0', wrapperClassName)}>
       <select
-        ref={ref}
-        aria-invalid={invalid || undefined}
-        className={cn(controlBase, 'h-9 appearance-none pl-3 pr-9 truncate', className)}
+        ref={setRefs}
+        value={controlled ? value : undefined}
+        defaultValue={controlled ? undefined : defaultValue}
+        onChange={onChange}
+        onBlur={onBlur}
+        disabled={disabled}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
         {...props}
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+      <Combobox
+        id={id}
+        value={current}
+        onValueChange={change}
+        options={options}
+        placeholder={placeholder ?? emptyLabel ?? 'Select…'}
+        searchPlaceholder={searchPlaceholder}
+        invalid={invalid}
+        disabled={disabled}
+        className={className}
+        aria-label={ariaLabel}
+        aria-describedby={describedBy}
+        onBlur={() => selectRef.current?.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))}
+      />
     </div>
   );
 });

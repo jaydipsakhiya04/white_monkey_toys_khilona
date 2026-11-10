@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DocumentsModule } from '../documents/documents.module';
+import { ExchangesModule } from '../exchanges/exchanges.module';
 import { OrdersModule } from '../orders/orders.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { StoreModule } from '../stores/store.module';
@@ -7,7 +8,7 @@ import { AccountController, GuestDocumentsController } from './account.controlle
 import { AccountService } from './account.service';
 
 @Module({
-  imports: [OrdersModule, ReviewsModule, DocumentsModule, StoreModule],
+  imports: [OrdersModule, ReviewsModule, DocumentsModule, StoreModule, ExchangesModule],
   controllers: [AccountController, GuestDocumentsController],
   providers: [AccountService],
   exports: [AccountService],

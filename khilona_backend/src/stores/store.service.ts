@@ -32,7 +32,15 @@ export class StoreService {
       isOpenNow: this.isOpenNow(store),
       whatsappUrl: whatsappUrl(store.whatsapp),
       phoneUrl: telUrl(store.phone),
+      // the second mobile works for both calls and WhatsApp
+      secondaryPhoneUrl: telUrl(store.secondaryPhone),
+      secondaryWhatsappUrl: whatsappUrl(store.secondaryPhone ? `91${store.secondaryPhone.replace(/\D/g, '').slice(-10)}` : null),
     };
+  }
+
+  /** Whether the storefront and public API may show prices (Admin → Store → Prices). */
+  async pricesVisible(): Promise<boolean> {
+    return (await this.get()).showPrices;
   }
 
   async update(dto: UpdateStoreDto, actorEmail: string): Promise<Store> {

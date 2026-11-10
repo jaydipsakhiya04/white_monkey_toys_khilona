@@ -7,6 +7,7 @@ import type { ProductFacets } from "@/types/api";
 import { cn } from "@/utils/cn";
 import { formatPrice } from "@/utils/format";
 import type { ListingParams } from "@/utils/listing";
+import { usePricing } from "@/features/store/pricing";
 import { useListingNav } from "./listing-nav";
 
 type Draft = {
@@ -14,6 +15,7 @@ type Draft = {
   maxPrice: string;
   inStock: boolean;
   featured: boolean;
+  ages: string[];
   options: string[];
 };
 
@@ -23,6 +25,7 @@ function fromParams(p: ListingParams): Draft {
     maxPrice: p.maxPrice !== undefined ? String(p.maxPrice) : "",
     inStock: p.inStock,
     featured: p.featured,
+    ages: p.ages,
     options: p.options,
   };
 }
@@ -33,6 +36,7 @@ function toPatch(d: Draft) {
     maxPrice: d.maxPrice || null,
     inStock: d.inStock ? "true" : null,
     featured: d.featured ? "true" : null,
+    age: d.ages.length ? d.ages.join(",") : null,
     options: d.options.length ? d.options.join(",") : null,
   };
 }
@@ -51,6 +55,7 @@ export function FilterPanel({
   onApplied?: () => void;
 }) {
   const { update } = useListingNav();
+  const { showPrices } = usePricing();
   const [draft, setDraft] = useState<Draft>(() => fromParams(current));
   const [priceError, setPriceError] = useState<string | null>(null);
   const uid = useId();
@@ -82,6 +87,11 @@ export function FilterPanel({
   const toggleOption = (token: string) => {
     const has = draft.options.includes(token);
     change({ options: has ? draft.options.filter((o) => o !== token) : [...draft.options, token] });
+  };
+
+  const toggleAge = (slug: string) => {
+    const has = draft.ages.includes(slug);
+    change({ ages: has ? draft.ages.filter((a) => a !== slug) : [...draft.ages, slug] });
   };
 
   const onPriceSubmit = (e: FormEvent) => {
@@ -125,7 +135,31 @@ export function FilterPanel({
         </div>
       </section>
 
-      <section aria-labelledby={`${uid}-price`}>
+      {facets?.ages && facets.ages.length > 0 && (
+        <fieldset>
+          <legend className={sectionTitle}>Age</legend>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {facets.ages.map((a) => {
+              const checked = draft.ages.includes(a.slug);
+              return (
+                <label
+                  key={a.slug}
+                  className={cn(
+                    "relative flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink",
+                    checked ? "border-ink bg-ink text-white" : "border-line-strong bg-surface text-ink hover:border-ink/40",
+                  )}
+                >
+                  <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggleAge(a.slug)} />
+                  <span className="truncate">{a.label}</span>
+                  <span className={cn("text-xs tabular-nums", checked ? "text-white/70" : "text-muted")}>{a.count}</span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
+      {showPrices && <section aria-labelledby={`${uid}-price`}>
         <h3 id={`${uid}-price`} className={sectionTitle}>
           Price
         </h3>
@@ -181,7 +215,7 @@ export function FilterPanel({
             </p>
           )}
         </form>
-      </section>
+      </section>}
 
       {facets?.options.map((group) => (
         <fieldset key={group.name}>
@@ -212,7 +246,7 @@ export function FilterPanel({
           <Button
             variant="outline"
             className="flex-1"
-            onClick={() => setDraft({ minPrice: "", maxPrice: "", inStock: false, featured: false, options: [] })}
+            onClick={() => setDraft({ minPrice: "", maxPrice: "", inStock: false, featured: false, ages: [], options: [] })}
           >
             Reset
           </Button>

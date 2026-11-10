@@ -11,11 +11,13 @@ import { documentFilename, useDocumentDownload } from "@/features/orders/documen
 import { OrderStatusBadge } from "@/features/orders/order-details";
 import { accountService } from "@/services/account";
 import type { CustomerOrderListItem, DocumentKind } from "@/types/api";
+import { usePricing } from "@/features/store/pricing";
 import { formatDateTime, formatPrice } from "@/utils/format";
 import { AccountHeading, useStoreInfo } from "./account-shell";
 import { accountKeys, OrderListSkeleton } from "./orders-ui";
 
 function DocRow({ order }: { order: CustomerOrderListItem }) {
+  const { showPrices } = usePricing();
   const { storeName } = useStoreInfo();
   const { busy, download } = useDocumentDownload(
     (kind) => accountService.document(order.orderNumber, kind),
@@ -29,7 +31,8 @@ function DocRow({ order }: { order: CustomerOrderListItem }) {
           #{order.orderNumber}
         </Link>
         <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted">
-          {formatDateTime(order.createdAt)} · {formatPrice(order.total)}
+          {formatDateTime(order.createdAt)}
+          {showPrices && <> · {formatPrice(order.total)}</>}
           <OrderStatusBadge status={order.status} />
         </p>
       </div>
@@ -53,6 +56,7 @@ function DocRow({ order }: { order: CustomerOrderListItem }) {
 }
 
 export function DocumentsView() {
+  const { showPrices } = usePricing();
   const q = useInfiniteQuery({
     queryKey: accountKeys.orders("documents"),
     queryFn: ({ pageParam }) => accountService.orders(pageParam, undefined, 20),
@@ -63,7 +67,15 @@ export function DocumentsView() {
   return (
     <>
       <AccountHeading title="Documents" description="Download invoices and order receipts as PDF. Documents always reflect the prices you paid." />
-      {q.isPending ? (
+      {!showPrices ? (
+        <EmptyState
+          icon={<FileText />}
+          title="Invoices are shared on WhatsApp"
+          description="Our team sends the invoice and order details for every order on WhatsApp. Contact us if you need a copy."
+        >
+          <ButtonLink href="/contact">Contact us</ButtonLink>
+        </EmptyState>
+      ) : q.isPending ? (
         <OrderListSkeleton count={2} />
       ) : q.isError ? (
         <ErrorState title="Something went wrong." description="We couldn't load your documents." onRetry={() => void q.refetch()} showHome={false} />

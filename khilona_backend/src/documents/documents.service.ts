@@ -23,7 +23,7 @@ const MUTED = '#6B6B6B';
 const LINE = '#E5E5E5';
 const SOFT = '#F5F5F4';
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = { CASH_ON_DELIVERY: 'Pay on delivery (cash / UPI)' };
+const PAYMENT_METHOD_LABELS: Record<string, string> = { CASH_ON_DELIVERY: 'As agreed with our team' };
 const PAYMENT_STATUS_LABELS: Record<string, string> = { UNPAID: 'Due on delivery', PAID: 'Paid', REFUNDED: 'Refunded' };
 
 const FONT_FILES = { regular: 'Inter-Regular.ttf', semibold: 'Inter-SemiBold.ttf', bold: 'Inter-Bold.ttf' } as const;
@@ -319,7 +319,7 @@ export class DocumentsService {
     const rows: [string, string][] = [
       ['Subtotal (MRP)', this.amount(order.subtotal)],
       ['Discount', toNumber(order.discount) > 0 ? `− ${this.amount(order.discount)}` : this.amount(0)],
-      ['Shipping', toNumber(order.shippingFee) > 0 ? this.amount(order.shippingFee) : 'Free'],
+      ['Shipping', toNumber(order.shippingFee) > 0 ? this.amount(order.shippingFee) : 'As per actual'],
     ];
     for (const [label, value] of rows) {
       this.font(doc, 'regular').fontSize(9).fillColor(MUTED).text(label, x, y, { width: width * 0.55 });

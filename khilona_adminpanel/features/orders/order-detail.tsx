@@ -17,7 +17,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { InitialsAvatar } from '@/components/ui/avatar';
-import { OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/badge';
+import { Badge, OrderStatusBadge, PaymentStatusBadge } from '@/components/ui/badge';
+import { EXCHANGE_REASON_LABEL, EXCHANGE_STATUS_LABEL, EXCHANGE_STATUS_TONE } from '@/features/exchanges/exchanges-list';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Card, CardHeader, ErrorState, Skeleton, Thumb } from '@/components/ui/feedback';
 import { Field } from '@/components/ui/field';
@@ -112,7 +113,14 @@ function OrderProgress({ order }: { order: AdminOrderDetail }) {
           <XCircle className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 text-[13px]">
-          <p className="font-semibold text-red-800">This order was cancelled</p>
+          <p className="font-semibold text-red-800">
+            {order.cancelledBy === 'CUSTOMER' ? 'Cancelled by the customer' : order.cancelledBy === 'STORE' ? 'Cancelled by the store' : 'This order was cancelled'}
+          </p>
+          {order.cancelReason && (
+            <p className="mt-0.5 text-ink">
+              <span className="font-medium">Reason:</span> {order.cancelReason}
+            </p>
+          )}
           <p className="text-red-700/80">
             {at ? `${formatDateTime(at)} · ` : ''}
             {order.stockRestored ? 'Stock has been returned to inventory.' : 'No further changes are possible.'}
@@ -232,7 +240,11 @@ function StatusPanel({ order }: { order: AdminOrderDetail }) {
                 })}
               </div>
             </fieldset>
-            <Field label="Note (optional)" className="mt-4" hint="Visible in the order timeline for your team.">
+            <Field
+              label={target === 'CANCELLED' ? 'Cancellation reason (required)' : 'Note (optional)'}
+              className="mt-4"
+              hint={target === 'CANCELLED' ? 'Shown to the customer. You can also pick a common reason in the next step.' : 'Visible in the order timeline for your team.'}
+            >
               <Textarea rows={2} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Packed and ready for pickup" />
             </Field>
             <Button
@@ -289,7 +301,7 @@ function PaymentAndNotes({ order }: { order: AdminOrderDetail }) {
     <Card>
       <CardHeader title="Payment & notes" />
       <div className="flex flex-col gap-4 p-4 sm:p-5">
-        <Field label="Payment status" hint="Cash on delivery">
+        <Field label="Payment status" hint="Payment as agreed with the customer">
           <Select
             value={order.paymentStatus}
             disabled={update.isPending}
@@ -616,7 +628,7 @@ export function OrderDetail({ id }: { id: string }) {
               )}
               <div className="flex justify-between">
                 <dt className="text-muted">Shipping</dt>
-                <dd className="tabular">{order.shippingFee > 0 ? formatCurrency(order.shippingFee) : 'Free'}</dd>
+                <dd className="tabular">{order.shippingFee > 0 ? formatCurrency(order.shippingFee) : 'As per actual'}</dd>
               </div>
               <div className="flex items-baseline justify-between border-t border-dashed border-line-strong pt-3">
                 <dt className="text-sm font-semibold">Total</dt>
@@ -624,10 +636,41 @@ export function OrderDetail({ id }: { id: string }) {
               </div>
               <div className="flex justify-between text-xs text-muted">
                 <dt>Payment</dt>
-                <dd>Cash on delivery · {PAYMENT_STATUS_LABEL[order.paymentStatus]}</dd>
+                <dd>{PAYMENT_STATUS_LABEL[order.paymentStatus]}</dd>
               </div>
             </dl>
           </Card>
+
+          {order.exchanges && order.exchanges.length > 0 && (
+            <Card>
+              <CardHeader
+                title="Exchange requests"
+                description="Wrong or damaged items reported by the customer"
+                action={
+                  <Link href={`/exchanges?search=${encodeURIComponent(order.orderNumber)}`} className="text-xs font-medium text-brand hover:text-brand-hover">
+                    Manage
+                  </Link>
+                }
+              />
+              <ul className="divide-y divide-line">
+                {order.exchanges.map((x) => (
+                  <li key={x.id} className="flex flex-col gap-1 px-4 py-3.5 text-[13px] sm:px-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold tabular">{x.requestNumber}</span>
+                      <Badge tone={EXCHANGE_STATUS_TONE[x.status]}>{EXCHANGE_STATUS_LABEL[x.status]}</Badge>
+                      <span className="text-xs text-muted">{formatDateTime(x.createdAt)}</span>
+                    </div>
+                    <p className="font-medium">
+                      {x.productName ?? 'Product'}
+                      {x.quantity > 1 && <span className="text-muted"> × {x.quantity}</span>} · {EXCHANGE_REASON_LABEL[x.reason]}
+                    </p>
+                    <p className="text-muted">“{x.details}”</p>
+                    {x.adminNote && <p className="rounded-lg bg-stone-50 px-2.5 py-1.5 text-ink-soft">Note: {x.adminNote}</p>}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <Card>
             <CardHeader title="Timeline" description="Every status change, newest last" />

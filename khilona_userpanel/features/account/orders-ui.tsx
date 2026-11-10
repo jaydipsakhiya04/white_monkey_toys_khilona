@@ -14,6 +14,7 @@ import { errorMessage, isApiError } from "@/lib/api/errors";
 import { ORDER_NUMBER_EXAMPLE, ORDER_NUMBER_PATTERN } from "@/lib/brand";
 import { accountService } from "@/services/account";
 import type { CustomerOrderListItem } from "@/types/api";
+import { usePricing } from "@/features/store/pricing";
 import { formatDateTime, formatPrice, pluralize } from "@/utils/format";
 
 export const accountKeys = {
@@ -26,6 +27,7 @@ export const accountKeys = {
 
 /** One order in a list: number, date, products preview, total, status, view details. */
 export function OrderCard({ order }: { order: CustomerOrderListItem }) {
+  const { showPrices } = usePricing();
   const extra = order.linesCount - order.itemsPreview.length;
   return (
     <li>
@@ -59,7 +61,8 @@ export function OrderCard({ order }: { order: CustomerOrderListItem }) {
         </div>
         <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-sm">
           <p className="text-muted">
-            {pluralize(order.itemsCount, "item")} · <span className="font-semibold text-ink tabular-nums">{formatPrice(order.total)}</span>
+            {pluralize(order.itemsCount, "item")}
+            {showPrices && <> · <span className="font-semibold text-ink tabular-nums">{formatPrice(order.total)}</span></>}
           </p>
           <span className="inline-flex items-center gap-1 font-semibold text-ink">
             View details

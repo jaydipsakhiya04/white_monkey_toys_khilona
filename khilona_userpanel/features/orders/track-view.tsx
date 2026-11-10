@@ -76,6 +76,25 @@ export function TrackView({ defaultOrderNumber, storeName }: { defaultOrderNumbe
                 <PartyPopper className="size-4" aria-hidden="true" /> Your order has been delivered 🎉
               </p>
             )}
+            {order.status === "CANCELLED" && (
+              <div className="rounded-2xl bg-danger-tint px-4 py-3 text-sm">
+                <p className="font-semibold text-danger-700">{order.cancelledBy === "STORE" ? "Cancelled by the store" : "This order was cancelled"}</p>
+                {order.cancelReason && (
+                  <p className="mt-0.5 text-ink">
+                    <span className="font-medium">Reason:</span> {order.cancelReason}
+                  </p>
+                )}
+              </div>
+            )}
+            {order.status === "DELIVERED" && isAuthenticated && (
+              <p className="text-sm text-muted">
+                Received a wrong or broken item?{" "}
+                <Link href={`/account/orders/${encodeURIComponent(order.orderNumber)}`} className="font-semibold text-ink underline underline-offset-4">
+                  Request an exchange
+                </Link>{" "}
+                from your order page.
+              </p>
+            )}
             <StatusTimeline order={order} />
             <OrderCustomer order={order} />
             <section aria-labelledby="track-items">
