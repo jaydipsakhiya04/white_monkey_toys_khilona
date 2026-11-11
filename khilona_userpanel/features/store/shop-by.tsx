@@ -15,33 +15,35 @@ export function ShopByAge({ groups }: { groups: AgeGroupCount[] }) {
     <section aria-labelledby="age-title" className="pb-14 sm:pb-20">
       <Container>
         <SectionHeader id="age-title" eyebrow="Shop by age" title="Perfect for every age" description="Age-rated picks, from first RC to pro hobby kits." href="/products" linkLabel="All toys" />
-        <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-6">
+        {/* phones: compact 3-across grid (every group visible, no sideways scrolling); desktop: one row */}
+        <ul className="grid grid-cols-3 gap-2.5 sm:gap-4 lg:grid-cols-6">
           {live.map((g, i) => {
             const meta = AGE_GROUPS.find((a) => a.value === g.value);
+            const dark = i === 0;
             return (
-              <li key={g.slug} className="w-[38vw] max-w-[11rem] shrink-0 snap-start sm:w-auto sm:max-w-none">
+              <li key={g.slug} className="min-w-0">
                 <Link
                   href={`/products?age=${g.slug}`}
                   data-reveal
-                  style={{ "--reveal-delay": `${(i % 6) * 60}ms` } as React.CSSProperties}
+                  style={{ "--reveal-delay": `${(i % 6) * 50}ms` } as React.CSSProperties}
+                  aria-label={`${g.label}: ${pluralize(g.count, "toy")}`}
                   className={cn(
-                    "group relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-[1.5rem] border p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift sm:aspect-[5/4] sm:p-5 lg:aspect-[4/5]",
-                    i === 0 ? "border-ink bg-ink text-white" : "border-line bg-sand text-ink hover:border-line-strong",
+                    "group flex h-full flex-col rounded-2xl border px-3 py-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift sm:rounded-[1.5rem] sm:px-5 sm:py-5",
+                    dark ? "border-ink bg-ink text-white" : "border-line bg-sand text-ink hover:border-line-strong",
                   )}
                 >
-                  <span aria-hidden="true" className={cn("pointer-events-none absolute -right-6 -top-6 size-24 rounded-full", i === 0 ? "bg-white/[0.06]" : "bg-white")} />
-                  <span className="relative flex items-center justify-between">
-                    <span className={cn("text-[0.625rem] font-bold uppercase tracking-[0.16em]", i === 0 ? "text-white/60" : "text-muted")}>Age</span>
+                  <span className="flex items-center justify-between gap-1">
+                    <span className={cn("text-[0.5625rem] font-bold uppercase tracking-[0.14em] sm:text-[0.625rem]", dark ? "text-white/60" : "text-muted")}>Age</span>
                     <ArrowUpRight
-                      className={cn("size-4 transition-transform duration-300 group-hover:rotate-45", i === 0 ? "text-white/70" : "text-muted group-hover:text-ink")}
+                      className={cn("size-3.5 shrink-0 transition-transform duration-300 group-hover:rotate-45 sm:size-4", dark ? "text-white/70" : "text-muted group-hover:text-ink")}
                       aria-hidden="true"
                     />
                   </span>
-                  <span className="relative">
-                    <span className="block font-display text-[2rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.25rem]">{meta?.short ?? g.label}</span>
-                    <span className={cn("mt-1 block text-sm font-semibold", i === 0 ? "text-white/80" : "text-ink-soft")}>{meta?.tagline ?? ""}</span>
-                    <span className={cn("mt-2 block text-xs", i === 0 ? "text-white/55" : "text-muted")}>{pluralize(g.count, "toy")}</span>
+                  <span className="mt-3 block whitespace-nowrap font-display text-[1.375rem] font-extrabold leading-none tracking-[-0.04em] min-[380px]:text-[1.5rem] sm:mt-6 sm:text-[2rem]">
+                    {meta?.short ?? g.label}
                   </span>
+                  <span className={cn("mt-1 block text-xs font-semibold sm:text-sm", dark ? "text-white/80" : "text-ink-soft")}>{meta?.tagline ?? ""}</span>
+                  <span className={cn("mt-auto block pt-2 text-[0.6875rem] sm:pt-3 sm:text-xs", dark ? "text-white/55" : "text-muted")}>{pluralize(g.count, "toy")}</span>
                 </Link>
               </li>
             );

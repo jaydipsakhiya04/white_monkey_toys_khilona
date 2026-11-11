@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { Home, LayoutGrid, Search, ShoppingBag, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { Sheet } from "@/components/ui/overlay";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 import { CartCountBadge, useCartLabel } from "@/features/cart/cart-button";
 import { cn } from "@/utils/cn";
-import { SearchForm } from "./header-search";
+import { MobileSearch } from "./mobile-search";
 
 const item =
   "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[0.6875rem] font-semibold transition-colors";
@@ -80,24 +79,7 @@ export function BottomTabBar() {
           </li>
         </ul>
       </nav>
-      <Sheet open={searchOpen} onClose={() => setSearchOpen(false)} side="bottom" title="Search the store">
-        <div className="px-5 pb-8 pt-4">
-          <Suspense>
-            <SearchForm autoFocus onSubmitted={() => setSearchOpen(false)} inputClassName="h-12 text-base" />
-          </Suspense>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/products?sort=newest" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
-              New arrivals
-            </Link>
-            <Link href="/products?featured=true" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
-              Featured
-            </Link>
-            <Link href="/categories" className="rounded-full border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink">
-              All categories
-            </Link>
-          </div>
-        </div>
-      </Sheet>
+      <MobileSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

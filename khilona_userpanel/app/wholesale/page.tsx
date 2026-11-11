@@ -145,7 +145,7 @@ export default async function WholesalePage() {
         </section>
 
         {/* enquiry */}
-        <section id="enquiry" aria-labelledby="enquiry-title" className="scroll-mt-28 grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
+        <section id="enquiry" aria-labelledby="enquiry-title" className="scroll-mt-28 grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14 [&>*]:min-w-0">
           <div>
             <p className="eyebrow">Get a quote</p>
             <h2 id="enquiry-title" className="mt-4 text-[1.875rem] font-bold leading-[1.08] text-ink sm:text-[2.5rem]">

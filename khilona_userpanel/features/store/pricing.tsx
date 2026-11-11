@@ -56,15 +56,16 @@ export function AskPriceButton({
       rel="noopener noreferrer"
       aria-label={productName ? `${label}: ${productName} (WhatsApp)` : `${label} on WhatsApp`}
       className={cn(
-        "relative z-10 inline-flex items-center justify-center gap-1.5 rounded-full font-semibold transition-colors",
-        size === "sm" && "h-8 border border-[#25D366]/40 bg-[#25D366]/10 px-3 text-[0.8125rem] text-[#128C4A] hover:bg-[#25D366]/20",
+        "relative z-10 inline-flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-semibold transition-colors",
+        size === "sm" &&
+          "h-9 border border-[#25D366]/40 bg-[#25D366]/10 px-2.5 text-[0.75rem] text-[#128C4A] hover:bg-[#25D366]/20 min-[380px]:text-[0.8125rem] sm:px-3",
         size === "md" && "h-10 border border-[#25D366]/40 bg-[#25D366]/10 px-4 text-sm text-[#128C4A] hover:bg-[#25D366]/20",
         size === "lg" && "h-12 bg-[#25D366] px-6 text-[0.9375rem] text-white shadow-[0_10px_24px_-12px_rgb(37_211_102/0.7)] hover:bg-[#1fbd5a]",
         className,
       )}
     >
-      <WhatsAppIcon className={size === "lg" ? "size-5" : "size-4"} />
-      {label}
+      <WhatsAppIcon className={cn("shrink-0", size === "lg" ? "size-5" : size === "sm" ? "size-3.5 min-[380px]:size-4" : "size-4")} />
+      <span className="truncate">{label}</span>
     </a>
   );
 }

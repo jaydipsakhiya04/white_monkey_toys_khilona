@@ -160,7 +160,7 @@ export function LoginScreen() {
                 inputMode="email"
                 autoComplete="username"
                 autoFocus
-                placeholder="you@whitemonkeytoys.in"
+                placeholder="you@example.com"
                 leading={<Mail />}
                 invalid={!!errors.email}
                 aria-describedby={errors.email ? 'email-error' : undefined}

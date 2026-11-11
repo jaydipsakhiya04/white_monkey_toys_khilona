@@ -335,7 +335,7 @@ async function seedStore() {
       coverImageUrl,
       phone: '+91 98765 43210',
       whatsapp: '919876543210',
-      email: 'hello@whitemonkeytoys.in',
+      email: 'whitemonkeytoys@gmail.com',
       address: 'Shop 12, Sunrise Arcade, CG Road, Navrangpura',
       city: 'Ahmedabad',
       state: 'Gujarat',

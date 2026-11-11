@@ -225,6 +225,9 @@ if [ ${#missing[@]} -eq 0 ]; then
   certbot --nginx -n --agree-tos "${MAIL_ARGS[@]}" --redirect \
     -d "$DOMAIN" -d "www.$DOMAIN" -d "admin.$DOMAIN" -d "api.$DOMAIN"
   echo "HTTPS enabled (auto-renewal is handled by certbot's timer)."
+  # HTTP/2: many images over one connection (big win for visitors far from the server)
+  sed -i -E 's/listen (\[::\]:)?443 ssl;/listen \1443 ssl http2;/' /etc/nginx/sites-available/khilona
+  nginx -t && systemctl reload nginx
 else
   warn "HTTPS not enabled yet. These DNS records must point to ${PUBLIC_IP:-this server}:"
   printf '   %s\n' "${missing[@]}"

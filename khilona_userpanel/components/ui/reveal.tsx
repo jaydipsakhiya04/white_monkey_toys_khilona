@@ -31,7 +31,8 @@ export function RevealObserver() {
           else window.setTimeout(() => io.observe(el), 60);
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
+      // start just before an element scrolls into view, so sections never sit blank on screen
+      { rootMargin: "0px 0px 12% 0px", threshold: 0.01 },
     );
     const scan = () =>
       document.querySelectorAll("[data-reveal]:not([data-shown])").forEach((el) => io.observe(el));

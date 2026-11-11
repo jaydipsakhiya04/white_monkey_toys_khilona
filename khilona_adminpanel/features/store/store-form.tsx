@@ -255,7 +255,7 @@ function StoreForm({ store }: { store: Store }) {
                 <Input {...register('secondaryPhone')} type="tel" inputMode="tel" placeholder="96627 25685" leading={<Phone />} />
               </Field>
               <Field label="Email" error={errors.email?.message}>
-                <Input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="hello@whitemonkeytoys.in" leading={<Mail />} />
+                <Input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="whitemonkeytoys@gmail.com" leading={<Mail />} />
               </Field>
             </div>
           </Card>
@@ -410,7 +410,7 @@ function StoreForm({ store }: { store: Store }) {
                   ['instagram', 'Instagram', 'https://instagram.com/whitemonkeytoys'],
                   ['facebook', 'Facebook', 'https://facebook.com/whitemonkeytoys'],
                   ['youtube', 'YouTube', 'https://youtube.com/@whitemonkeytoys'],
-                  ['website', 'Website', 'https://whitemonkeytoys.in'],
+                  ['website', 'Website', 'https://whitemonkeytoys.com'],
                 ] as const
               ).map(([key, label, ph]) => (
                 <Field key={key} label={label} error={errors[key]?.message}>

@@ -60,22 +60,44 @@ function buildRemotePatterns(): RemotePattern[] {
   return patterns;
 }
 
+function originOf(raw: string | undefined): string | null {
+  if (!raw) return null;
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return null;
+  }
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   devIndicators: false,
   images: {
     remotePatterns: buildRemotePatterns(),
-    formats: ["image/avif", "image/webp"],
+    // WebP only: AVIF encoding is several times slower on first request, for little gain on photos
+    formats: ["image/webp"],
+    // uploads never change under the same URL (new uploads get new names) — keep optimised copies 30 days
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [360, 414, 640, 750, 828, 1080, 1200, 1920],
   },
-  /**
-   * Optional same-origin API proxy: when API_PROXY_TARGET is set, `/_api/*` is
-   * forwarded to the backend, so NEXT_PUBLIC_API_URL can be `<site>/_api`
-   * (useful when the API's CORS allow-list doesn't include this origin).
-   */
   async rewrites() {
+    const rules: { source: string; destination: string }[] = [];
+    /**
+     * Product photos are requested as same-origin `/uploads/...` (see lib/images.ts) and proxied to
+     * the API on the same machine, so the image optimizer never fetches them over the public
+     * internet (that round trip was slow and timed out under load).
+     */
+    const uploadsOrigin = originOf(process.env.API_URL) ?? originOf(process.env.NEXT_PUBLIC_API_URL);
+    if (uploadsOrigin) rules.push({ source: "/uploads/:path*", destination: `${uploadsOrigin}/uploads/:path*` });
+    /**
+     * Optional same-origin API proxy: when API_PROXY_TARGET is set, `/_api/*` is
+     * forwarded to the backend, so NEXT_PUBLIC_API_URL can be `<site>/_api`
+     * (useful when the API's CORS allow-list doesn't include this origin).
+     */
     const target = process.env.API_PROXY_TARGET?.replace(/\/+$/, "");
-    return target ? [{ source: "/_api/:path*", destination: `${target}/:path*` }] : [];
+    if (target) rules.push({ source: "/_api/:path*", destination: `${target}/:path*` });
+    return rules;
   },
 };
 

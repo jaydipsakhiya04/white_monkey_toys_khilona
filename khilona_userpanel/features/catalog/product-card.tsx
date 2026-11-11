@@ -62,22 +62,23 @@ export function ProductCard({ product, priority, headingLevel = "h3" }: { produc
             <span className="rounded-full bg-white px-2.5 py-1 text-[0.6875rem] font-semibold leading-none text-ink shadow-soft">Featured</span>
           )}
         </div>
-        {soldOut && (
-          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-ink px-2.5 py-1 text-[0.6875rem] font-semibold leading-none text-white">Sold out</span>
+        {/* age rating sits on the photo so the text rows below keep their full width on phones */}
+        {soldOut ? (
+          <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 text-[0.6875rem] font-semibold leading-none text-white">Sold out</span>
+        ) : (
+          product.ageRating && <AgeBadge label={product.ageRating} className="absolute bottom-2 left-2 border-white/80 bg-white/90 shadow-soft backdrop-blur" />
         )}
       </Link>
-      <div className="flex flex-1 flex-col px-1.5 pb-1 pt-3.5 sm:px-2">
-        <div className="flex items-center justify-between gap-2">
-          <p className="min-w-0 truncate text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted">{product.category.name}</p>
-          {product.ageRating && <AgeBadge label={product.ageRating} className="shrink-0" />}
-        </div>
-        <H className="mt-1.5 font-sans text-sm font-semibold leading-snug tracking-normal text-ink sm:text-[0.9375rem]">
+      <div className="flex flex-1 flex-col px-1 pb-0.5 pt-3 sm:px-2 sm:pt-3.5">
+        <p className="truncate text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-muted sm:text-[0.6875rem] sm:tracking-[0.14em]">{product.category.name}</p>
+        {/* always two lines tall, so buttons line up across a row */}
+        <H className="mt-1 min-h-[2.5em] font-sans text-[0.8125rem] font-semibold leading-[1.25] tracking-normal text-ink sm:mt-1.5 sm:text-[0.9375rem]">
           <Link href={href} className="line-clamp-2 rounded after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
             {product.name}
           </Link>
         </H>
         <RatingSummaryInline average={product.rating?.average ?? 0} count={product.rating?.count ?? 0} className="mt-1.5" />
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-2.5 sm:pt-3">
           <Price
             price={product.price}
             effectivePrice={product.effectivePrice}
@@ -87,12 +88,13 @@ export function ProductCard({ product, priority, headingLevel = "h3" }: { produc
             size="md"
             showBadge={false}
             askFor={{ name: product.name }}
+            className="w-full"
           />
-          <div className="mt-1 flex items-center justify-between gap-2">
+          <div className="mt-1.5 flex items-center justify-between gap-2">
             <StockHint product={product} />
             {product.hasVariants && <p className="truncate text-xs text-muted">More options</p>}
           </div>
-          <div className="relative z-10 mt-3">
+          <div className="relative z-10 mt-2.5 sm:mt-3">
             <QuickAddButton product={product} />
           </div>
         </div>

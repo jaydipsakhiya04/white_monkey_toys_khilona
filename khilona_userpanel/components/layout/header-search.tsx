@@ -27,11 +27,14 @@ export function SearchForm({
   autoFocus,
   onSubmitted,
   inputClassName,
+  inline = false,
 }: {
   className?: string;
   autoFocus?: boolean;
   onSubmitted?: () => void;
   inputClassName?: string;
+  /** Full-screen phone search: results are listed under the field instead of in a floating dropdown. */
+  inline?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -60,7 +63,7 @@ export function SearchForm({
     staleTime: 60_000,
   });
   const items = q.length >= 2 ? (suggestions.data?.items ?? []) : [];
-  const showPanel = open && q.length >= 2;
+  const showPanel = (inline || open) && q.length >= 2;
 
   useEffect(() => setActive(-1), [q]);
 
@@ -108,12 +111,14 @@ export function SearchForm({
       onSubmit={submit}
       className={cn("relative", className)}
       onBlur={(e) => {
+        if (inline) return;
         if (!wrapRef.current?.contains(e.relatedTarget as Node)) setOpen(false);
       }}
     >
       <label htmlFor={id} className="sr-only">
         Search products
       </label>
+      <div className="relative">
       <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[1.125rem] -translate-y-1/2 text-muted" aria-hidden="true" />
       <input
         ref={inputRef}
@@ -138,7 +143,7 @@ export function SearchForm({
         placeholder="Search RC cars, drones, figures…"
         maxLength={100}
         className={cn(
-          "h-11 w-full rounded-full border border-line bg-sand pl-10 pr-10 text-[0.9375rem] text-ink transition-colors placeholder:text-muted/80 hover:border-line-strong focus:border-ink focus:bg-surface focus:outline-none focus:ring-4 focus:ring-black/5 [&::-webkit-search-cancel-button]:hidden",
+          "h-11 w-full rounded-full border border-line bg-sand pl-10 pr-10 text-base text-ink sm:text-[0.9375rem] transition-colors placeholder:text-muted/80 hover:border-line-strong focus:border-ink focus:bg-surface focus:outline-none focus:ring-4 focus:ring-black/5 [&::-webkit-search-cancel-button]:hidden",
           inputClassName,
         )}
       />
@@ -155,10 +160,16 @@ export function SearchForm({
           <X className="size-4" aria-hidden="true" />
         </button>
       )}
+      </div>
 
       {showPanel && (
-        <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 animate-pop-in overflow-hidden rounded-2xl border border-line bg-surface shadow-lift">
-          <ul id={listId} role="listbox" aria-label="Suggestions" className="max-h-[60vh] overflow-y-auto p-1.5" onMouseLeave={() => setActive(-1)}>
+        <div
+          className={cn(
+            "overflow-hidden rounded-2xl border border-line bg-surface",
+            inline ? "mt-3" : "absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 animate-pop-in shadow-lift",
+          )}
+        >
+          <ul id={listId} role="listbox" aria-label="Suggestions" className={cn("overflow-y-auto p-1.5", !inline && "max-h-[60vh]")} onMouseLeave={() => setActive(-1)}>
             {items.map((p, i) => (
               <li key={p.id} id={`${listId}-${i}`} role="option" aria-selected={i === active}>
                 <Link
